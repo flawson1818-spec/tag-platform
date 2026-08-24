@@ -1,9 +1,13 @@
 import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../communication/notifications.service';
+import { PushNotificationsService } from '../communication/push-notifications.service';
 import { SocialChannel } from '../communication/social-publication.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { AiAgentName } from './ai-interaction-log.entity';
+
+const ESCALATION_RECIPIENT_ROLES = ['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'];
 
 const MODEL = 'claude-opus-5';
 const MAX_TOKENS = 1024;
@@ -72,7 +76,11 @@ export class AiAgentsService {
   private readonly logger = new Logger(AiAgentsService.name);
   private client: Anthropic | null = null;
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+    private readonly pushNotificationsService: PushNotificationsService,
+  ) {}
 
   private getClient(): Anthropic {
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -93,9 +101,48 @@ export class AiAgentsService {
   async chatEvangelisation(dto: AiChatDto, userId: string | null): Promise<AiChatResult> {
     if (CRISIS_KEYWORDS.some((keyword) => dto.message.toLowerCase().includes(keyword))) {
       await this.logInteraction('EVANGELISATION', dto.message, CRISIS_RESPONSE, userId, true);
+      await this.notifyCrisisEscalation(userId);
       return { reply: CRISIS_RESPONSE, escalated: true };
     }
     return this.chat('EVANGELISATION', EVANGELISATION_SYSTEM, dto, userId);
+  }
+
+  /**
+   * docs/02_AI_AGENTS_SPECIFICATION.md section 4: a detected crisis must "déclencher une
+   * escalade immédiate vers un humain (Modérateur/Pasteur)" — logging the flag alone (the prior
+   * behavior) meant nobody was ever actually told; this notifies every MODERATEUR+ user in-app
+   * and by push. Best-effort: a notification failure must never surface as an error to the
+   * person in crisis, who has already received CRISIS_RESPONSE regardless.
+   */
+  private async notifyCrisisEscalation(userId: string | null): Promise<void> {
+    let recipientIds: string[];
+    try {
+      const { data, error } = await this.supabase.client
+        .from('role_assignments')
+        .select('user_id, roles!inner(code)')
+        .in('roles.code', ESCALATION_RECIPIENT_ROLES);
+      if (error) throw new Error(error.message);
+      recipientIds = Array.from(new Set((data as unknown as { user_id: string }[]).map((r) => r.user_id)));
+    } catch (error) {
+      this.logger.error('Failed to look up crisis-escalation recipients', error as Error);
+      return;
+    }
+
+    const title = 'Alerte IA Évangélisation — suivi humain requis';
+    const body =
+      "Une personne a été orientée vers des ressources d'urgence par l'IA Évangélisation " +
+      "suite à un message évoquant une situation de détresse ou de danger. Un suivi humain est nécessaire dès que possible.";
+
+    await Promise.all(
+      recipientIds.map(async (recipientId) => {
+        await this.notificationsService
+          .create(recipientId, 'AI_CRISIS_ESCALATION', { userId })
+          .catch((error) => this.logger.error(`Failed to notify ${recipientId} of crisis escalation`, error));
+        await this.pushNotificationsService
+          .send(recipientId, title, body)
+          .catch((error) => this.logger.error(`Failed to push-notify ${recipientId} of crisis escalation`, error));
+      }),
+    );
   }
 
   /**
