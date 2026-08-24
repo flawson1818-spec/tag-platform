@@ -147,6 +147,75 @@ describe('EventsService', () => {
     });
   });
 
+  describe('raiseHand', () => {
+    it('upserts hand_raised_at without touching an existing role_in_event', async () => {
+      const supabase = createSupabaseServiceMock({
+        events: createQueryChain({ data: CREATED_EVENT, error: null }),
+        event_participants: createQueryChain({
+          data: { id: 'p-1', event_id: 'event-1', user_id: 'user-1', role_in_event: 'SPEAKER', hand_raised_at: '2026-01-01T00:00:00.000Z', user: null },
+          error: null,
+        }),
+      });
+      const service = buildService(supabase);
+
+      const result = await service.raiseHand('event-1', 'user-1');
+
+      expect(result.role_in_event).toBe('SPEAKER');
+      expect(result.hand_raised_at).toBe('2026-01-01T00:00:00.000Z');
+    });
+
+    it('throws NotFoundException when the event does not exist', async () => {
+      const supabase = createSupabaseServiceMock({
+        events: createQueryChain({ data: null, error: null }),
+      });
+      const service = buildService(supabase);
+
+      await expect(service.raiseHand('missing', 'user-1')).rejects.toThrow('Event missing not found');
+    });
+  });
+
+  describe('lowerHand', () => {
+    it('clears hand_raised_at for the participant', async () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({ event_participants: chain });
+      const service = buildService(supabase);
+
+      await service.lowerHand('event-1', 'user-1');
+
+      expect(chain.update).toHaveBeenCalledWith({ hand_raised_at: null });
+      expect(chain.eq).toHaveBeenCalledWith('event_id', 'event-1');
+      expect(chain.eq).toHaveBeenCalledWith('user_id', 'user-1');
+    });
+  });
+
+  describe('setParticipantRole', () => {
+    it('grants the floor to a participant', async () => {
+      const supabase = createSupabaseServiceMock({
+        event_participants: createQueryChain({
+          data: { id: 'p-1', event_id: 'event-1', user_id: 'user-1', role_in_event: 'SPEAKER', user: { display_name: 'Believer' } },
+          error: null,
+        }),
+      });
+      const service = buildService(supabase);
+
+      const result = await service.setParticipantRole('event-1', 'user-1', 'SPEAKER');
+
+      expect(result.role_in_event).toBe('SPEAKER');
+      expect(result.display_name).toBe('Believer');
+    });
+
+    it('throws NotFoundException when the target user never joined the event', async () => {
+      const supabase = createSupabaseServiceMock({
+        event_participants: createQueryChain({ data: null, error: null }),
+      });
+      const service = buildService(supabase);
+
+      await expect(service.setParticipantRole('event-1', 'user-1', 'SPEAKER')).rejects.toThrow(
+        'No participant user-1 registered for event event-1',
+      );
+    });
+  });
+
   describe('softDelete', () => {
     it('throws if the event does not exist', async () => {
       const supabase = createSupabaseServiceMock({

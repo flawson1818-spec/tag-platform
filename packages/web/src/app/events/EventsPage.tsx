@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { getAccessToken } from '../auth/AuthContext';
-import { EVENT_STATUSES, EVENT_TYPES, EVENT_TYPE_LABELS, TagEvent, eventsApi } from '../../lib/api';
+import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { EVENT_STATUSES, EVENT_TYPES, EVENT_TYPE_LABELS, EventParticipant, TagEvent, eventsApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 
 function formatSchedule(iso: string): string {
@@ -14,6 +14,7 @@ function formatSchedule(iso: string): string {
 }
 
 export function EventsPage() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<TagEvent[]>([]);
   const [typeFilter, setTypeFilter] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,10 @@ export function EventsPage() {
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [liveEventId, setLiveEventId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<EventParticipant[]>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
 
   const [type, setType] = useState<string>(EVENT_TYPES[0]);
   const [title, setTitle] = useState('');
@@ -94,6 +99,56 @@ export function EventsPage() {
       .catch((err) => setFormError((err as Error).message));
   };
 
+  const refreshParticipants = (eventId: string) => {
+    setParticipantsLoading(true);
+    eventsApi
+      .listParticipants(eventId)
+      .then(setParticipants)
+      .catch((err) => setFormError((err as Error).message))
+      .finally(() => setParticipantsLoading(false));
+  };
+
+  const toggleLive = (eventId: string) => {
+    if (liveEventId === eventId) {
+      setLiveEventId(null);
+      return;
+    }
+    setLiveEventId(eventId);
+    refreshParticipants(eventId);
+  };
+
+  const me = participants.find((p) => p.user_id === user?.id) ?? null;
+
+  const handleRaiseHand = () => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) {
+      setFormError('Connecte-toi pour lever la main.');
+      return;
+    }
+    eventsApi
+      .raiseHand(token, liveEventId)
+      .then(() => refreshParticipants(liveEventId))
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleLowerHand = () => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .lowerHand(token, liveEventId)
+      .then(() => refreshParticipants(liveEventId))
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleSetRole = (participantUserId: string, role: string) => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .setParticipantRole(token, liveEventId, participantUserId, role)
+      .then(() => refreshParticipants(liveEventId))
+      .catch((err) => setFormError((err as Error).message));
+  };
+
   return (
     <div className="communities-page">
       <h2>Événements</h2>
@@ -159,12 +214,54 @@ export function EventsPage() {
               <button onClick={() => handleJoin(event.id)} disabled={joinedIds.has(event.id)}>
                 {joinedIds.has(event.id) ? 'Inscrit ✓' : "S'inscrire"}
               </button>
+              {event.status === 'RUNNING' && (
+                <button type="button" onClick={() => toggleLive(event.id)}>
+                  {liveEventId === event.id ? 'Fermer la salle en direct' : '🖐 Salle en direct'}
+                </button>
+              )}
               {EVENT_STATUSES.filter((s) => s !== event.status).map((s) => (
                 <button key={s} onClick={() => handleStatusChange(event.id, s)}>
                   {s}
                 </button>
               ))}
             </div>
+
+            {liveEventId === event.id && (
+              <div className="request-row" style={{ marginTop: '0.6rem' }}>
+                {participantsLoading && <p>Chargement…</p>}
+                <div className="request-form">
+                  <button type="button" onClick={me?.hand_raised_at ? handleLowerHand : handleRaiseHand}>
+                    {me?.hand_raised_at ? 'Baisser la main' : 'Lever la main 🖐'}
+                  </button>
+                </div>
+                {!participantsLoading && participants.filter((p) => p.hand_raised_at).length === 0 && (
+                  <p className="hint">Aucune main levée pour l'instant.</p>
+                )}
+                <ul className="request-list">
+                  {participants
+                    .filter((p) => p.hand_raised_at)
+                    .map((p) => (
+                      <li key={p.id} className="request-row">
+                        <div className="request-meta">
+                          <span>{p.display_name ?? 'Anonyme'}</span>
+                          <span className="chip chip-status">{p.role_in_event}</span>
+                        </div>
+                        <div className="request-form">
+                          {p.role_in_event === 'SPEAKER' ? (
+                            <button type="button" onClick={() => handleSetRole(p.user_id, 'ATTENDEE')}>
+                              Retirer la parole
+                            </button>
+                          ) : (
+                            <button type="button" onClick={() => handleSetRole(p.user_id, 'SPEAKER')}>
+                              Donner la parole
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
           </li>
         ))}
       </ul>

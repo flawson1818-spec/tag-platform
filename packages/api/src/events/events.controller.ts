@@ -8,6 +8,7 @@ import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventsQueryDto } from './dto/list-events.query.dto';
 import { UpdateEventStatusDto } from './dto/update-event-status.dto';
+import { UpdateParticipantRoleDto } from './dto/update-participant-role.dto';
 import { EventStatus } from './event.entity';
 import { EventsService } from './events.service';
 
@@ -66,5 +67,34 @@ export class EventsController {
   @HttpCode(HttpStatus.OK)
   join(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.eventsService.join(id, currentUser.id);
+  }
+
+  @Post(':id/hand-raise')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  raiseHand(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.eventsService.raiseHand(id, currentUser.id);
+  }
+
+  @Post(':id/hand-lower')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  lowerHand(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.eventsService.lowerHand(id, currentUser.id);
+  }
+
+  @Patch(':id/participants/:userId/role')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @RequirePermission('event.manage')
+  @HttpCode(HttpStatus.OK)
+  setParticipantRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() dto: UpdateParticipantRoleDto,
+  ) {
+    return this.eventsService.setParticipantRole(id, userId, dto.role);
   }
 }

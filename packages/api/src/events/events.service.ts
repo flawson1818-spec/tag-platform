@@ -120,6 +120,47 @@ export class EventsService {
     return (data as unknown as Array<Record<string, unknown>>).map((row) => this.mapParticipant(row));
   }
 
+  /**
+   * 07_UX_UI_SPECIFICATION.md §7 — "salle en direct avec mains levées". Upserts rather than
+   * requiring a prior join() call, and only sets hand_raised_at in the upsert payload so an
+   * existing role_in_event (e.g. already-granted SPEAKER) is left untouched — Postgres's
+   * ON CONFLICT DO UPDATE only touches the columns actually listed, not the whole row.
+   */
+  async raiseHand(eventId: string, userId: string): Promise<EventParticipant> {
+    await this.findById(eventId);
+    const { data, error } = await this.participantsDb
+      .upsert({ event_id: eventId, user_id: userId, hand_raised_at: new Date().toISOString() }, { onConflict: 'event_id,user_id' })
+      .select(PARTICIPANT_COLUMNS)
+      .single();
+    if (error) throw new InternalServerErrorException(error.message);
+    return this.mapParticipant(data as unknown as Record<string, unknown>);
+  }
+
+  async lowerHand(eventId: string, userId: string): Promise<void> {
+    const { error } = await this.participantsDb
+      .update({ hand_raised_at: null })
+      .eq('event_id', eventId)
+      .eq('user_id', userId);
+    if (error) throw new InternalServerErrorException(error.message);
+  }
+
+  /** Moderator-only (event.manage): grants or revokes the floor, same bookkeeping-only meaning as the prayer room's speak:grant — no audio transport is wired up here either. */
+  async setParticipantRole(
+    eventId: string,
+    targetUserId: string,
+    role: EventParticipant['role_in_event'],
+  ): Promise<EventParticipant> {
+    const { data, error } = await this.participantsDb
+      .update({ role_in_event: role })
+      .eq('event_id', eventId)
+      .eq('user_id', targetUserId)
+      .select(PARTICIPANT_COLUMNS)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    if (!data) throw new NotFoundException(`No participant ${targetUserId} registered for event ${eventId}`);
+    return this.mapParticipant(data as unknown as Record<string, unknown>);
+  }
+
   private mapParticipant(row: Record<string, unknown>): EventParticipant {
     const { user, ...rest } = row as Omit<EventParticipant, 'display_name'> & {
       user: { display_name: string } | null;
