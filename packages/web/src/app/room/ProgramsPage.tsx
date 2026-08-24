@@ -9,6 +9,13 @@ import {
   PrayerSlot,
   prayerApi,
 } from '../../lib/api';
+import { CalendarView, formatViewRangeLabel, isWithinView, shiftReferenceDate } from '../../lib/calendar';
+
+const CALENDAR_VIEWS: { value: CalendarView; label: string }[] = [
+  { value: 'day', label: 'Jour' },
+  { value: 'week', label: 'Semaine' },
+  { value: 'month', label: 'Mois' },
+];
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -53,6 +60,8 @@ export function ProgramsPage() {
   const [slotForm, setSlotForm] = useState(EMPTY_SLOT_FORM);
   const [slotSaving, setSlotSaving] = useState(false);
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  const [calendarView, setCalendarView] = useState<CalendarView>('week');
+  const [referenceDate, setReferenceDate] = useState(() => new Date());
 
   const refreshPrograms = () => {
     setLoading(true);
@@ -196,6 +205,7 @@ export function ProgramsPage() {
   };
 
   const selectedProgram = programs.find((p) => p.id === selectedId) ?? null;
+  const visibleSlots = slots.filter((slot) => isWithinView(slot.start_at, calendarView, referenceDate));
 
   return (
     <div className="communities-page">
@@ -253,6 +263,33 @@ export function ProgramsPage() {
           <h3>Créneaux — {selectedProgram.title}</h3>
           {slotsLoading && <p>Chargement…</p>}
 
+          <div className="calendar-toolbar">
+            <div className="calendar-view-switch">
+              {CALENDAR_VIEWS.map((v) => (
+                <button
+                  key={v.value}
+                  type="button"
+                  className={calendarView === v.value ? 'active' : ''}
+                  onClick={() => setCalendarView(v.value)}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+            <div className="calendar-nav">
+              <button type="button" onClick={() => setReferenceDate((d) => shiftReferenceDate(calendarView, d, -1))}>
+                ← Précédent
+              </button>
+              <span className="calendar-range-label">{formatViewRangeLabel(calendarView, referenceDate)}</span>
+              <button type="button" onClick={() => setReferenceDate(new Date())}>
+                Aujourd'hui
+              </button>
+              <button type="button" onClick={() => setReferenceDate((d) => shiftReferenceDate(calendarView, d, 1))}>
+                Suivant →
+              </button>
+            </div>
+          </div>
+
           <table className="slot-table">
             <thead>
               <tr>
@@ -260,11 +297,12 @@ export function ProgramsPage() {
                 <th>Titre</th>
                 <th>Catégorie</th>
                 <th>Importance</th>
+                <th>Animé par</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {slots.map((slot) => (
+              {visibleSlots.map((slot) => (
                 <tr key={slot.id} className={slot.status === 'RUNNING' ? 'slot-row-live' : ''}>
                   <td>
                     {formatDateTime(slot.start_at)}–{formatDateTime(slot.end_at)}
@@ -273,6 +311,7 @@ export function ProgramsPage() {
                   <td>{slot.title}</td>
                   <td>{slot.category}</td>
                   <td>{slot.importance}</td>
+                  <td>{slot.leader_display_name ?? 'IA Intercession'}</td>
                   <td>
                     <button type="button" onClick={() => startEditSlot(slot)}>
                       Modifier
@@ -286,6 +325,9 @@ export function ProgramsPage() {
             </tbody>
           </table>
           {!slotsLoading && slots.length === 0 && <p className="hint">Aucun créneau pour ce programme.</p>}
+          {!slotsLoading && slots.length > 0 && visibleSlots.length === 0 && (
+            <p className="hint">Aucun créneau sur cette période — essaie une autre semaine/mois.</p>
+          )}
 
           <h4>{editingSlotId ? 'Modifier le créneau' : 'Ajouter un créneau'}</h4>
           <form onSubmit={editingSlotId ? handleUpdateSlot : handleCreateSlot} className="request-form">
