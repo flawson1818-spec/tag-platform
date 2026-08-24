@@ -110,7 +110,7 @@ function CommunityStep({ onDone }: { onDone: () => void }) {
     const token = getAccessToken();
     if (!token || !user) return;
     try {
-      await communitiesApi.join(token, communityId, user.id);
+      await communitiesApi.join(token, communityId);
       setJoinedIds((prev) => new Set(prev).add(communityId));
     } catch (err) {
       setError((err as Error).message);
