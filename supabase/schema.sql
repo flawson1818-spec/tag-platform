@@ -956,3 +956,10 @@ from permissions p
 join roles r on r.code = any(array['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'])
 where p.code = 'event.manage'
 on conflict (role_id, permission_id) do nothing;
+
+-- docs/07_UX_UI_SPECIFICATION.md §11: "préférences par type de notification". Keyed by
+-- notification `type` (TESTIMONY_PUBLISHED, ...) -> boolean; a missing key means enabled
+-- (opt-out model, so existing users keep receiving everything until they explicitly turn a
+-- type off). A jsonb column rather than one boolean column per type since the type set is
+-- expected to grow with new notification triggers.
+alter table users add column if not exists notification_prefs jsonb not null default '{}'::jsonb;

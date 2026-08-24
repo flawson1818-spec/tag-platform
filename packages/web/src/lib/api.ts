@@ -673,6 +673,11 @@ export interface AppNotification {
   created_at: string;
 }
 
+export interface NotificationPreference {
+  type: string;
+  enabled: boolean;
+}
+
 export const pushApi = {
   vapidPublicKey: () => request<{ publicKey: string | null }>('/push/vapid-public-key'),
   register: (token: string, subscriptionToken: string) =>
@@ -701,6 +706,14 @@ export const notificationsApi = {
     request<void>('/notifications/read-all', { method: 'PATCH', headers: authHeaders(token) }),
   archive: (token: string, id: string) =>
     request<AppNotification>(`/notifications/${id}/archive`, { method: 'PATCH', headers: authHeaders(token) }),
+  listPreferences: (token: string) =>
+    request<NotificationPreference[]>('/notifications/preferences', { headers: authHeaders(token) }),
+  setPreference: (token: string, type: string, enabled: boolean) =>
+    request<NotificationPreference[]>(`/notifications/preferences/${type}`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ enabled }),
+    }),
 };
 
 export const EVENT_TYPES = [

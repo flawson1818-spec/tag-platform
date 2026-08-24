@@ -5,11 +5,13 @@ import {
   usersApi,
   filesApi,
   gamificationApi,
+  notificationsApi,
   prayerRequestsApi,
   testimoniesApi,
   MyGamificationStats,
   CommunityGoal,
   LeaderboardEntry,
+  NotificationPreference,
   PrayerRequest,
   Testimony,
 } from '../../lib/api';
@@ -263,6 +265,57 @@ function GamificationSection() {
   );
 }
 
+const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
+  TESTIMONY_PUBLISHED: 'Ton témoignage est publié',
+  TESTIMONY_REJECTED: 'Ton témoignage est refusé',
+  PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
+};
+
+function NotificationPreferencesSection() {
+  const [prefs, setPrefs] = useState<NotificationPreference[]>([]);
+  const [savingType, setSavingType] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+    notificationsApi.listPreferences(token).then(setPrefs).catch((err) => setError((err as Error).message));
+  }, []);
+
+  const handleToggle = (type: string, enabled: boolean) => {
+    const token = getAccessToken();
+    if (!token) return;
+    setError(null);
+    setSavingType(type);
+    notificationsApi
+      .setPreference(token, type, enabled)
+      .then(setPrefs)
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setSavingType(null));
+  };
+
+  if (prefs.length === 0 && !error) return null;
+
+  return (
+    <div className="gamification">
+      <h3>Notifications</h3>
+      <p className="hint">Choisis les notifications que tu veux recevoir.</p>
+      {error && <p className="error">{error}</p>}
+      {prefs.map((pref) => (
+        <label key={pref.type} className="tag-checkbox">
+          <input
+            type="checkbox"
+            checked={pref.enabled}
+            disabled={savingType === pref.type}
+            onChange={(e) => handleToggle(pref.type, e.target.checked)}
+          />
+          {NOTIFICATION_TYPE_LABELS[pref.type] ?? pref.type}
+        </label>
+      ))}
+    </div>
+  );
+}
+
 function PrivacySection() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -422,6 +475,7 @@ export function ProfilePage() {
       {error && <p className="error">{error}</p>}
 
       <GamificationSection />
+      <NotificationPreferencesSection />
       <MyPrayerRequestsSection />
       <MyTestimoniesSection />
       <PrivacySection />
