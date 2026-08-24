@@ -1,0 +1,30 @@
+# Local/small-deployment orchestration for the two services this repo actually builds.
+# Supabase (Postgres + Auth + Storage) is the real, cloud-hosted project this app already
+# talks to in every environment — there is no local Supabase service here to keep this
+# file honest; see packages/api/.env.example for the project URL and required secrets.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    ports:
+      - '3000:3000'
+    env_file:
+      - packages/api/.env
+    environment:
+      PORT: 3000
+      WEB_ORIGIN: http://localhost:4200
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000/api
+    ports:
+      - '4200:80'
+    depends_on:
+      - api
+    restart: unless-stopped

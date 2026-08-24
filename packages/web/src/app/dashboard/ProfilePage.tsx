@@ -1,0 +1,347 @@
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getAccessToken, useAuth } from '../auth/AuthContext';
+import {
+  usersApi,
+  filesApi,
+  gamificationApi,
+  MyGamificationStats,
+  CommunityGoal,
+  LeaderboardEntry,
+} from '../../lib/api';
+
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
+
+function AvatarUpload({ avatarFileId }: { avatarFileId: string | null }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token || !avatarFileId) return;
+    filesApi
+      .get(token, avatarFileId)
+      .then((file) => {
+        if (file.readUrl) setPreviewUrl(file.readUrl);
+      })
+      .catch(() => undefined);
+  }, [avatarFileId]);
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const token = getAccessToken();
+    if (!token) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Choisis une image (JPG, PNG…).');
+      return;
+    }
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      setError('Image trop lourde (5 Mo maximum).');
+      return;
+    }
+
+    setError(null);
+    setUploading(true);
+    try {
+      const { file: stored, uploadUrl } = await filesApi.presign(token, {
+        filename: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
+      });
+      await filesApi.upload(uploadUrl, file);
+      await usersApi.updateMe(token, { avatarFileId: stored.id });
+      setPreviewUrl(URL.createObjectURL(file));
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="avatar-upload">
+      {previewUrl ? (
+        <img src={previewUrl} alt="Avatar" className="avatar-preview" />
+      ) : (
+        <div className="avatar-preview avatar-preview-empty" />
+      )}
+      <label className="link-button">
+        {uploading ? 'Envoi…' : "Changer l'avatar"}
+        <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} hidden />
+      </label>
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+
+function GamificationSection() {
+  const [stats, setStats] = useState<MyGamificationStats | null>(null);
+  const [goal, setGoal] = useState<CommunityGoal | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [optIn, setOptIn] = useState(false);
+  const [optInSaving, setOptInSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadLeaderboard = () => {
+    gamificationApi.leaderboard().then(setLeaderboard).catch(() => undefined);
+  };
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+    gamificationApi
+      .myStats(token)
+      .then((s) => {
+        setStats(s);
+        setOptIn(s.leaderboardOptIn);
+      })
+      .catch((err) => setError((err as Error).message));
+    gamificationApi.communityGoal().then(setGoal).catch(() => undefined);
+    loadLeaderboard();
+  }, []);
+
+  const handleOptInChange = (checked: boolean) => {
+    const token = getAccessToken();
+    if (!token) return;
+    setOptIn(checked);
+    setOptInSaving(true);
+    gamificationApi
+      .setLeaderboardOptIn(token, checked)
+      .then(loadLeaderboard)
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setOptInSaving(false));
+  };
+
+  return (
+    <div className="gamification">
+      <h3>Ma prière</h3>
+      {error && <p className="error">{error}</p>}
+      {stats && (
+        <div className="gamification-stats">
+          <div className="gamification-stat">
+            <span className="gamification-stat-value">{stats.totalHours}</span>
+            <span className="gamification-stat-label">heures priées</span>
+          </div>
+          <div className="gamification-stat">
+            <span className="gamification-stat-value">{stats.currentStreakDays}</span>
+            <span className="gamification-stat-label">jours de suite</span>
+          </div>
+        </div>
+      )}
+      {stats && stats.badges.length > 0 && (
+        <div className="gamification-badges">
+          {stats.badges.map((badge) => (
+            <span key={badge} className="tag-badge" style={{ background: '#45519c' }}>
+              {badge}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {goal && (
+        <div className="gamification-goal">
+          <p className="hint">
+            Objectif communautaire de {goal.month} : {goal.achievedHours} / {goal.targetHours} h
+          </p>
+          <div className="room-progress">
+            <div
+              className="room-progress-fill"
+              style={{ width: `${Math.min(100, (goal.achievedHours / goal.targetHours) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <label className="tag-checkbox">
+        <input
+          type="checkbox"
+          checked={optIn}
+          disabled={optInSaving}
+          onChange={(e) => handleOptInChange(e.target.checked)}
+        />
+        Apparaître dans le classement public
+      </label>
+
+      {leaderboard.length > 0 && (
+        <ol className="gamification-leaderboard">
+          {leaderboard.map((entry) => (
+            <li key={entry.displayName}>
+              <span>{entry.displayName}</span>
+              <span>{entry.hours} h</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+function PrivacySection() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const [exporting, setExporting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [clearingAiHistory, setClearingAiHistory] = useState(false);
+  const [aiHistoryCleared, setAiHistoryCleared] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    const token = getAccessToken();
+    if (!token) return;
+    setError(null);
+    setExporting(true);
+    try {
+      const data = await usersApi.exportMe(token);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tag-mes-donnees.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleClearAiHistory = async () => {
+    const token = getAccessToken();
+    if (!token) return;
+    setError(null);
+    setClearingAiHistory(true);
+    try {
+      await usersApi.deleteMyAiHistory(token);
+      setAiHistoryCleared(true);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setClearingAiHistory(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const token = getAccessToken();
+    if (!token) return;
+    setError(null);
+    setDeleting(true);
+    try {
+      await usersApi.deleteMe(token);
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      setError((err as Error).message);
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="gamification">
+      <h3>Mes données</h3>
+      <p className="hint">Droit d'accès, d'export et de suppression de tes données personnelles.</p>
+      <button type="button" onClick={handleExport} disabled={exporting}>
+        {exporting ? 'Export…' : 'Exporter mes données (JSON)'}
+      </button>{' '}
+      <button type="button" onClick={handleClearAiHistory} disabled={clearingAiHistory}>
+        {clearingAiHistory ? 'Suppression…' : 'Effacer mon historique IA'}
+      </button>
+      {aiHistoryCleared && <p className="hint">Historique IA effacé.</p>}
+
+      {confirmingDelete ? (
+        <div className="reject-row">
+          <p className="error">
+            Cette action est irréversible : ton compte sera anonymisé et tu seras déconnecté partout.
+          </p>
+          <button type="button" onClick={handleDelete} disabled={deleting}>
+            {deleting ? 'Suppression…' : 'Confirmer la suppression définitive'}
+          </button>
+          <button type="button" onClick={() => setConfirmingDelete(false)}>
+            Annuler
+          </button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirmingDelete(true)}>
+          Supprimer mon compte
+        </button>
+      )}
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}
+
+export function ProfilePage() {
+  const { user } = useAuth();
+  const [displayName, setDisplayName] = useState(user?.display_name ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [locale, setLocale] = useState(user?.locale ?? 'fr');
+  const [timezone, setTimezone] = useState(user?.timezone ?? 'UTC');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  if (!user) return null;
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const token = getAccessToken();
+    if (!token) return;
+    setError(null);
+    setSaved(false);
+    setSaving(true);
+    usersApi
+      .updateMe(token, { displayName, phone: phone || undefined, locale, timezone })
+      .then(() => setSaved(true))
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setSaving(false));
+  };
+
+  return (
+    <div className="auth-page">
+      <h2>Mon profil</h2>
+      <AvatarUpload avatarFileId={user.avatar_file_id} />
+      <form onSubmit={handleSubmit} className="auth-form">
+        <input
+          type="text"
+          placeholder="Nom affiché"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          required
+        />
+        <input
+          type="tel"
+          placeholder="Téléphone (optionnel)"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Langue (ex : fr)"
+          value={locale}
+          onChange={(e) => setLocale(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Fuseau horaire (ex : Africa/Abidjan)"
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
+        />
+        <button type="submit" disabled={saving}>
+          {saving ? 'Enregistrement…' : 'Enregistrer'}
+        </button>
+      </form>
+      {saved && <p className="hint">Profil mis à jour.</p>}
+      {error && <p className="error">{error}</p>}
+
+      <GamificationSection />
+      <PrivacySection />
+    </div>
+  );
+}
+
+export default ProfilePage;

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: tag-platform
+data:
+  PORT: '3000'
+  WEB_ORIGIN: https://tag.example.org
+  SUPABASE_URL: https://vlbvjntypatgcaidsjrc.supabase.co
+  JWT_ACCESS_EXPIRES_IN_SECONDS: '900'
+  JWT_REFRESH_EXPIRES_IN_DAYS: '30'

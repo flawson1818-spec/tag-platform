@@ -1,0 +1,272 @@
+<title>TAG — Une prière ne s'arrête jamais</title>
+<style>
+  :root {
+    --ground: #F7F6F1; --surface: #FFFFFF; --surface-2: #EFEDE3;
+    --ink: #1D2030; --ink-soft: #4B4E5C; --muted: #767A88; --border: #E4E0D4;
+    --accent: #45519C; --accent-ink: #FFFFFF; --accent-soft: #EEF0FA; --accent-line: #C7CCE8;
+    --live: #B4483C; --good: #3C7A5C; --good-soft: #E7F2EC;
+    --hero-ground: #171A2C; --hero-ink: #F2F2F7; --hero-soft: #B9BCD4;
+    --shadow: 0 1px 2px rgba(30,30,40,.05), 0 20px 40px -20px rgba(30,30,40,.22);
+  }
+  :root[data-theme="dark"] {
+    --ground: #101119; --surface: #191B24; --surface-2: #20222D;
+    --ink: #E8E8EF; --ink-soft: #C2C4D2; --muted: #8B8FA0; --border: #2B2E3A;
+    --accent: #8B96E6; --accent-ink: #12131C; --accent-soft: rgba(139,150,230,.14); --accent-line: #363B57;
+    --live: #E27C71; --good: #6FBE97; --good-soft: rgba(111,190,151,.14);
+    --hero-ground: #0B0C14; --hero-ink: #F2F2F7; --hero-soft: #9FA3C4;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 24px 48px -20px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101119; --surface: #191B24; --surface-2: #20222D;
+      --ink: #E8E8EF; --ink-soft: #C2C4D2; --muted: #8B8FA0; --border: #2B2E3A;
+      --accent: #8B96E6; --accent-ink: #12131C; --accent-soft: rgba(139,150,230,.14); --accent-line: #363B57;
+      --live: #E27C71; --good: #6FBE97; --good-soft: rgba(111,190,151,.14);
+      --hero-ground: #0B0C14; --hero-ink: #F2F2F7; --hero-soft: #9FA3C4;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 24px 48px -20px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  h1, h2, h3 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", ui-serif, serif; margin: 0; text-wrap: balance; }
+  .num { font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between;
+    padding: 0.9rem 1.6rem; background: color-mix(in srgb, var(--hero-ground) 78%, transparent);
+    backdrop-filter: blur(10px); color: var(--hero-ink);
+  }
+  .nav .mark { font-family: Georgia, serif; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.02em; }
+  .nav-right { display: flex; align-items: center; gap: 0.7rem; }
+  .lang { background: transparent; border: 1px solid rgba(255,255,255,0.22); color: var(--hero-ink); border-radius: 8px; padding: 0.35rem 0.6rem; font-size: 0.82rem; }
+  .btn-outline {
+    border: 1px solid rgba(255,255,255,0.3); color: var(--hero-ink); background: transparent;
+    padding: 0.4rem 0.9rem; border-radius: 999px; font-size: 0.85rem;
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.08); }
+  .icon-btn { border: 1px solid rgba(255,255,255,0.22); background: transparent; color: var(--hero-ink); width: 2rem; height: 2rem; border-radius: 7px; display: grid; place-items: center; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative; background: var(--hero-ground); color: var(--hero-ink); overflow: hidden;
+    padding: 3.6rem 1.6rem 3rem;
+  }
+  .hero canvas { position: absolute; top: 50%; right: -40px; transform: translateY(-50%); opacity: 0.55; pointer-events: none; }
+  .hero-inner { position: relative; max-width: 1080px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--hero-soft); border: 1px solid rgba(255,255,255,0.18);
+    padding: 0.3rem 0.65rem; border-radius: 999px; margin-bottom: 1.3rem;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); animation: pulse 1.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .eyebrow .dot { animation: none; } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .hero h1 { font-size: clamp(2.2rem, 5.4vw, 3.6rem); line-height: 1.06; max-width: 15ch; margin-bottom: 1rem; }
+  .hero .lede { color: var(--hero-soft); font-size: 1.08rem; max-width: 46ch; margin-bottom: 2.1rem; }
+
+  .live-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); backdrop-filter: blur(6px);
+    border-radius: 16px; padding: 1.3rem 1.5rem; max-width: 480px; display: flex; flex-direction: column; gap: 0.8rem;
+  }
+  .live-card .row1 { display: flex; align-items: center; justify-content: space-between; }
+  .live-pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: var(--live); }
+  .live-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); animation: pulse 1.6s ease-in-out infinite; }
+  .live-timer { font-family: "Cascadia Code", "Consolas", monospace; font-variant-numeric: tabular-nums; font-size: 1.05rem; color: var(--hero-soft); }
+  .live-topic { font-size: 1.3rem; font-family: Georgia, serif; }
+  .live-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    background: var(--accent); color: #fff; border: none; padding: 0.7rem 1.1rem; border-radius: 10px;
+    font-weight: 600; font-size: 0.92rem; margin-top: 0.3rem;
+  }
+  .live-cta:hover { filter: brightness(1.06); }
+  .hero-stats { display: flex; gap: 1.6rem; margin-top: 1.8rem; flex-wrap: wrap; }
+  .hero-stats .v { font-size: 1.05rem; }
+  .hero-stats .k { font-size: 0.68rem; color: var(--hero-soft); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ---------- sections ---------- */
+  main { max-width: 1080px; margin: 0 auto; padding: 3rem 1.6rem 5rem; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.1rem; gap: 1rem; flex-wrap: wrap; }
+  .section-head h2 { font-size: 1.32rem; }
+  .section-head .link { font-size: 0.84rem; color: var(--accent); }
+  section + section { margin-top: 3rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.4rem; }
+  @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.3rem; box-shadow: var(--shadow); }
+
+  .country-row { display: grid; grid-template-columns: 1.5rem 6.5rem 1fr 3rem; align-items: center; gap: 0.6rem; padding: 0.4rem 0; font-size: 0.85rem; }
+  .country-row .bar-track { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .country-row .bar-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+  .country-row .count { text-align: right; color: var(--ink-soft); }
+
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+  .kpi { border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; background: var(--surface); }
+  .kpi .v { font-size: 1.4rem; font-weight: 700; }
+  .kpi .k { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+
+  .carousel { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.4rem; scroll-snap-type: x proximity; }
+  .event-card {
+    scroll-snap-align: start; flex: 0 0 240px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.1rem; box-shadow: var(--shadow);
+  }
+  .event-card .type { font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; }
+  .event-card h3 { font-size: 1.05rem; margin-bottom: 0.35rem; }
+  .event-card .when { font-size: 0.82rem; color: var(--muted); }
+  .event-card button { margin-top: 0.8rem; width: 100%; border: 1px solid var(--border); background: transparent; color: var(--ink); padding: 0.5rem; border-radius: 8px; font-size: 0.84rem; }
+  .event-card button:hover { border-color: var(--accent-line); }
+
+  .testimony-feed { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 700px) { .testimony-feed { grid-template-columns: 1fr; } }
+  .testimony-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.1rem; }
+  .testimony-card .meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .testimony-card p { margin: 0; font-size: 0.9rem; color: var(--ink-soft); }
+  .pill.good { background: var(--good-soft); color: var(--good); font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  footer { text-align: center; padding: 2rem 1.6rem 3rem; color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
+</style>
+
+<nav class="nav">
+  <span class="mark">TAG</span>
+  <div class="nav-right">
+    <select class="lang"><option>Français</option><option>English</option><option>Español</option><option>Português</option></select>
+    <button class="btn-outline">Connexion</button>
+    <button class="icon-btn" id="themeToggle" aria-label="Changer de thème" title="Changer de thème">◐</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <canvas id="globe" width="380" height="380" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <span class="eyebrow"><span class="dot"></span>Intercession continue — 24 h/24, 7 j/7</span>
+    <h1>Une prière ne s'arrête jamais.</h1>
+    <p class="lede">À chaque instant, quelque part dans le monde, une salle TAG est en direct — un autel numérique mondial où des intercesseurs se relaient sans interruption.</p>
+
+    <div class="live-card">
+      <div class="row1">
+        <span class="live-pill"><span class="dot"></span>Salle mondiale — en direct</span>
+        <span class="live-timer num" id="heroTimer">04:12</span>
+      </div>
+      <div class="live-topic" id="heroTopic">Sujet actuel : Nation</div>
+      <button class="live-cta">Rejoindre la prière →</button>
+    </div>
+
+    <div class="hero-stats">
+      <div><div class="v num" id="heroPresence">12 480</div><div class="k">En prière maintenant</div></div>
+      <div><div class="v num">142</div><div class="k">Pays représentés</div></div>
+      <div><div class="v num">6</div><div class="k">Salles ouvertes</div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="overview">
+    <div class="section-head"><h2>Où prie-t-on en ce moment</h2><span class="link">Carte mondiale complète →</span></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div id="countryList"></div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="v num">48 230</div><div class="k">Heures cumulées ce mois</div></div>
+        <div class="kpi"><div class="v num">1 204</div><div class="k">Témoignages publiés</div></div>
+        <div class="kpi"><div class="v num">312</div><div class="k">Communautés actives</div></div>
+        <div class="kpi"><div class="v num">99.98%</div><div class="k">Disponibilité 30 jours</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="events">
+    <div class="section-head"><h2>Prochains événements</h2><span class="link">Tout voir →</span></div>
+    <div class="carousel">
+      <div class="event-card"><div class="type">Veillée</div><h3>Veillée mondiale</h3><div class="when">Samedi 08 août · 20h00 UTC</div><button>S'inscrire</button></div>
+      <div class="event-card"><div class="type">Jeûne</div><h3>Jeûne de 3 jours</h3><div class="when">Lun 10 → Mer 12 août</div><button>S'inscrire</button></div>
+      <div class="event-card"><div class="type">Croisade</div><h3>Croisade Amérique latine</h3><div class="when">Ven 14 août · 19h00 UTC-5</div><button>S'inscrire</button></div>
+      <div class="event-card"><div class="type">Étude biblique</div><h3>Les Psaumes d'intercession</h3><div class="when">Chaque mardi · 18h00 UTC</div><button>S'inscrire</button></div>
+    </div>
+  </section>
+
+  <section id="testimonies">
+    <div class="section-head"><h2>Témoignages récents</h2><span class="link">Voir tous les témoignages →</span></div>
+    <div class="testimony-feed">
+      <div class="testimony-card"><div class="meta"><span class="pill good">Validé</span> ▶ Vidéo — Nigéria</div><p>« Après six mois de traitement, les médecins n'ont plus rien trouvé. Merci à toute la communauté qui a prié avec moi chaque soir. »</p></div>
+      <div class="testimony-card"><div class="meta"><span class="pill good">Validé</span> 📝 Texte — France</div><p>« J'ai retrouvé un emploi trois jours après la veillée de prière pour l'emploi. Dieu est fidèle. »</p></div>
+      <div class="testimony-card"><div class="meta"><span class="pill good">Validé</span> 🎙 Audio — Philippines</div><p>« Notre famille est réconciliée après des années de silence. Cette salle nous a portés. »</p></div>
+      <div class="testimony-card"><div class="meta"><span class="pill good">Validé</span> 🖼 Photo — Brésil</div><p>« Visa accordé après une longue attente. Toute la gloire à Dieu, merci pour vos prières. »</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>TAG — Total Adoration &amp; Global Intercession · Aperçu de plateforme, données de démonstration.</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+
+  /* hero countdown mirrors the prayer room mechanic */
+  var topics = ['Nation', 'Guérison', 'Jeunesse', 'Famille'];
+  var ti = 0, remaining = 45;
+  setInterval(function () {
+    remaining--;
+    if (remaining < 0) { ti = (ti + 1) % topics.length; remaining = 45; document.getElementById('heroTopic').textContent = 'Sujet actuel : ' + topics[ti]; }
+    var m = Math.floor(remaining / 60), s = remaining % 60;
+    document.getElementById('heroTimer').textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+  }, 1000);
+
+  setInterval(function () {
+    document.getElementById('heroPresence').textContent = (12480 + Math.floor(Math.random() * 40) - 15).toLocaleString('fr-FR');
+  }, 4000);
+
+  var countries = [
+    ['🇳🇬', 'Nigéria', 2350], ['🇧🇷', 'Brésil', 1980], ['🇺🇸', 'États-Unis', 1640],
+    ['🇵🇭', 'Philippines', 1120], ['🇫🇷', 'France', 780]
+  ];
+  var max = Math.max.apply(null, countries.map(function (c) { return c[2]; }));
+  var wrap = document.getElementById('countryList');
+  countries.forEach(function (c) {
+    var row = document.createElement('div');
+    row.className = 'country-row';
+    row.innerHTML = '<span>' + c[0] + '</span><span>' + c[1] + '</span>' +
+      '<span class="bar-track"><span class="bar-fill" style="width:' + (c[2] / max * 100) + '%"></span></span>' +
+      '<span class="count num">' + c[2].toLocaleString('fr-FR') + '</span>';
+    wrap.appendChild(row);
+  });
+
+  /* ambient dot-globe behind hero */
+  var canvas = document.getElementById('globe');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height, R = 150;
+  var pts = [];
+  for (var lat = -80; lat <= 80; lat += 10) {
+    var ringR = Math.cos(lat * Math.PI / 180);
+    var count = Math.max(4, Math.round(22 * ringR));
+    for (var i = 0; i < count; i++) pts.push({ lat: lat, lon: (360 / count) * i, bright: Math.random() < 0.08 });
+  }
+  var angle = 0;
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    pts.forEach(function (p) {
+      var lonR = (p.lon + angle) * Math.PI / 180, latR = p.lat * Math.PI / 180;
+      var x = Math.cos(latR) * Math.sin(lonR), z = Math.cos(latR) * Math.cos(lonR), y = Math.sin(latR);
+      if (z < -0.15) return;
+      var sx = W / 2 + x * R, sy = H / 2 - y * R;
+      ctx.beginPath();
+      ctx.arc(sx, sy, p.bright ? 2.8 : 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = p.bright ? '#8B96E6' : 'rgba(255,255,255,0.28)';
+      ctx.fill();
+    });
+  }
+  draw();
+  if (!reduceMotion) setInterval(function () { angle += 0.7; draw(); }, 60);
+})();
+</script>

@@ -1,0 +1,603 @@
+<title>TAG — Écrans (suite)</title>
+<style>
+  :root {
+    --ground: #F7F6F1; --surface: #FFFFFF; --surface-2: #EFEDE3;
+    --ink: #1D2030; --ink-soft: #4B4E5C; --muted: #767A88; --border: #E4E0D4;
+    --accent: #45519C; --accent-ink: #FFFFFF; --accent-soft: #EEF0FA; --accent-line: #C7CCE8;
+    --good: #3C7A5C; --good-soft: #E7F2EC; --bad: #B4483C; --bad-soft: #FBEAE7;
+    --warn: #A9781F; --warn-soft: #F6EEDC;
+    --shadow: 0 1px 2px rgba(30,30,40,.05), 0 16px 32px -18px rgba(30,30,40,.22);
+  }
+  :root[data-theme="dark"] {
+    --ground: #101119; --surface: #191B24; --surface-2: #20222D;
+    --ink: #E8E8EF; --ink-soft: #C2C4D2; --muted: #8B8FA0; --border: #2B2E3A;
+    --accent: #8B96E6; --accent-ink: #12131C; --accent-soft: rgba(139,150,230,.14); --accent-line: #363B57;
+    --good: #6FBE97; --good-soft: rgba(111,190,151,.14); --bad: #E27C71; --bad-soft: rgba(226,124,113,.14);
+    --warn: #E0B767; --warn-soft: rgba(224,183,103,.14);
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 36px -18px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101119; --surface: #191B24; --surface-2: #20222D;
+      --ink: #E8E8EF; --ink-soft: #C2C4D2; --muted: #8B8FA0; --border: #2B2E3A;
+      --accent: #8B96E6; --accent-ink: #12131C; --accent-soft: rgba(139,150,230,.14); --accent-line: #363B57;
+      --good: #6FBE97; --good-soft: rgba(111,190,151,.14); --bad: #E27C71; --bad-soft: rgba(226,124,113,.14);
+      --warn: #E0B767; --warn-soft: rgba(224,183,103,.14);
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 36px -18px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  h1,h2,h3 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", ui-serif, serif; margin: 0; text-wrap: balance; }
+  .num { font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  .topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--ground) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  .topbar-row { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 1.25rem; gap: 1rem; }
+  .brand { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft); width: 2rem; height: 2rem; border-radius: 7px; display: grid; place-items: center; }
+  .icon-btn:hover { color: var(--ink); border-color: var(--accent-line); }
+  .tabs { display: flex; gap: 0.3rem; padding: 0 1.25rem 0.6rem; overflow-x: auto; }
+  .tab { border: none; background: transparent; color: var(--muted); font-size: 0.86rem; padding: 0.4rem 0.8rem; border-radius: 999px; white-space: nowrap; }
+  .tab:hover { color: var(--ink); background: var(--surface-2); }
+  .tab.active { color: var(--accent-ink); background: var(--accent); font-weight: 600; }
+
+  .view { max-width: 920px; margin: 0 auto; padding: 1.8rem 1.25rem 5rem; display: none; }
+  .view.active { display: block; animation: rise .35s ease-out both; }
+  @keyframes rise { from{opacity:0; transform: translateY(6px)} to{opacity:1; transform: translateY(0)} }
+  @media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
+
+  .view-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; flex-wrap: wrap; }
+  .view-head h2 { font-size: 1.5rem; }
+  .view-sub { color: var(--muted); font-size: 0.86rem; margin-top: 0.2rem; }
+
+  .btn { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--border); background: var(--surface); color: var(--ink); padding: 0.5rem 0.9rem; border-radius: 9px; font-size: 0.87rem; }
+  .btn:hover { border-color: var(--accent-line); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { opacity: 0.92; }
+  .btn.small { padding: 0.32rem 0.65rem; font-size: 0.78rem; border-radius: 7px; }
+  .btn.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
+  .btn.danger:hover { background: var(--bad-soft); }
+  .btn.block { width: 100%; justify-content: center; }
+
+  select.field, input.field, textarea.field { border: 1px solid var(--border); background: var(--surface); color: var(--ink); padding: 0.5rem 0.7rem; border-radius: 8px; font-size: 0.87rem; width: 100%; }
+  select.field:focus, input.field:focus, textarea.field:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  label.f-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.3rem; }
+  .field-row { margin-bottom: 0.9rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.2rem; margin-bottom: 1.1rem; box-shadow: var(--shadow); }
+  .pill { font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px; }
+  .pill.neutral { background: var(--surface-2); color: var(--ink-soft); }
+  .pill.accent { background: var(--accent-soft); color: var(--accent); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+  /* ---------- auth ---------- */
+  .auth-wrap { display: flex; justify-content: center; padding: 1.5rem 0; }
+  .auth-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.8rem 1.7rem; box-shadow: var(--shadow); text-align: center; }
+  .auth-card h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .auth-card .sub { color: var(--muted); font-size: 0.86rem; margin-bottom: 1.4rem; }
+  .auth-form { text-align: left; }
+  .auth-error { background: var(--bad-soft); color: var(--bad); font-size: 0.82rem; padding: 0.55rem 0.7rem; border-radius: 8px; margin-bottom: 0.9rem; display: none; }
+  .auth-error.show { display: block; }
+  .auth-success { background: var(--good-soft); color: var(--good); font-size: 0.86rem; padding: 0.8rem; border-radius: 10px; display: none; }
+  .auth-success.show { display: block; }
+  .divider { display: flex; align-items: center; gap: 0.7rem; margin: 1.1rem 0; color: var(--muted); font-size: 0.76rem; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+  .sso-row { display: flex; gap: 0.6rem; }
+  .switch-link { text-align: center; margin-top: 1.1rem; font-size: 0.86rem; color: var(--muted); }
+  .switch-link a { color: var(--accent); cursor: pointer; }
+  .forgot { text-align: right; font-size: 0.8rem; color: var(--accent); cursor: pointer; margin: -0.4rem 0 0.9rem; }
+
+  /* ---------- profil ---------- */
+  .profile-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
+  .avatar-lg { width: 3.4rem; height: 3.4rem; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-family: Georgia, serif; font-size: 1.2rem; }
+  .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.2rem; }
+  .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.3rem; }
+  .badge-chip { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--accent-soft); color: var(--accent); font-size: 0.78rem; padding: 0.3rem 0.65rem; border-radius: 999px; }
+  .progress-track { height: 7px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+  .subtabs { display: flex; gap: 0.4rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+  .subtab { border: none; background: transparent; padding: 0.55rem 0.2rem; margin-right: 1.2rem; color: var(--muted); font-size: 0.88rem; border-bottom: 2px solid transparent; }
+  .subtab.active { color: var(--ink); border-color: var(--accent); font-weight: 600; }
+  .switch { position: relative; display: inline-block; width: 2.4rem; height: 1.4rem; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .track { position: absolute; inset: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; transition: .2s; }
+  .switch .track::before { content: ""; position: absolute; width: 1rem; height: 1rem; left: 2px; top: 1px; background: var(--surface); border-radius: 50%; transition: .2s; box-shadow: var(--shadow); }
+  .switch input:checked + .track { background: var(--accent); border-color: var(--accent); }
+  .switch input:checked + .track::before { transform: translateX(1rem); background: #fff; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .setting-row:last-child { border-bottom: none; }
+
+  /* ---------- communities ---------- */
+  .community-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+  .post { border-bottom: 1px solid var(--border); padding: 0.9rem 0; }
+  .post:last-child { border-bottom: none; }
+  .post-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; }
+  .post-actions { display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+  .post-actions button { background: none; border: none; color: var(--muted); padding: 0; }
+  .post-actions button:hover { color: var(--accent); }
+  .member-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+  .member-row:last-child { border-bottom: none; }
+
+  /* ---------- stats ---------- */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1.3rem; }
+  @media (max-width: 640px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi { border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1rem; background: var(--surface); }
+  .kpi .v { font-size: 1.35rem; font-weight: 700; }
+  .kpi .k { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 0.9rem; height: 140px; padding-top: 1rem; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.4rem; height: 100%; }
+  .bar-col .bar { width: 100%; max-width: 34px; background: var(--accent); border-radius: 6px 6px 2px 2px; }
+  .bar-col .lbl { font-size: 0.72rem; color: var(--muted); text-align: center; }
+  .bar-col .val { font-size: 0.72rem; color: var(--ink-soft); }
+  .sparkline-wrap { padding: 0.4rem 0 0.2rem; }
+
+  /* ---------- notifications ---------- */
+  .notif-row { display: flex; gap: 0.7rem; padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+  .notif-row:last-child { border-bottom: none; }
+  .notif-row.unread { background: var(--accent-soft); margin: 0 -1.2rem; padding: 0.8rem 1.2rem; border-radius: 8px; border-bottom: none; }
+  .notif-icon { font-size: 1.1rem; }
+  .notif-body { flex: 1; }
+  .notif-title { font-size: 0.9rem; }
+  .notif-time { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+  .notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-top: 0.4rem; flex-shrink: 0; }
+
+  /* ---------- admin ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  thead th { text-align: left; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--ink-soft); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  .admin-filters { display: flex; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .admin-filters .field { width: auto; min-width: 160px; }
+
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(10,10,16,0.45); display: none; align-items: center; justify-content: center; z-index: 60; padding: 1rem; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1.5rem; max-width: 360px; width: 100%; box-shadow: var(--shadow); }
+  .modal h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .modal p { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 1.1rem; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+</style>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <span class="brand">TAG</span>
+    <button class="icon-btn" id="themeToggle" aria-label="Changer de thème" title="Changer de thème">◐</button>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-view="auth">Connexion/Inscription</button>
+    <button class="tab" data-view="profile">Profil</button>
+    <button class="tab" data-view="community">Communautés</button>
+    <button class="tab" data-view="stats">Statistiques</button>
+    <button class="tab" data-view="notifs">Notifications</button>
+    <button class="tab" data-view="admin">Administration</button>
+  </div>
+</div>
+
+<!-- ============ CONNEXION / INSCRIPTION ============ -->
+<section class="view active" id="view-auth">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2 id="authTitle">Bienvenue sur TAG</h2>
+      <div class="sub" id="authSub">Connecte-toi pour rejoindre la communauté d'intercession.</div>
+
+      <div class="auth-error" id="authError">Identifiants invalides. Vérifie ton email et ton mot de passe.</div>
+      <div class="auth-success" id="authSuccess">Compte créé — vérifie ta boîte mail pour confirmer ton adresse.</div>
+
+      <form class="auth-form" id="loginForm">
+        <div class="field-row"><label class="f-label">Email</label><input class="field" type="email" id="loginEmail" placeholder="toi@exemple.com"></div>
+        <div class="field-row"><label class="f-label">Mot de passe</label><input class="field" type="password" id="loginPass" placeholder="••••••••"></div>
+        <div class="forgot">Mot de passe oublié ?</div>
+        <button type="submit" class="btn primary block">Se connecter</button>
+        <div class="divider">ou</div>
+        <div class="sso-row">
+          <button type="button" class="btn block">Google</button>
+          <button type="button" class="btn block">Apple</button>
+        </div>
+        <div class="switch-link">Pas de compte ? <a id="toRegister">S'inscrire</a></div>
+      </form>
+
+      <form class="auth-form" id="registerForm" hidden>
+        <div class="field-row"><label class="f-label">Nom affiché</label><input class="field" id="regName" placeholder="Ton prénom"></div>
+        <div class="field-row"><label class="f-label">Email</label><input class="field" type="email" id="regEmail" placeholder="toi@exemple.com"></div>
+        <div class="field-row"><label class="f-label">Mot de passe</label><input class="field" type="password" id="regPass" placeholder="12 caractères minimum"></div>
+        <div class="field-row"><label class="f-label">Langue</label>
+          <select class="field" id="regLang"><option>Français</option><option>English</option><option>Español</option><option>Português</option></select>
+        </div>
+        <button type="submit" class="btn primary block">Créer mon compte</button>
+        <div class="switch-link">Déjà un compte ? <a id="toLogin">Se connecter</a></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROFIL ============ -->
+<section class="view" id="view-profile">
+  <div class="view-head"><div><h2>Profil</h2><div class="view-sub">Statistiques personnelles, historique, préférences.</div></div></div>
+
+  <div class="profile-head">
+    <div class="avatar-lg">MK</div>
+    <div>
+      <div style="font-weight:600; font-size:1.05rem;">Marie K.</div>
+      <div style="color:var(--muted); font-size:0.85rem;">Cellule Espoir Paris · Français</div>
+    </div>
+  </div>
+
+  <div class="profile-stats">
+    <div class="kpi"><div class="v num">🔥 14</div><div class="k">Jours consécutifs</div></div>
+    <div class="kpi"><div class="v num">32h</div><div class="k">Ce mois-ci</div></div>
+    <div class="kpi"><div class="v num">3</div><div class="k">Témoignages publiés</div></div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex; justify-content:space-between; font-size:0.82rem; color:var(--muted); margin-bottom:0.4rem;">
+      <span>Objectif mensuel</span><span class="num">32h / 40h</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:80%;"></div></div>
+  </div>
+
+  <div class="badge-row">
+    <span class="badge-chip">🏅 Fidèle</span>
+    <span class="badge-chip">🌍 Intercesseur des Nations</span>
+    <span class="badge-chip">🌙 Veilleur de nuit</span>
+  </div>
+
+  <div class="subtabs" id="profileTabs">
+    <button class="subtab active" data-sub="requests">Mes demandes</button>
+    <button class="subtab" data-sub="testimonies">Mes témoignages</button>
+    <button class="subtab" data-sub="settings">Réglages</button>
+  </div>
+
+  <div id="profile-requests">
+    <div class="panel"><div class="pill accent">En cours</div><div style="margin-top:0.4rem; font-size:0.9rem; color:var(--ink-soft);">Guérison — soumise il y a 3 jours</div></div>
+    <div class="panel"><div class="pill good">Répondu</div><div style="margin-top:0.4rem; font-size:0.9rem; color:var(--ink-soft);">Emploi — soumise il y a 3 semaines</div></div>
+  </div>
+  <div id="profile-testimonies" hidden>
+    <div class="panel"><div class="pill good">Validé</div><div style="margin-top:0.4rem; font-size:0.9rem; color:var(--ink-soft);">« Réconciliation familiale » — publié</div></div>
+  </div>
+  <div id="profile-settings" hidden>
+    <div class="panel">
+      <div class="setting-row">Notifications — début de créneau suivi <label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+      <div class="setting-row">Notifications — réponse à une demande <label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+      <div class="setting-row">Notifications — WhatsApp <label class="switch"><input type="checkbox"><span class="track"></span></label></div>
+      <div class="setting-row">Rappel de prière quotidien <label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+    </div>
+    <button class="btn danger small">Exporter / supprimer mes données</button>
+  </div>
+</section>
+
+<!-- ============ COMMUNAUTÉS ============ -->
+<section class="view" id="view-community">
+  <div class="view-head">
+    <div><h2>Cellule "Espoir Paris"</h2><div class="view-sub">14 membres · rattachée à Église Bethel Paris</div></div>
+    <span class="pill accent">Membre</span>
+  </div>
+
+  <div class="subtabs" id="communityTabs">
+    <button class="subtab active" data-sub="feed">Fil</button>
+    <button class="subtab" data-sub="announce">Annonces</button>
+    <button class="subtab" data-sub="members">Membres</button>
+  </div>
+
+  <div id="community-feed">
+    <div class="panel">
+      <textarea class="field" id="postText" rows="2" placeholder="Partager quelque chose avec la cellule..."></textarea>
+      <div style="display:flex; justify-content:flex-end; margin-top:0.6rem;"><button class="btn primary small" id="postSubmit">Publier</button></div>
+    </div>
+    <div class="panel" id="feedList"></div>
+  </div>
+
+  <div id="community-announce" hidden>
+    <div class="panel"><strong>📌 Réunion vendredi 19h</strong><div class="card-text" style="color:var(--ink-soft); font-size:0.88rem; margin-top:0.3rem;">Rendez-vous chez la famille Nguyen pour la prière hebdomadaire.</div></div>
+  </div>
+
+  <div id="community-members" hidden>
+    <div class="panel">
+      <div class="member-row"><span>Pasteur J. Dupont</span><span class="pill accent">Responsable</span></div>
+      <div class="member-row"><span>Marie K.</span><span class="pill neutral">Membre</span></div>
+      <div class="member-row"><span>David O.</span><span class="pill neutral">Membre</span></div>
+      <div class="member-row"><span>Grace T.</span><span class="pill neutral">Membre</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATISTIQUES ============ -->
+<section class="view" id="view-stats">
+  <div class="view-head">
+    <div><h2>Statistiques</h2><div class="view-sub">Vue Responsable — alimentée par l'IA Analyse.</div></div>
+    <select class="field" style="max-width:180px;"><option>7 derniers jours</option><option>30 derniers jours</option><option>Ce trimestre</option></select>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="v num">2 840h</div><div class="k">Heures de prière</div></div>
+    <div class="kpi"><div class="v num">18 204</div><div class="k">Participants uniques</div></div>
+    <div class="kpi"><div class="v num">61%</div><div class="k">Rétention J7</div></div>
+    <div class="kpi"><div class="v num">+12%</div><div class="k">Croissance communauté</div></div>
+  </div>
+
+  <div class="panel">
+    <div style="font-size:0.9rem; font-weight:600; margin-bottom:0.3rem;">Thèmes les plus demandés</div>
+    <div class="bar-chart" id="themeChart"></div>
+  </div>
+
+  <div class="panel">
+    <div style="font-size:0.9rem; font-weight:600; margin-bottom:0.3rem;">Heures de prière — 7 derniers jours</div>
+    <div class="sparkline-wrap"><svg id="sparkline" width="100%" height="90" viewBox="0 0 560 90" preserveAspectRatio="none"></svg></div>
+  </div>
+</section>
+
+<!-- ============ NOTIFICATIONS ============ -->
+<section class="view" id="view-notifs">
+  <div class="view-head">
+    <div><h2>Notifications</h2><div class="view-sub">4 non lues</div></div>
+    <button class="btn small" id="markAllRead">Tout marquer lu</button>
+  </div>
+  <div class="panel" id="notifList" style="padding: 0.4rem 1.2rem;"></div>
+</section>
+
+<!-- ============ ADMINISTRATION ============ -->
+<section class="view" id="view-admin">
+  <div class="view-head"><div><h2>Administration</h2><div class="view-sub">Utilisateurs, contenus signalés, configuration IA.</div></div></div>
+
+  <div class="subtabs" id="adminTabs">
+    <button class="subtab active" data-sub="users">Utilisateurs</button>
+    <button class="subtab" data-sub="flagged">Contenus signalés</button>
+    <button class="subtab" data-sub="ai">IA</button>
+  </div>
+
+  <div id="admin-users">
+    <div class="admin-filters">
+      <input class="field" placeholder="Rechercher un utilisateur..." style="max-width:220px;">
+      <select class="field"><option>Tous les statuts</option><option>Actif</option><option>Suspendu</option></select>
+      <select class="field"><option>Tous les rôles</option><option>Intercesseur</option><option>Modérateur</option><option>Pasteur</option></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nom</th><th>Rôle</th><th>Statut</th><th>Depuis</th><th></th></tr></thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="admin-flagged" hidden>
+    <div class="panel">
+      <div class="pill warn">Signalé</div>
+      <div style="margin-top:0.4rem; font-size:0.9rem; color:var(--ink-soft);">Message dans le chat de la Salle mondiale — signalé par 2 utilisateurs pour spam.</div>
+      <div style="display:flex; gap:0.5rem; margin-top:0.6rem;"><button class="btn small">Ignorer</button><button class="btn small danger">Supprimer</button></div>
+    </div>
+  </div>
+
+  <div id="admin-ai" hidden>
+    <div class="panel">
+      <div class="setting-row">IA Intercession — animation de secours <label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+      <div class="setting-row">IA Modératrice — quarantaine automatique <label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+      <div class="setting-row">IA Communication — auto-publish réseaux sociaux <label class="switch"><input type="checkbox"><span class="track"></span></label></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-backdrop" id="suspendModal">
+  <div class="modal">
+    <h3>Suspendre ce compte ?</h3>
+    <p id="suspendText">Cette action empêche l'utilisateur de se connecter jusqu'à réactivation manuelle. Elle sera journalisée dans l'audit.</p>
+    <div class="modal-actions">
+      <button class="btn small" id="suspendCancel">Annuler</button>
+      <button class="btn small danger" id="suspendConfirm">Suspendre</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+
+  var tabs = document.querySelectorAll('.tab');
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      tabs.forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      document.getElementById('view-' + t.dataset.view).classList.add('active');
+    });
+  });
+
+  function wireSubtabs(groupId, panelPrefix) {
+    var group = document.getElementById(groupId);
+    if (!group) return;
+    group.querySelectorAll('.subtab').forEach(function (b) {
+      b.addEventListener('click', function () {
+        group.querySelectorAll('.subtab').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        group.querySelectorAll('.subtab').forEach(function (x) {
+          var el = document.getElementById(panelPrefix + '-' + x.dataset.sub);
+          if (el) el.hidden = x !== b;
+        });
+      });
+    });
+  }
+  wireSubtabs('profileTabs', 'profile');
+  wireSubtabs('communityTabs', 'community');
+  wireSubtabs('adminTabs', 'admin');
+
+  /* ---------- auth ---------- */
+  var loginForm = document.getElementById('loginForm'), registerForm = document.getElementById('registerForm');
+  var authTitle = document.getElementById('authTitle'), authSub = document.getElementById('authSub');
+  document.getElementById('toRegister').addEventListener('click', function () {
+    loginForm.hidden = true; registerForm.hidden = false;
+    authTitle.textContent = 'Rejoindre TAG'; authSub.textContent = "Crée ton compte pour participer aux salles et suivre tes demandes.";
+    document.getElementById('authError').classList.remove('show'); document.getElementById('authSuccess').classList.remove('show');
+  });
+  document.getElementById('toLogin').addEventListener('click', function () {
+    registerForm.hidden = true; loginForm.hidden = false;
+    authTitle.textContent = 'Bienvenue sur TAG'; authSub.textContent = "Connecte-toi pour rejoindre la communauté d'intercession.";
+    document.getElementById('authSuccess').classList.remove('show');
+  });
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = document.getElementById('authError');
+    if (!document.getElementById('loginEmail').value || !document.getElementById('loginPass').value) {
+      err.textContent = 'Merci de renseigner ton email et ton mot de passe.'; err.classList.add('show'); return;
+    }
+    err.textContent = 'Identifiants invalides. Vérifie ton email et ton mot de passe.'; err.classList.add('show');
+  });
+  registerForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!document.getElementById('regEmail').value || !document.getElementById('regPass').value) return;
+    registerForm.hidden = true;
+    document.getElementById('authSuccess').classList.add('show');
+    authTitle.textContent = 'Presque prêt !'; authSub.textContent = '';
+  });
+
+  /* ---------- community feed ---------- */
+  var feedPosts = [
+    { who: 'Pasteur J. Dupont', time: 'il y a 2h', text: 'Merci à tous ceux qui étaient présents hier soir, quelle belle soirée de prière !', reacts: 8 },
+    { who: 'David O.', time: 'il y a 1j', text: 'Je propose qu’on ajoute un créneau spécial pour les examens des jeunes cette semaine.', reacts: 4 }
+  ];
+  function renderFeed() {
+    var wrap = document.getElementById('feedList');
+    wrap.innerHTML = '';
+    feedPosts.forEach(function (p) {
+      var d = document.createElement('div');
+      d.className = 'post';
+      d.innerHTML = '<div class="post-meta"><strong style="color:var(--ink);">' + p.who + '</strong> · ' + p.time + '</div>' +
+        '<div style="font-size:0.9rem; color:var(--ink-soft);">' + p.text + '</div>' +
+        '<div class="post-actions"><button data-react>❤️ ' + p.reacts + '</button><button>💬 Répondre</button></div>';
+      wrap.appendChild(d);
+    });
+    wrap.querySelectorAll('[data-react]').forEach(function (b, i) {
+      b.addEventListener('click', function () { feedPosts[i].reacts++; renderFeed(); });
+    });
+  }
+  renderFeed();
+  document.getElementById('postSubmit').addEventListener('click', function () {
+    var txt = document.getElementById('postText').value.trim();
+    if (!txt) return;
+    feedPosts.unshift({ who: 'Marie K.', time: 'à l’instant', text: txt, reacts: 0 });
+    document.getElementById('postText').value = '';
+    renderFeed();
+  });
+
+  /* ---------- stats charts ---------- */
+  var themes = [['Famille', 62], ['Santé', 54], ['Nation', 47], ['Emploi', 38], ['Guérison', 33]];
+  var maxTheme = Math.max.apply(null, themes.map(function (t) { return t[1]; }));
+  var chart = document.getElementById('themeChart');
+  themes.forEach(function (t) {
+    var col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = '<div class="val num">' + t[1] + '</div><div class="bar" style="height:' + (t[1] / maxTheme * 100) + '%"></div><div class="lbl">' + t[0] + '</div>';
+    chart.appendChild(col);
+  });
+
+  var days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  var vals = [340, 410, 380, 460, 520, 610, 470];
+  var w = 560, h = 90, pad = 8;
+  var maxV = Math.max.apply(null, vals), minV = Math.min.apply(null, vals);
+  var stepX = (w - pad * 2) / (vals.length - 1);
+  var pts = vals.map(function (v, i) {
+    var x = pad + i * stepX;
+    var y = h - pad - ((v - minV) / (maxV - minV || 1)) * (h - pad * 2);
+    return [x, y];
+  });
+  var svg = document.getElementById('sparkline');
+  var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#45519C';
+  var line = pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ');
+  var area = 'M' + pad + ',' + h + ' L' + line + ' L' + (w - pad) + ',' + h + ' Z';
+  var ns = 'http://www.w3.org/2000/svg';
+  var pathArea = document.createElementNS(ns, 'path');
+  pathArea.setAttribute('d', area); pathArea.setAttribute('fill', accent); pathArea.setAttribute('opacity', '0.12');
+  var pathLine = document.createElementNS(ns, 'polyline');
+  pathLine.setAttribute('points', line); pathLine.setAttribute('fill', 'none'); pathLine.setAttribute('stroke', accent); pathLine.setAttribute('stroke-width', '2');
+  svg.appendChild(pathArea); svg.appendChild(pathLine);
+  pts.forEach(function (p, i) {
+    var c = document.createElementNS(ns, 'circle');
+    c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r', i === pts.length - 1 ? 3.5 : 2.2);
+    c.setAttribute('fill', accent);
+    svg.appendChild(c);
+  });
+
+  /* ---------- notifications ---------- */
+  var notifs = [
+    { icon: '🕒', title: 'Le sujet "Nation" démarre dans la salle mondiale', time: 'il y a 2 min', unread: true },
+    { icon: '✅', title: 'Votre demande "Emploi" a reçu une réponse', time: 'il y a 1h', unread: true },
+    { icon: '🎉', title: 'Nouveau témoignage validé dans votre cellule', time: 'il y a 3h', unread: true },
+    { icon: '📅', title: 'Veillée mondiale — inscriptions ouvertes', time: 'hier', unread: true },
+    { icon: '🎂', title: 'Anniversaire de David O. aujourd’hui', time: 'hier', unread: false }
+  ];
+  function renderNotifs() {
+    var wrap = document.getElementById('notifList');
+    wrap.innerHTML = '';
+    notifs.forEach(function (n, i) {
+      var row = document.createElement('div');
+      row.className = 'notif-row' + (n.unread ? ' unread' : '');
+      row.innerHTML = '<span class="notif-icon">' + n.icon + '</span>' +
+        '<div class="notif-body"><div class="notif-title">' + n.title + '</div><div class="notif-time">' + n.time + '</div></div>' +
+        (n.unread ? '<span class="notif-dot" data-read="' + i + '" title="Marquer lu"></span>' : '');
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-read]').forEach(function (d) {
+      d.style.cursor = 'pointer';
+      d.addEventListener('click', function () { notifs[Number(d.dataset.read)].unread = false; renderNotifs(); updateUnreadCount(); });
+    });
+  }
+  function updateUnreadCount() {
+    var n = notifs.filter(function (x) { return x.unread; }).length;
+    document.querySelector('#view-notifs .view-sub').textContent = n + ' non lue' + (n === 1 ? '' : 's');
+  }
+  renderNotifs(); updateUnreadCount();
+  document.getElementById('markAllRead').addEventListener('click', function () {
+    notifs.forEach(function (n) { n.unread = false; });
+    renderNotifs(); updateUnreadCount();
+  });
+
+  /* ---------- admin users ---------- */
+  var users = [
+    { name: 'Ana Ferreira', role: 'Intercesseur', status: 'Actif', since: '2025' },
+    { name: 'David Okafor', role: 'Modérateur', status: 'Actif', since: '2024' },
+    { name: 'Grace Tan', role: 'Intercesseur', status: 'Actif', since: '2026' },
+    { name: 'Marc Lefèvre', role: 'Intercesseur', status: 'Suspendu', since: '2023' },
+    { name: 'Pasteur J. Dupont', role: 'Pasteur', status: 'Actif', since: '2022' }
+  ];
+  var pendingSuspendIndex = null;
+  function renderUsers() {
+    var body = document.getElementById('usersTable');
+    body.innerHTML = '';
+    users.forEach(function (u, i) {
+      var tr = document.createElement('tr');
+      var pill = u.status === 'Actif' ? 'good' : 'bad';
+      tr.innerHTML = '<td style="color:var(--ink);">' + u.name + '</td><td>' + u.role + '</td>' +
+        '<td><span class="pill ' + pill + '">' + u.status + '</span></td><td class="num">' + u.since + '</td>' +
+        '<td>' + (u.status === 'Actif' ? '<button class="btn small danger" data-suspend="' + i + '">Suspendre</button>' : '<button class="btn small" data-reactivate="' + i + '">Réactiver</button>') + '</td>';
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('[data-suspend]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        pendingSuspendIndex = Number(b.dataset.suspend);
+        document.getElementById('suspendText').textContent = 'Suspendre ' + users[pendingSuspendIndex].name + ' empêche la connexion jusqu’à réactivation manuelle. Action journalisée dans l’audit.';
+        document.getElementById('suspendModal').classList.add('show');
+      });
+    });
+    body.querySelectorAll('[data-reactivate]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        users[Number(b.dataset.reactivate)].status = 'Actif';
+        renderUsers();
+      });
+    });
+  }
+  renderUsers();
+  document.getElementById('suspendCancel').addEventListener('click', function () {
+    document.getElementById('suspendModal').classList.remove('show');
+  });
+  document.getElementById('suspendConfirm').addEventListener('click', function () {
+    if (pendingSuspendIndex !== null) users[pendingSuspendIndex].status = 'Suspendu';
+    document.getElementById('suspendModal').classList.remove('show');
+    renderUsers();
+  });
+})();
+</script>

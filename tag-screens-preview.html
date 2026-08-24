@@ -1,0 +1,594 @@
+<title>TAG — Écrans</title>
+<style>
+  :root {
+    --ground: #F7F6F1; --surface: #FFFFFF; --surface-2: #EFEDE3;
+    --ink: #1D2030; --ink-soft: #4B4E5C; --muted: #767A88; --border: #E4E0D4;
+    --accent: #45519C; --accent-ink: #FFFFFF; --accent-soft: #EEF0FA; --accent-line: #C7CCE8;
+    --good: #3C7A5C; --good-soft: #E7F2EC; --bad: #B4483C; --bad-soft: #FBEAE7;
+    --shadow: 0 1px 2px rgba(30,30,40,.05), 0 16px 32px -18px rgba(30,30,40,.22);
+  }
+  :root[data-theme="dark"] {
+    --ground: #101119; --surface: #191B24; --surface-2: #20222D;
+    --ink: #E8E8EF; --ink-soft: #C2C4D2; --muted: #8B8FA0; --border: #2B2E3A;
+    --accent: #8B96E6; --accent-ink: #12131C; --accent-soft: rgba(139,150,230,.14); --accent-line: #363B57;
+    --good: #6FBE97; --good-soft: rgba(111,190,151,.14); --bad: #E27C71; --bad-soft: rgba(226,124,113,.14);
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 36px -18px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101119; --surface: #191B24; --surface-2: #20222D;
+      --ink: #E8E8EF; --ink-soft: #C2C4D2; --muted: #8B8FA0; --border: #2B2E3A;
+      --accent: #8B96E6; --accent-ink: #12131C; --accent-soft: rgba(139,150,230,.14); --accent-line: #363B57;
+      --good: #6FBE97; --good-soft: rgba(111,190,151,.14); --bad: #E27C71; --bad-soft: rgba(226,124,113,.14);
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 36px -18px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  h1,h2,h3 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", ui-serif, serif; margin: 0; text-wrap: balance; }
+  .num { font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  /* top bar + tabs */
+  .topbar {
+    position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+  }
+  .topbar-row { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 1.25rem; gap: 1rem; }
+  .brand { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    width: 2rem; height: 2rem; border-radius: 7px; display: grid; place-items: center;
+  }
+  .icon-btn:hover { color: var(--ink); border-color: var(--accent-line); }
+  .tabs { display: flex; gap: 0.3rem; padding: 0 1.25rem 0.6rem; overflow-x: auto; }
+  .tab {
+    border: none; background: transparent; color: var(--muted); font-size: 0.88rem;
+    padding: 0.4rem 0.85rem; border-radius: 999px; white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink); background: var(--surface-2); }
+  .tab.active { color: var(--accent-ink); background: var(--accent); font-weight: 600; }
+
+  .view { max-width: 880px; margin: 0 auto; padding: 1.8rem 1.25rem 5rem; display: none; }
+  .view.active { display: block; animation: rise .35s ease-out both; }
+  @keyframes rise { from{opacity:0; transform: translateY(6px)} to{opacity:1; transform: translateY(0)} }
+  @media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
+
+  .view-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; flex-wrap: wrap; }
+  .view-head h2 { font-size: 1.5rem; }
+  .view-sub { color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); padding: 0.5rem 0.9rem; border-radius: 9px; font-size: 0.87rem;
+  }
+  .btn:hover { border-color: var(--accent-line); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { opacity: 0.92; }
+  .btn.small { padding: 0.32rem 0.65rem; font-size: 0.78rem; border-radius: 7px; }
+  .btn.ghost { background: transparent; }
+
+  select.field, input.field, textarea.field {
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+    padding: 0.5rem 0.7rem; border-radius: 8px; font-size: 0.87rem; width: 100%;
+  }
+  select.field:focus, input.field:focus, textarea.field:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  label.f-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.3rem; }
+  .field-row { display: grid; gap: 0.9rem; margin-bottom: 0.9rem; }
+  .field-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .field-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 560px) { .field-row.cols-2, .field-row.cols-3 { grid-template-columns: 1fr; } }
+  .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .radio-group label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.87rem; }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.1rem; margin-bottom: 1.1rem; box-shadow: var(--shadow);
+  }
+  .panel-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.95rem 1.05rem; margin-bottom: 0.7rem; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
+  .card-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.3rem; flex-wrap: wrap; }
+  .card-text { color: var(--ink-soft); font-size: 0.92rem; margin: 0.3rem 0 0.5rem; }
+
+  .pill { font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px; }
+  .pill.neutral { background: var(--surface-2); color: var(--ink-soft); }
+  .pill.accent { background: var(--accent-soft); color: var(--accent); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+
+  .empty { color: var(--muted); font-size: 0.88rem; padding: 1.4rem 0; text-align: center; }
+
+  /* calendar */
+  .calendar-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+  .calendar-toggle button { border: none; background: var(--surface); padding: 0.4rem 0.8rem; font-size: 0.82rem; color: var(--ink-soft); }
+  .calendar-toggle button.active { background: var(--accent); color: var(--accent-ink); }
+  .timeline { border-left: 2px solid var(--accent-line); margin-left: 0.4rem; }
+  .slot-row { position: relative; padding: 0.7rem 0 0.7rem 1.3rem; }
+  .slot-row::before { content: ""; position: absolute; left: -5px; top: 1.15rem; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .slot-time { font-size: 0.76rem; color: var(--muted); }
+  .slot-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.15rem; }
+  .slot-head .t { font-weight: 600; }
+  .slot-leader { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+  .placeholder-view { text-align: center; color: var(--muted); padding: 3rem 1rem; border: 1px dashed var(--border); border-radius: 12px; font-size: 0.9rem; }
+
+  /* world map */
+  .map-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.7rem; margin-bottom: 1.2rem; }
+  @media (max-width: 640px) { .map-kpis { grid-template-columns: repeat(2, 1fr); } }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 0.9rem; }
+  .kpi .v { font-size: 1.3rem; font-weight: 700; }
+  .kpi .k { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .globe-wrap { display: flex; justify-content: center; margin-bottom: 1rem; }
+  .country-row { display: grid; grid-template-columns: 1.6rem 8rem 1fr 3.4rem; align-items: center; gap: 0.6rem; padding: 0.4rem 0; font-size: 0.86rem; }
+  .country-row .bar-track { height: 7px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .country-row .bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .6s ease; }
+  .country-row .count { text-align: right; color: var(--ink-soft); }
+</style>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <span class="brand">TAG</span>
+    <button class="icon-btn" id="themeToggle" aria-label="Changer de thème" title="Changer de thème">◐</button>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-view="requests">Demandes de prière</button>
+    <button class="tab" data-view="testimonies">Témoignages</button>
+    <button class="tab" data-view="calendar">Calendrier</button>
+    <button class="tab" data-view="map">Carte mondiale</button>
+  </div>
+</div>
+
+<!-- ============ DEMANDES DE PRIÈRE ============ -->
+<section class="view active" id="view-requests">
+  <div class="view-head">
+    <div>
+      <h2>Demandes de prière</h2>
+      <div class="view-sub">Soumission, filtrage, promotion en sujet collectif par un modérateur.</div>
+    </div>
+    <button class="btn primary" id="btnNewRequest">+ Nouvelle demande</button>
+  </div>
+
+  <div class="panel" id="requestForm" hidden>
+    <div class="field-row cols-2">
+      <div>
+        <label class="f-label">Catégorie</label>
+        <select class="field" id="reqCategory">
+          <option>Santé</option><option>Famille</option><option>Emploi</option>
+          <option>Mariage</option><option>Études</option><option>Visa</option>
+          <option>Délivrance</option><option>Autre</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Confidentialité</label>
+        <div class="radio-group">
+          <label><input type="radio" name="conf" value="Anonyme" checked> Anonyme</label>
+          <label><input type="radio" name="conf" value="Privé"> Privé</label>
+          <label><input type="radio" name="conf" value="Public"> Public</label>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="f-label">Description</label>
+        <textarea class="field" id="reqText" rows="2" placeholder="Décris ta demande de prière..."></textarea>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn ghost" id="reqCancel">Annuler</button>
+      <button class="btn primary" id="reqSubmit">Envoyer la demande</button>
+    </div>
+  </div>
+
+  <div class="view-head" style="margin-bottom:0.6rem;">
+    <select class="field" id="reqFilter" style="max-width: 220px;">
+      <option value="all">Tous les statuts</option>
+      <option value="Nouveau">Nouveau</option>
+      <option value="Assigné">Assigné</option>
+      <option value="Répondu">Répondu</option>
+    </select>
+  </div>
+  <div id="requestList"></div>
+</section>
+
+<!-- ============ TÉMOIGNAGES ============ -->
+<section class="view" id="view-testimonies">
+  <div class="view-head">
+    <div>
+      <h2>Témoignages</h2>
+      <div class="view-sub">Publication multi-format, modération avant diffusion.</div>
+    </div>
+    <button class="btn primary" id="btnNewTestimony">+ Partager un témoignage</button>
+  </div>
+
+  <div class="panel" id="testimonyForm" hidden>
+    <div class="field-row cols-2">
+      <div>
+        <label class="f-label">Format</label>
+        <select class="field" id="tstType">
+          <option>Texte</option><option>Audio</option><option>Vidéo</option><option>Photo</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Titre</label>
+        <input class="field" id="tstTitle" placeholder="Ex. Guérison, Emploi trouvé...">
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="f-label">Récit</label>
+        <textarea class="field" id="tstText" rows="2" placeholder="Raconte ce que Dieu a fait..."></textarea>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn ghost" id="tstCancel">Annuler</button>
+      <button class="btn primary" id="tstSubmit">Soumettre à modération</button>
+    </div>
+  </div>
+
+  <div id="testimonyList"></div>
+</section>
+
+<!-- ============ CALENDRIER ============ -->
+<section class="view" id="view-calendar">
+  <div class="view-head">
+    <div>
+      <h2>Calendrier — Jeudi 06 août 2026</h2>
+      <div class="view-sub">Programme de la salle mondiale, créneaux successifs.</div>
+    </div>
+    <div class="calendar-toggle" id="calToggle">
+      <button class="active" data-mode="day">Jour</button>
+      <button data-mode="week">Semaine</button>
+      <button data-mode="month">Mois</button>
+    </div>
+  </div>
+
+  <div id="calDay">
+    <div class="timeline" id="slotList"></div>
+
+    <div class="panel" id="slotForm" hidden style="margin-top:1rem;">
+      <div class="field-row cols-3">
+        <div><label class="f-label">Début</label><input class="field" id="slotStart" placeholder="08:20"></div>
+        <div><label class="f-label">Fin</label><input class="field" id="slotEnd" placeholder="08:25"></div>
+        <div>
+          <label class="f-label">Catégorie</label>
+          <select class="field" id="slotCategory">
+            <option>Famille</option><option>Nation</option><option>Guérison</option>
+            <option>Jeunesse</option><option>Église</option><option>Urgence</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div><label class="f-label">Titre du créneau</label><input class="field" id="slotTitle" placeholder="Ex. Prière pour les familles"></div>
+      </div>
+      <div class="panel-actions">
+        <button class="btn ghost" id="slotCancel">Annuler</button>
+        <button class="btn primary" id="slotSubmit">Ajouter au programme</button>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:1.1rem; flex-wrap: wrap; gap: 0.7rem;">
+      <button class="btn" id="btnAddSlot">+ Créneau</button>
+      <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; color: var(--muted);">
+        Répétition :
+        <select class="field" id="recurrence" style="width:auto;">
+          <option>Aucune</option><option>Quotidien</option><option>Hebdomadaire</option><option>Mensuel</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="placeholder-view" id="calWeek" hidden>Vue semaine — aperçu simplifié pour cette démonstration. Le programme détaillé reste géré créneau par créneau en vue Jour.</div>
+  <div class="placeholder-view" id="calMonth" hidden>Vue mois — aperçu simplifié pour cette démonstration. Utile pour visualiser les programmes récurrents sur plusieurs semaines.</div>
+</section>
+
+<!-- ============ CARTE MONDIALE ============ -->
+<section class="view" id="view-map">
+  <div class="view-head">
+    <div>
+      <h2>Carte mondiale</h2>
+      <div class="view-sub">Agrégats par pays uniquement — jamais de position individuelle.</div>
+    </div>
+    <select class="field" id="mapFilter" style="max-width: 220px;">
+      <option value="all">Tous les événements</option>
+      <option value="vigil">Veillée mondiale</option>
+      <option value="crusade">Croisade Amérique latine</option>
+    </select>
+  </div>
+
+  <div class="map-kpis">
+    <div class="kpi"><div class="v num" id="kpiPresence">12 480</div><div class="k">En prière</div></div>
+    <div class="kpi"><div class="v num" id="kpiCountries">142</div><div class="k">Pays</div></div>
+    <div class="kpi"><div class="v num" id="kpiRooms">6</div><div class="k">Salles ouvertes</div></div>
+    <div class="kpi"><div class="v num" id="kpiTz">14</div><div class="k">Fuseaux actifs</div></div>
+  </div>
+
+  <div class="globe-wrap"><canvas id="globe" width="220" height="220" aria-hidden="true"></canvas></div>
+
+  <div id="countryList"></div>
+</section>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  document.getElementById('themeToggle').addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---------- tabs ---------- */
+  var tabs = document.querySelectorAll('.tab');
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      tabs.forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      document.getElementById('view-' + t.dataset.view).classList.add('active');
+    });
+  });
+
+  /* ---------- Demandes de prière ---------- */
+  var requests = [
+    { id: 1, category: 'Santé', conf: 'Anonyme', text: "Prière pour une guérison rapide avant une opération prévue la semaine prochaine.", status: 'En cours' },
+    { id: 2, category: 'Emploi', conf: 'Public', text: "Marie K. — recherche un emploi depuis 4 mois, prions pour une porte ouverte.", status: 'Nouveau' },
+    { id: 3, category: 'Mariage', conf: 'Privé', text: "Restauration d'un couple traversant une période difficile.", status: 'Assigné' },
+    { id: 4, category: 'Visa', conf: 'Anonyme', text: "Démarche de visa en cours, prière pour la faveur et la patience.", status: 'Répondu' }
+  ];
+  var reqIdSeq = 5;
+
+  function renderRequests() {
+    var filter = document.getElementById('reqFilter').value;
+    var list = document.getElementById('requestList');
+    list.innerHTML = '';
+    var filtered = requests.filter(function (r) { return filter === 'all' || r.status === filter; });
+    if (!filtered.length) { list.innerHTML = '<div class="empty">Aucune demande pour ce filtre.</div>'; return; }
+    filtered.forEach(function (r) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      var icon = r.conf === 'Anonyme' ? '🔒' : r.conf === 'Privé' ? '🔐' : '👤';
+      var pillClass = r.status === 'Nouveau' ? 'accent' : r.status === 'Répondu' ? 'good' : 'neutral';
+      card.innerHTML =
+        '<div class="card-meta">' + icon + ' ' + r.conf + ' · ' + r.category + '<span class="pill ' + pillClass + '">' + r.status + '</span></div>' +
+        '<div class="card-text">' + r.text + '</div>' +
+        (r.status === 'Nouveau' ? '<button class="btn small" data-promote="' + r.id + '">Transformer en sujet collectif</button>' : '');
+      list.appendChild(card);
+    });
+    list.querySelectorAll('[data-promote]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = Number(btn.dataset.promote);
+        requests.forEach(function (r) { if (r.id === id) r.status = 'Assigné'; });
+        renderRequests();
+      });
+    });
+  }
+  document.getElementById('reqFilter').addEventListener('change', renderRequests);
+  document.getElementById('btnNewRequest').addEventListener('click', function () {
+    document.getElementById('requestForm').hidden = false;
+  });
+  document.getElementById('reqCancel').addEventListener('click', function () {
+    document.getElementById('requestForm').hidden = true;
+  });
+  document.getElementById('reqSubmit').addEventListener('click', function () {
+    var text = document.getElementById('reqText').value.trim();
+    if (!text) { document.getElementById('reqText').focus(); return; }
+    var conf = document.querySelector('input[name="conf"]:checked').value;
+    requests.unshift({ id: reqIdSeq++, category: document.getElementById('reqCategory').value, conf: conf, text: text, status: 'Nouveau' });
+    document.getElementById('reqText').value = '';
+    document.getElementById('requestForm').hidden = true;
+    document.getElementById('reqFilter').value = 'all';
+    renderRequests();
+  });
+  renderRequests();
+
+  /* ---------- Témoignages ---------- */
+  var testimonies = [
+    { id: 1, type: 'Vidéo', title: 'Guérison totale après 6 mois', status: 'Validé', reason: null },
+    { id: 2, type: 'Texte', title: 'Emploi trouvé après la veillée de prière', status: 'En attente', reason: null },
+    { id: 3, type: 'Audio', title: 'Réconciliation familiale', status: 'Rejeté', reason: 'Contenu incomplet, à préciser avant republication.' }
+  ];
+  var tstIdSeq = 4;
+  var typeIcon = { 'Texte': '📝', 'Audio': '🎙', 'Vidéo': '▶', 'Photo': '🖼' };
+
+  function renderTestimonies() {
+    var list = document.getElementById('testimonyList');
+    list.innerHTML = '';
+    testimonies.forEach(function (t) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      var pillClass = t.status === 'Validé' ? 'good' : t.status === 'Rejeté' ? 'bad' : 'accent';
+      var actions = '';
+      if (t.status === 'En attente') {
+        actions = '<div style="display:flex; gap:0.5rem; margin-top:0.5rem;">' +
+          '<button class="btn small primary" data-approve="' + t.id + '">Approuver</button>' +
+          '<button class="btn small ghost" data-reject="' + t.id + '">Rejeter</button></div>' +
+          '<div class="field-row" id="reject-row-' + t.id + '" hidden style="margin-top:0.5rem;">' +
+          '<input class="field" placeholder="Motif du rejet..." id="reject-reason-' + t.id + '">' +
+          '<div class="panel-actions"><button class="btn small primary" data-confirm-reject="' + t.id + '">Confirmer le rejet</button></div></div>';
+      } else if (t.status === 'Rejeté' && t.reason) {
+        actions = '<div class="card-text" style="font-size:0.82rem; color: var(--bad);">Motif : ' + t.reason + '</div>';
+      }
+      card.innerHTML =
+        '<div class="card-meta">' + typeIcon[t.type] + ' ' + t.type + '<span class="pill ' + pillClass + '">' + t.status + '</span></div>' +
+        '<div class="card-text"><strong>' + t.title + '</strong></div>' + actions;
+      list.appendChild(card);
+    });
+    list.querySelectorAll('[data-approve]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = Number(btn.dataset.approve);
+        testimonies.forEach(function (t) { if (t.id === id) t.status = 'Validé'; });
+        renderTestimonies();
+      });
+    });
+    list.querySelectorAll('[data-reject]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('reject-row-' + btn.dataset.reject).hidden = false;
+      });
+    });
+    list.querySelectorAll('[data-confirm-reject]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = Number(btn.dataset.confirmReject);
+        var reason = document.getElementById('reject-reason-' + id).value.trim() || 'Non conforme aux règles de publication.';
+        testimonies.forEach(function (t) { if (t.id === id) { t.status = 'Rejeté'; t.reason = reason; } });
+        renderTestimonies();
+      });
+    });
+  }
+  document.getElementById('btnNewTestimony').addEventListener('click', function () {
+    document.getElementById('testimonyForm').hidden = false;
+  });
+  document.getElementById('tstCancel').addEventListener('click', function () {
+    document.getElementById('testimonyForm').hidden = true;
+  });
+  document.getElementById('tstSubmit').addEventListener('click', function () {
+    var title = document.getElementById('tstTitle').value.trim();
+    if (!title) { document.getElementById('tstTitle').focus(); return; }
+    testimonies.unshift({ id: tstIdSeq++, type: document.getElementById('tstType').value, title: title, status: 'En attente', reason: null });
+    document.getElementById('tstTitle').value = '';
+    document.getElementById('tstText').value = '';
+    document.getElementById('testimonyForm').hidden = true;
+    renderTestimonies();
+  });
+  renderTestimonies();
+
+  /* ---------- Calendrier ---------- */
+  var slots = [
+    { start: '08:00', end: '08:03', title: "Prière d'ouverture", category: 'Église', leader: null },
+    { start: '08:03', end: '08:10', title: 'Adoration', category: 'Église', leader: null },
+    { start: '08:10', end: '08:15', title: 'Famille', category: 'Famille', leader: 'Marie K.' },
+    { start: '08:15', end: '08:20', title: 'Nation', category: 'Nation', leader: null },
+    { start: '08:20', end: '08:25', title: 'Guérison', category: 'Guérison', leader: 'Pasteur J. Dupont' },
+    { start: '08:58', end: '09:00', title: 'Bénédiction finale', category: 'Église', leader: null }
+  ];
+
+  function renderSlots() {
+    var list = document.getElementById('slotList');
+    list.innerHTML = '';
+    slots.forEach(function (s) {
+      var row = document.createElement('div');
+      row.className = 'slot-row';
+      row.innerHTML =
+        '<div class="slot-time num">' + s.start + '–' + s.end + '</div>' +
+        '<div class="slot-head"><span class="t">' + s.title + '</span><span class="pill accent">' + s.category + '</span></div>' +
+        '<div class="slot-leader">' + (s.leader ? 'Animé par ' + s.leader : "Animé par l'IA Intercession") + '</div>';
+      list.appendChild(row);
+    });
+  }
+  renderSlots();
+
+  document.getElementById('btnAddSlot').addEventListener('click', function () {
+    document.getElementById('slotForm').hidden = false;
+  });
+  document.getElementById('slotCancel').addEventListener('click', function () {
+    document.getElementById('slotForm').hidden = true;
+  });
+  document.getElementById('slotSubmit').addEventListener('click', function () {
+    var start = document.getElementById('slotStart').value.trim();
+    var end = document.getElementById('slotEnd').value.trim();
+    var title = document.getElementById('slotTitle').value.trim();
+    if (!start || !end || !title) return;
+    var idx = slots.length > 0 ? slots.length - 1 : 0;
+    slots.splice(idx, 0, { start: start, end: end, title: title, category: document.getElementById('slotCategory').value, leader: null });
+    document.getElementById('slotStart').value = '';
+    document.getElementById('slotEnd').value = '';
+    document.getElementById('slotTitle').value = '';
+    document.getElementById('slotForm').hidden = true;
+    renderSlots();
+  });
+
+  var calButtons = document.querySelectorAll('#calToggle button');
+  calButtons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      calButtons.forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      document.getElementById('calDay').hidden = b.dataset.mode !== 'day';
+      document.getElementById('calWeek').hidden = b.dataset.mode !== 'week';
+      document.getElementById('calMonth').hidden = b.dataset.mode !== 'month';
+    });
+  });
+
+  /* ---------- Carte mondiale ---------- */
+  var datasets = {
+    all: [
+      ['🇳🇬', 'Nigéria', 2350], ['🇧🇷', 'Brésil', 1980], ['🇺🇸', 'États-Unis', 1640],
+      ['🇵🇭', 'Philippines', 1120], ['🇫🇷', 'France', 780], ['🇰🇪', 'Kenya', 690],
+      ['🇮🇳', 'Inde', 610], ['🇨🇴', 'Colombie', 420]
+    ],
+    vigil: [
+      ['🇧🇷', 'Brésil', 3100], ['🇳🇬', 'Nigéria', 2790], ['🇺🇸', 'États-Unis', 1450],
+      ['🇫🇷', 'France', 980], ['🇵🇭', 'Philippines', 860]
+    ],
+    crusade: [
+      ['🇨🇴', 'Colombie', 2200], ['🇧🇷', 'Brésil', 1900], ['🇲🇽', 'Mexique', 1340],
+      ['🇦🇷', 'Argentine', 970]
+    ]
+  };
+
+  function renderCountries() {
+    var data = datasets[document.getElementById('mapFilter').value];
+    var max = Math.max.apply(null, data.map(function (d) { return d[2]; }));
+    var wrap = document.getElementById('countryList');
+    wrap.innerHTML = '';
+    data.sort(function (a, b) { return b[2] - a[2]; }).forEach(function (d) {
+      var row = document.createElement('div');
+      row.className = 'country-row';
+      row.innerHTML =
+        '<span>' + d[0] + '</span><span>' + d[1] + '</span>' +
+        '<span class="bar-track"><span class="bar-fill" style="width:' + (d[2] / max * 100) + '%"></span></span>' +
+        '<span class="count num">' + d[2].toLocaleString('fr-FR') + '</span>';
+      wrap.appendChild(row);
+    });
+  }
+  document.getElementById('mapFilter').addEventListener('change', renderCountries);
+  renderCountries();
+
+  setInterval(function () {
+    document.getElementById('kpiPresence').textContent = (12480 + Math.floor(Math.random() * 40) - 15).toLocaleString('fr-FR');
+  }, 4000);
+
+  /* ambient dot-globe (canvas, decorative + informational: a few bright = active rooms) */
+  var canvas = document.getElementById('globe');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height, R = 92;
+  var pts = [];
+  for (var lat = -80; lat <= 80; lat += 12) {
+    var ringR = Math.cos(lat * Math.PI / 180);
+    var count = Math.max(4, Math.round(18 * ringR));
+    for (var i = 0; i < count; i++) {
+      var lon = (360 / count) * i;
+      pts.push({ lat: lat, lon: lon, bright: Math.random() < 0.09 });
+    }
+  }
+  var angle = 0;
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var styles = getComputedStyle(document.documentElement);
+    var lineColor = styles.getPropertyValue('--accent-line').trim();
+    var accentColor = styles.getPropertyValue('--accent').trim();
+    pts.forEach(function (p) {
+      var lon = p.lon + angle;
+      var latR = p.lat * Math.PI / 180, lonR = lon * Math.PI / 180;
+      var x = Math.cos(latR) * Math.sin(lonR);
+      var z = Math.cos(latR) * Math.cos(lonR);
+      var y = Math.sin(latR);
+      if (z < -0.15) return;
+      var sx = W / 2 + x * R, sy = H / 2 - y * R;
+      var size = p.bright ? 2.6 : 1.5 + (z * 0.6);
+      ctx.beginPath();
+      ctx.arc(sx, sy, Math.max(0.6, size), 0, Math.PI * 2);
+      ctx.fillStyle = p.bright ? accentColor : lineColor;
+      ctx.globalAlpha = p.bright ? 0.95 : 0.55;
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+  draw();
+  if (!reduceMotion) {
+    setInterval(function () { angle += 1.1; draw(); }, 60);
+  }
+})();
+</script>

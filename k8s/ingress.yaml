@@ -1,0 +1,29 @@
+# Assumes an ingress-nginx controller is already installed on the cluster. Replace the host
+# with the real domain once one is decided.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tag-platform
+  namespace: tag-platform
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tag.example.org
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80

@@ -1,4 +1,17 @@
 {
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\" | Where-Object { $_.CommandLine -match 'nx serve api|run-executor' } | Select-Object ProcessId, ParentProcessId, CommandLine)",
+      "PowerShell(if \\($env:ANTHROPIC_API_KEY\\) { \"SET len=$\\($env:ANTHROPIC_API_KEY.Length\\)\" } else { \"NOT SET\" })",
+      "Bash(node -e \"const m = require\\('@anthropic-ai/sdk'\\); console.log\\(typeof m, typeof m.default, Object.keys\\(m\\).slice\\(0,10\\)\\)\")",
+      "Bash(npx nx *)",
+      "Bash(curl -s -o /dev/null -w \"web:%{http_code}\\\\n\" -m 5 http://localhost:4200/)",
+      "Bash(curl -s -o /dev/null -w \"api:%{http_code}\\\\n\" -m 5 http://localhost:3000/api/health)"
+    ]
+  },
+  "enabledPlugins": {
+    "nx@nx-claude-plugins": true
+  },
   "extraKnownMarketplaces": {
     "nx-claude-plugins": {
       "source": {
@@ -7,12 +20,11 @@
       }
     }
   },
-  "enabledPlugins": {
-    "nx@nx-claude-plugins": true
-  },
   "sandbox": {
     "network": {
-      "allowedDomains": ["www.google-analytics.com"]
+      "allowedDomains": [
+        "www.google-analytics.com"
+      ]
     }
   }
 }

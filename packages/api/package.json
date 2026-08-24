@@ -77,30 +77,49 @@
         }
       },
       "test": {
+        "executor": "nx:run-commands",
         "options": {
-          "passWithNoTests": true
+          "command": "vitest run --config vitest.config.mts",
+          "cwd": "packages/api"
+        },
+        "configurations": {
+          "watch": {
+            "command": "vitest --config vitest.config.mts"
+          }
         }
       }
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/mapped-types": "^2.1.1",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.0",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@nestjs/platform-socket.io": "^11.1.28",
+    "@nestjs/schedule": "^6.1.3",
+    "@nestjs/swagger": "^11.4.6",
+    "@nestjs/throttler": "^6.4.0",
+    "@nestjs/websockets": "^11.1.28",
+    "@supabase/supabase-js": "^2.112.0",
+    "argon2": "^0.45.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "pg": "^8.22.0",
+    "otplib": "^12.0.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
-    "tslib": "^2.3.0"
+    "socket.io": "^4.8.3",
+    "tslib": "^2.3.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.0.0",
-    "@types/pg": "^8.20.4",
-    "dotenv": "^16.4.7",
-    "prisma": "^7.9.1"
+    "@types/passport-jwt": "^4.0.1",
+    "@types/web-push": "^3.6.4"
   }
 }

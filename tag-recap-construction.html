@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>TAG — Récapitulatif de construction</title>
+<style>
+  :root {
+    --ground: #F7F6F1; --surface: #FFFFFF; --surface-2: #EFEDE3;
+    --ink: #1D2030; --ink-soft: #4B4E5C; --muted: #767A88; --border: #E4E0D4;
+    --accent: #45519C; --accent-ink: #FFFFFF; --accent-soft: #EEF0FA; --accent-line: #C7CCE8;
+    --good: #3C7A5C; --good-soft: #E7F2EC; --bad: #B4483C; --bad-soft: #FBEAE7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.5pt; line-height: 1.55;
+  }
+  .page { max-width: 780px; margin: 0 auto; padding: 2.2rem 2rem 3rem; }
+  h1, h2, h3, h4 { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", ui-serif, serif; margin: 0 0 0.4em; text-wrap: balance; }
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.35rem; margin-top: 2.2rem; color: var(--accent); border-bottom: 2px solid var(--accent-line); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.3rem; }
+  h4 { font-size: 0.92rem; margin-top: 1rem; color: var(--ink-soft); }
+  p { margin: 0.5em 0; }
+  ul, ol { margin: 0.4em 0; padding-left: 1.4em; }
+  li { margin: 0.2em 0; }
+  code { font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace; background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.88em; }
+  pre { background: var(--ink); color: #E8E8EF; padding: 0.8rem 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 0.8em 0; font-size: 0.85rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 700; }
+  .cover {
+    text-align: center; padding: 3.5rem 1rem 2.5rem; border-bottom: 3px solid var(--accent);
+    margin-bottom: 1rem;
+  }
+  .cover .mark { font-family: Georgia, serif; font-weight: 700; font-size: 2.6rem; color: var(--accent); }
+  .cover .subtitle { font-size: 1.1rem; color: var(--ink-soft); margin-top: 0.4rem; }
+  .cover .date { font-size: 0.8rem; color: var(--muted); margin-top: 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .lead { font-size: 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 0 10px 10px 0; padding: 0.9rem 1.1rem; }
+  .badge { display: inline-block; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: 999px; }
+  .badge.done { background: var(--good-soft); color: var(--good); }
+  .badge.todo { background: var(--bad-soft); color: var(--bad); }
+  .badge.next { background: var(--accent-soft); color: var(--accent); }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem 1.1rem; margin: 0.7rem 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .kpi { background: var(--accent-soft); border-radius: 10px; padding: 0.7rem 0.9rem; text-align: center; }
+  .kpi .v { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  .kpi .k { font-size: 0.68rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  .kpi-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.8rem 0; }
+  .kpi-row .kpi { flex: 1; min-width: 110px; }
+  .toc { columns: 2; column-gap: 2rem; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .footer-note { font-size: 0.78rem; color: var(--muted); margin-top: 2.5rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+  .page-break { page-break-before: always; }
+  @media print {
+    body { background: white; }
+    .page { padding: 0; max-width: none; }
+    h2 { page-break-after: avoid; }
+    .panel, .kpi-row, table { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="mark">TAG</div>
+    <div class="subtitle">Total Adoration &amp; Global Intercession</div>
+    <div class="subtitle" style="font-size:0.95rem; margin-top:0.6rem;">Récapitulatif de construction — État du dépôt</div>
+    <div class="date">7 août 2026</div>
+  </div>
+
+  <p class="lead">
+    Ce document récapitule, en détail, tout ce qui a été effectivement construit dans le dépôt
+    <code>tag-platform</code> jusqu'ici : la base de données réelle (Supabase), l'API NestJS, le
+    début de l'application web React, ce qui a été vérifié par des tests réels, les décisions de
+    simplification assumées, et ce qu'il reste à construire. L'objectif est de donner une
+    sensibilité concrète du fonctionnement actuel de l'application — pas un plan théorique.
+  </p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="v">2</div><div class="k">Domaines complets</div></div>
+    <div class="kpi"><div class="v">13</div><div class="k">Tables en base</div></div>
+    <div class="kpi"><div class="v">8</div><div class="k">Rôles hiérarchiques</div></div>
+    <div class="kpi"><div class="v">17</div><div class="k">Permissions atomiques</div></div>
+    <div class="kpi"><div class="v">~30</div><div class="k">Routes API</div></div>
+  </div>
+
+  <h2 id="toc">Sommaire</h2>
+  <div class="toc">
+    <ol>
+      <li><a href="#vision">Vision du produit (rappel)</a></li>
+      <li><a href="#architecture">Architecture technique</a></li>
+      <li><a href="#identity">Domaine Identity (Auth) <span class="badge done">Construit</span></a></li>
+      <li><a href="#community">Domaine Community <span class="badge done">Construit</span></a></li>
+      <li><a href="#web">Application web</a></li>
+      <li><a href="#tests">Ce qui a été vérifié</a></li>
+      <li><a href="#decisions">Décisions de simplification assumées</a></li>
+      <li><a href="#todo">Ce qui reste à construire</a></li>
+      <li><a href="#run">Comment tester aujourd'hui</a></li>
+    </ol>
+  </div>
+
+  <h2 id="vision">1. Vision du produit (rappel)</h2>
+  <p>
+    TAG est une plateforme mondiale d'intercession chrétienne continue : une salle de prière est
+    active quelque part dans le monde à chaque instant, 24h/24, 7j/7. Le programme est découpé en
+    créneaux successifs (<code>PrayerSlot</code>), animés par un responsable humain ou, en son
+    absence, par une IA Animatrice. L'IA anime et assiste, mais ne remplace jamais l'autorité
+    pastorale sur les décisions sensibles.
+  </p>
+  <p>
+    Le dépôt suit un ensemble de 17 documents de spécification (<code>docs/01</code> à
+    <code>docs/17</code>) qui font autorité sur toute décision d'architecture ou de règle métier.
+    Rien n'est censé être inventé en dehors de ce qu'ils décrivent.
+  </p>
+
+  <h2 id="architecture">2. Architecture technique</h2>
+  <table>
+    <tr><th>Couche</th><th>Choix effectif</th></tr>
+    <tr><td>Monorepo</td><td>Nx Workspace, npm workspaces (<code>packages/api</code>, <code>packages/web</code>)</td></tr>
+    <tr><td>Backend</td><td>NestJS 11, TypeScript strict, validation via <code>class-validator</code></td></tr>
+    <tr><td>Base de données</td><td>Supabase (PostgreSQL réel, projet en ligne) — le serveur API se connecte avec la clé de service, contourne RLS</td></tr>
+    <tr><td>Frontend web</td><td>React 19 + Vite + react-router-dom (le document de roadmap recommandait Angular ; le dépôt existant avait déjà React — poursuivi par cohérence avec l'existant plutôt que réécrit)</td></tr>
+    <tr><td>Authentification</td><td>JWT (access token) + refresh token opaque haché, maison — pas de dépendance à Supabase Auth</td></tr>
+    <tr><td>Documentation API</td><td>Swagger généré automatiquement, servi sur <code>/api/docs</code></td></tr>
+  </table>
+  <p>
+    Convention de code observée dans tout le dépôt : les services accèdent directement au client
+    Supabase (pas de couche ORM), les contrôleurs restent minces (validation → appel service →
+    retour), les DTO d'entrée sont en <code>camelCase</code>, les entités/réponses reflètent les
+    colonnes de la base en <code>snake_case</code>.
+  </p>
+
+  <div class="page-break"></div>
+  <h2 id="identity">3. Domaine Identity (Auth) <span class="badge done">Construit et vérifié</span></h2>
+  <p>Fondation de toute l'application — premier domaine construit, conforme à l'ordre de génération imposé par les règles du projet.</p>
+
+  <h3>3.1 Base de données</h3>
+  <p>7 tables créées : <code>users</code>, <code>roles</code>, <code>permissions</code>, <code>role_permissions</code>, <code>role_assignments</code>, <code>refresh_tokens</code>, <code>password_reset_tokens</code>.</p>
+  <ul>
+    <li><strong>8 rôles hiérarchiques</strong> : Visiteur → Nouveau Converti → Intercesseur → Modérateur → Responsable d'Équipe → Pasteur → Administrateur → Super Administrateur.</li>
+    <li><strong>17 permissions atomiques</strong> (ex. <code>prayer_request.create</code>, <code>testimony.approve</code>, <code>user.manage</code>) réparties sur <strong>73 associations rôle-permission</strong>, reflétant exactement la matrice du document RBAC.</li>
+    <li>Mots de passe hachés en <strong>Argon2id</strong> ; politique : 12 caractères minimum, majuscule, minuscule, chiffre, caractère spécial.</li>
+  </ul>
+
+  <h3>3.2 Sécurité des sessions</h3>
+  <ul>
+    <li>Access token JWT, durée de vie 15 minutes.</li>
+    <li>Refresh token opaque (aléatoire, 48 octets), jamais stocké en clair — seul son empreinte SHA-256 est en base.</li>
+    <li><strong>Rotation</strong> : chaque rafraîchissement invalide l'ancien token et en émet un nouveau.</li>
+    <li><strong>Détection de réutilisation</strong> : si un refresh token déjà révoqué est présenté à nouveau (signe de vol), toute la famille de sessions de l'utilisateur est révoquée immédiatement.</li>
+    <li>Changement de mot de passe (réinitialisation) révoque automatiquement toutes les sessions actives.</li>
+  </ul>
+
+  <h3>3.3 RBAC — contrôle d'accès</h3>
+  <p>
+    Chaque route sensible vérifie une <strong>permission atomique</strong> (jamais un nom de rôle en dur) via un Guard NestJS dédié. Point clé validé par des tests réels :
+  </p>
+  <div class="panel">
+    <strong>Portée globale vs. scopée à une communauté.</strong> Une attribution de rôle globale
+    (<code>community_id = NULL</code>) donne ses permissions partout. Une attribution scopée à une
+    communauté précise ne donne ses permissions <em>que</em> dans cette communauté — vérifié en
+    direct : un utilisateur promu Responsable d'Équipe uniquement sur une cellule ne peut pas agir
+    sur une autre communauté (403 confirmé).
+  </div>
+  <p>
+    Anti-escalade : l'endpoint d'attribution de rôle plafonne volontairement à <em>Pasteur</em> —
+    impossible d'attribuer Administrateur ou Super Administrateur par cette voie, conformément à la
+    note du document RBAC.
+  </p>
+
+  <h3>3.4 Routes construites</h3>
+  <table>
+    <tr><th>Route</th><th>Description</th></tr>
+    <tr><td><code>POST /auth/register</code></td><td>Inscription, attribue automatiquement le rôle Visiteur, retourne les tokens</td></tr>
+    <tr><td><code>POST /auth/login</code></td><td>Connexion</td></tr>
+    <tr><td><code>POST /auth/refresh</code></td><td>Rotation du refresh token</td></tr>
+    <tr><td><code>POST /auth/logout</code></td><td>Révocation du refresh token</td></tr>
+    <tr><td><code>POST /auth/password/forgot</code> / <code>reset</code></td><td>Réinitialisation (envoi via un service mail console en attendant le domaine Communication)</td></tr>
+    <tr><td><code>GET</code> / <code>PATCH /users/me</code></td><td>Profil courant</td></tr>
+    <tr><td><code>GET /users</code></td><td>Liste paginée, réservée à <code>user.manage</code></td></tr>
+    <tr><td><code>GET /users/:id</code></td><td>Soi-même ou <code>user.manage</code></td></tr>
+    <tr><td><code>PATCH /users/:id/status</code>, <code>DELETE /users/:id</code></td><td>Administration (suspension, suppression douce)</td></tr>
+    <tr><td><code>GET /roles</code>, <code>POST /roles/assign</code> / <code>revoke</code></td><td>Gestion des rôles</td></tr>
+  </table>
+
+  <div class="page-break"></div>
+  <h2 id="community">4. Domaine Community <span class="badge done">Construit et vérifié</span></h2>
+  <p>Deuxième domaine, dans l'ordre de génération imposé (Identity → Community → Prayer...).</p>
+
+  <h3>4.1 Base de données</h3>
+  <ul>
+    <li><code>communities</code> — hiérarchie via <code>parent_id</code>, types <code>GROUP / TEAM / CELL / COUNTRY / CITY / CHURCH / MINISTRY</code>.</li>
+    <li><code>community_members</code>, <code>posts</code>, <code>comments</code>.</li>
+    <li>Nouvelle permission <code>community.manage</code> ajoutée (extension explicitement autorisée par le document RBAC, qui prévoit que la table des permissions grandisse avec chaque nouvelle fonctionnalité) — accordée à Responsable d'Équipe et au-dessus.</li>
+  </ul>
+
+  <h3>4.2 Règles de fonctionnement</h3>
+  <ul>
+    <li>Le créateur d'une communauté en devient automatiquement membre.</li>
+    <li>Seuls les membres d'une communauté peuvent y publier ou y commenter (vérifié : un non-membre reçoit 403, devient autorisé après ajout comme membre).</li>
+    <li>Créer une communauté à la racine (sans parent) exige une attribution <em>globale</em> de <code>community.manage</code> — créer une sous-communauté exige cette permission dans le contexte du parent.</li>
+  </ul>
+
+  <h3>4.3 Routes construites</h3>
+  <table>
+    <tr><th>Route</th><th>Description</th></tr>
+    <tr><td><code>POST/GET/PATCH/DELETE /communities</code></td><td>Cycle de vie de la communauté</td></tr>
+    <tr><td><code>POST/DELETE/GET /communities/:id/members</code></td><td>Gestion des membres</td></tr>
+    <tr><td><code>POST/GET /communities/:id/posts</code></td><td>Fil d'actualité de la communauté</td></tr>
+    <tr><td><code>POST/GET /posts/:id/comments</code></td><td>Commentaires</td></tr>
+  </table>
+  <p>Les listes (utilisateurs, communautés, membres, posts, commentaires) renvoient toutes une pagination cohérente <code>{ data, meta: { page, limit, total, totalPages } }</code>.</p>
+
+  <h2 id="web">5. Application web (React)</h2>
+  <p>Amorce de l'interface, branchée sur la vraie API :</p>
+  <ul>
+    <li>Pages <strong>Connexion</strong> et <strong>Inscription</strong>.</li>
+    <li><code>AuthContext</code> : persistance de session (jetons en <code>localStorage</code>), restauration automatique au chargement, rafraîchissement silencieux si l'access token a expiré.</li>
+    <li><strong>Tableau de bord</strong> protégé (redirection vers la connexion si non authentifié), affichant l'utilisateur courant.</li>
+  </ul>
+  <p>Les deux maquettes visuelles statiques (salle de prière mondiale, écrans demandes/témoignages/calendrier/carte) existent séparément (<code>prayer-room-preview.html</code>, <code>tag-screens-preview.html</code>) mais ne sont pas encore branchées à l'API réelle.</p>
+
+  <h2 id="tests">6. Ce qui a été vérifié</h2>
+  <ul>
+    <li><strong>Build, lint, typecheck</strong> propres sur <code>api</code> et <code>web</code> via Nx, à chaque étape.</li>
+    <li><strong>Tests de bout en bout réels</strong> (pas de mocks) contre le vrai projet Supabase, via des appels HTTP directs au serveur en cours d'exécution :
+      <ul>
+        <li>Inscription → connexion → route protégée → 401 sans jeton.</li>
+        <li>Rotation du refresh token, puis réutilisation de l'ancien jeton → 401 + révocation de toute la session.</li>
+        <li>RBAC : 403 pour un Visiteur, 200 après promotion en rôle habilité.</li>
+        <li>Plafond anti-escalade sur l'attribution de rôle.</li>
+        <li>Communautés : création refusée/autorisée selon permission et portée, adhésion, publication bloquée puis débloquée après adhésion, isolation de portée entre deux communautés.</li>
+      </ul>
+    </li>
+    <li>Toutes les données de test créées pendant ces vérifications ont été supprimées de la base après coup.</li>
+  </ul>
+
+  <div class="page-break"></div>
+  <h2 id="decisions">7. Décisions de simplification assumées</h2>
+  <p>Choix délibérés, à connaître avant de continuer :</p>
+  <table>
+    <tr><th>Sujet</th><th>Décision</th><th>Raison</th></tr>
+    <tr><td><code>items</code> / <code>tags</code></td><td>Non touchés</td><td>Scaffolding par défaut de Nx, absent des spécifications TAG — n'appartient pas au produit réel</td></tr>
+    <tr><td>Enveloppe <code>{success, data, meta}</code></td><td>Appliquée uniquement aux listes paginées, pas à toutes les routes</td><td>Cohérence avec le code déjà existant plutôt qu'avec la spec API au pied de la lettre</td></tr>
+    <tr><td>MFA</td><td>Différé</td><td>Explicitement hors MVP selon la feuille de route</td></tr>
+    <tr><td>Édition/suppression de posts et commentaires</td><td>Non construites</td><td>Absentes de la liste de routes de la spécification API — rien n'est inventé au-delà du document</td></tr>
+    <tr><td>Envoi d'e-mail (mot de passe oublié)</td><td>Implémentation console (journalisée, pas envoyée)</td><td>Le domaine Communication (fournisseur mail réel) n'existe pas encore</td></tr>
+  </table>
+
+  <h2 id="todo">8. Ce qui reste à construire</h2>
+  <p>Dans l'ordre de génération du projet (chaque domaine dépend des précédents) :</p>
+  <ol>
+    <li><span class="badge next">Suivant</span> <strong>Prayer</strong> — <code>PrayerProgram</code> / <code>PrayerSlot</code>, chronomètre serveur, transition automatique, salle mondiale continue, demandes de prière, témoignages.</li>
+    <li><span class="badge todo">À faire</span> <strong>Communication</strong> — notifications, e-mail réel, WhatsApp, publications multicanal.</li>
+    <li><span class="badge todo">À faire</span> <strong>Storage</strong> — fichiers, upload présigné.</li>
+    <li><span class="badge todo">À faire</span> <strong>Analytics</strong> — tableaux de bord, carte mondiale en temps réel.</li>
+    <li><span class="badge todo">À faire</span> <strong>Administration</strong> — journaux d'audit, sauvegardes.</li>
+    <li><span class="badge todo">À faire</span> <strong>Agents IA</strong> — Accueil, Intercession, Évangélisation, Modératrice, Communication, Analyse (dont « Le Veilleur » sur WhatsApp).</li>
+    <li><span class="badge todo">À faire</span> <strong>Application mobile</strong> Flutter, <strong>événements</strong>, <strong>gamification</strong>.</li>
+    <li><span class="badge todo">À faire</span> <strong>Déploiement</strong> Docker / production.</li>
+  </ol>
+
+  <h2 id="run">9. Comment tester aujourd'hui</h2>
+  <table>
+    <tr><th>Service</th><th>Adresse locale</th></tr>
+    <tr><td>Application web</td><td><code>http://localhost:4200</code></td></tr>
+    <tr><td>API</td><td><code>http://localhost:3000/api</code></td></tr>
+    <tr><td>Documentation Swagger</td><td><code>http://localhost:3000/api/docs</code></td></tr>
+  </table>
+  <p>Démarrage : <code>npx nx serve api</code> et <code>npx nx serve web</code> à la racine du dépôt (deux terminaux séparés).</p>
+
+  <div class="footer-note">
+    Document généré à partir de l'état réel du dépôt <code>tag-platform</code> (branche <code>master</code>) au 7 août 2026 — pas un plan théorique, un état des lieux vérifié.
+  </div>
+
+</div>
+</body>
+</html>

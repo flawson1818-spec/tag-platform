@@ -1,0 +1,11 @@
+# Deploy everything with: kubectl apply -k k8s/
+# (after creating the real api-secrets Secret out-of-band — see api-secret.example.yaml)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tag-platform
+resources:
+  - namespace.yaml
+  - api-configmap.yaml
+  - api-deployment.yaml
+  - web-deployment.yaml
+  - ingress.yaml

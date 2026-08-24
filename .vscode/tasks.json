@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install dependencies",
+      "type": "shell",
+      "command": "npm ci",
+      "problemMatcher": [],
+      "inAgents": true,
+      "runOptions": { "runOn": "worktreeCreated" }
+    },
+    {
+      "label": "NX: Serve (pick project)",
+      "type": "shell",
+      "command": "npx nx serve <project>",
+      "problemMatcher": [],
+      "inAgents": true
+    },
+    {
+      "label": "NX: Build (pick project)",
+      "type": "shell",
+      "command": "npx nx build <project>",
+      "problemMatcher": [],
+      "inAgents": true
+    },
+    {
+      "label": "NX: Test (pick project)",
+      "type": "shell",
+      "command": "npx nx test <project>",
+      "problemMatcher": [],
+      "inAgents": true
+    },
+    {
+      "label": "NX: Lint (pick project)",
+      "type": "shell",
+      "command": "npx nx lint <project>",
+      "problemMatcher": [],
+      "inAgents": true
+    },
+    {
+      "label": "Format (Prettier)",
+      "type": "shell",
+      "command": "npx prettier --write .",
+      "problemMatcher": [],
+      "inAgents": true
+    },
+    {
+      "label": "Run all tests (NX)",
+      "type": "shell",
+      "command": "npx nx run-many --target=test --all",
+      "problemMatcher": [],
+      "inAgents": true
+    }
+  ]
+}
