@@ -52,10 +52,44 @@ describe('AnalyticsService', () => {
 
       expect(result.activeRooms).toBe(2);
       expect(result.presence).toBe(3);
+    });
+
+    it('folds any timezone bucket below the anonymity threshold into a single regional bucket instead of exposing its exact size', async () => {
+      const runningSlots = [{ id: 'slot-1', program_id: 'program-1' }];
+      const attendance = [
+        // 5 in Africa/Abidjan: at the threshold, shown as-is.
+        ...Array.from({ length: 5 }, (_, i) => ({ user_id: `abidjan-${i}`, users: { timezone: 'Africa/Abidjan' } })),
+        // 3 in Europe/Paris and 1 in Asia/Tokyo: both below threshold, folded together.
+        ...Array.from({ length: 3 }, (_, i) => ({ user_id: `paris-${i}`, users: { timezone: 'Europe/Paris' } })),
+        { user_id: 'tokyo-1', users: { timezone: 'Asia/Tokyo' } },
+      ];
+      const { service } = buildService({
+        prayer_slots: createQueryChain({ data: runningSlots, error: null }),
+        prayer_slot_attendance: createQueryChain({ data: attendance, error: null }),
+      });
+
+      const result = await service.getWorldMap();
+
       expect(result.timezones).toEqual([
-        { timezone: 'Africa/Abidjan', count: 2 },
-        { timezone: 'Europe/Paris', count: 1 },
+        { timezone: 'Africa/Abidjan', count: 5 },
+        { timezone: 'Autres', count: 4 },
       ]);
+    });
+
+    it('shows no regional bucket at all when every timezone is empty or above threshold', async () => {
+      const runningSlots = [{ id: 'slot-1', program_id: 'program-1' }];
+      const attendance = Array.from({ length: 6 }, (_, i) => ({
+        user_id: `user-${i}`,
+        users: { timezone: 'Africa/Abidjan' },
+      }));
+      const { service } = buildService({
+        prayer_slots: createQueryChain({ data: runningSlots, error: null }),
+        prayer_slot_attendance: createQueryChain({ data: attendance, error: null }),
+      });
+
+      const result = await service.getWorldMap();
+
+      expect(result.timezones).toEqual([{ timezone: 'Africa/Abidjan', count: 6 }]);
     });
 
     it('deduplicates a user attending via multiple slots (counted once in presence)', async () => {

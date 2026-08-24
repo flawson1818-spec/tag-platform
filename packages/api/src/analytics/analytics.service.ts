@@ -6,6 +6,15 @@ const EXPORT_ROW_LIMIT = 5000;
 const EXPORT_TTL_HOURS = 24;
 const BUCKET = 'tag-files';
 
+/**
+ * docs/07_UX_UI_SPECIFICATION.md §12 cas d'erreur: a timezone bucket below this count must
+ * never be shown with its exact size (indirect identification risk in a sparsely-populated
+ * region) — folded into a single regional bucket instead. Also required by
+ * docs/08_NON_FUNCTIONAL_REQUIREMENTS.md §7.
+ */
+const WORLD_MAP_ANONYMITY_THRESHOLD = 5;
+const WORLD_MAP_REGIONAL_BUCKET = 'Autres';
+
 /** Columns to exclude per export scope — never leak secrets like password_hash. */
 const EXPORT_COLUMNS: Record<string, string> = {
   prayer_requests: 'id, category, description, confidentiality, status, created_at',
@@ -48,12 +57,18 @@ export class AnalyticsService {
       timezoneCounts.set(timezone, (timezoneCounts.get(timezone) ?? 0) + 1);
     }
 
+    const sorted = Array.from(timezoneCounts, ([timezone, count]) => ({ timezone, count })).sort(
+      (a, b) => b.count - a.count,
+    );
+    const visible = sorted.filter((t) => t.count >= WORLD_MAP_ANONYMITY_THRESHOLD);
+    const regionalTotal = sorted
+      .filter((t) => t.count < WORLD_MAP_ANONYMITY_THRESHOLD)
+      .reduce((sum, t) => sum + t.count, 0);
+
     return {
       presence: byUser.size,
       activeRooms,
-      timezones: Array.from(timezoneCounts, ([timezone, count]) => ({ timezone, count })).sort(
-        (a, b) => b.count - a.count,
-      ),
+      timezones: regionalTotal > 0 ? [...visible, { timezone: WORLD_MAP_REGIONAL_BUCKET, count: regionalTotal }] : visible,
     };
   }
 
