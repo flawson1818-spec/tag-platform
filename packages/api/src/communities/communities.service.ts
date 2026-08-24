@@ -95,6 +95,17 @@ export class CommunitiesService {
     if (error) throw new InternalServerErrorException(error.message);
   }
 
+  /**
+   * Self-service join (docs/07_UX_UI_SPECIFICATION.md §9 "adhésion directe") — deliberately not
+   * gated behind `community.manage_members` (that permission is for a Responsable adding someone
+   * *else*; requiring it here made it impossible for an ordinary member to ever join a community
+   * themselves). No approval workflow yet — every community currently allows immediate join.
+   */
+  async join(communityId: string, userId: string): Promise<void> {
+    await this.findById(communityId);
+    await this.addMember(communityId, { userId });
+  }
+
   async addMember(communityId: string, dto: AddMemberDto): Promise<void> {
     const { error } = await this.supabase.client.from('community_members').insert({
       community_id: communityId,

@@ -71,6 +71,49 @@ describe('CommunitiesService', () => {
     });
   });
 
+  describe('join', () => {
+    it('checks the community exists, then adds the caller as a member', async () => {
+      const communitiesChain = createQueryChain({ data: COMMUNITY, error: null });
+      const membersChain = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({
+        communities: communitiesChain,
+        community_members: membersChain,
+      });
+      const service = new CommunitiesService(supabase as never);
+
+      await service.join('community-1', 'user-1');
+
+      expect(membersChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ community_id: 'community-1', user_id: 'user-1' }),
+      );
+    });
+
+    it('propagates NotFoundException for an unknown community without touching community_members', async () => {
+      const communitiesChain = createQueryChain({ data: null, error: null });
+      const membersChain = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({
+        communities: communitiesChain,
+        community_members: membersChain,
+      });
+      const service = new CommunitiesService(supabase as never);
+
+      await expect(service.join('missing', 'user-1')).rejects.toThrow('Community missing not found');
+      expect(membersChain.insert).not.toHaveBeenCalled();
+    });
+
+    it('tolerates joining a community the caller already belongs to', async () => {
+      const communitiesChain = createQueryChain({ data: COMMUNITY, error: null });
+      const membersChain = createQueryChain({ data: null, error: { message: 'duplicate key', code: '23505' } });
+      const supabase = createSupabaseServiceMock({
+        communities: communitiesChain,
+        community_members: membersChain,
+      });
+      const service = new CommunitiesService(supabase as never);
+
+      await expect(service.join('community-1', 'user-1')).resolves.toBeUndefined();
+    });
+  });
+
   describe('addMember', () => {
     it('tolerates a duplicate-membership conflict (23505) instead of throwing', async () => {
       const supabase = createSupabaseServiceMock({

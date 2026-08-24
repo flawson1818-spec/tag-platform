@@ -51,7 +51,7 @@ export function CommunityDetailPage() {
     setJoining(true);
     setJoinError(null);
     try {
-      await communitiesApi.join(token, id, user.id);
+      await communitiesApi.join(token, id);
       refresh();
     } catch (err) {
       setJoinError((err as Error).message);

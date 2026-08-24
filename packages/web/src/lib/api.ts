@@ -472,12 +472,9 @@ export const communitiesApi = {
     request<PaginatedResult<CommunityMember>>(`/communities/${communityId}/members?page=${page}&limit=50`, {
       headers: authHeaders(token),
     }),
-  join: (token: string, communityId: string, userId: string) =>
-    request<void>(`/communities/${communityId}/members`, {
-      method: 'POST',
-      headers: authHeaders(token),
-      body: JSON.stringify({ userId }),
-    }),
+  /** Self-service join — the member is always the authenticated caller, inferred from the token. */
+  join: (token: string, communityId: string) =>
+    request<void>(`/communities/${communityId}/join`, { method: 'POST', headers: authHeaders(token) }),
 };
 
 export const postsApi = {

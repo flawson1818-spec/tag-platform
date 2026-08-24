@@ -85,6 +85,12 @@ export class CommunitiesController {
     return this.communitiesService.softDelete(id);
   }
 
+  @Post(':id/join')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async join(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.communitiesService.join(id, currentUser.id);
+  }
+
   @Post(':id/members')
   @HttpCode(HttpStatus.NO_CONTENT)
   async addMember(
