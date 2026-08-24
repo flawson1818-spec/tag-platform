@@ -114,5 +114,25 @@ describe('PermissionsService', () => {
 
       await expect(service.getUserRoleCodes('user-1')).rejects.toThrow('db down');
     });
+
+    it('scopes to global assignments only when globalOnly is set', async () => {
+      const chain = createQueryChain({ data: [], error: null });
+      const supabase = createSupabaseServiceMock({ role_assignments: chain });
+      const service = new PermissionsService(supabase as never);
+
+      await service.getUserRoleCodes('user-1', { globalOnly: true });
+
+      expect(chain.is).toHaveBeenCalledWith('community_id', null);
+    });
+
+    it('does not scope by community when globalOnly is not set', async () => {
+      const chain = createQueryChain({ data: [], error: null });
+      const supabase = createSupabaseServiceMock({ role_assignments: chain });
+      const service = new PermissionsService(supabase as never);
+
+      await service.getUserRoleCodes('user-1');
+
+      expect(chain.is).not.toHaveBeenCalled();
+    });
   });
 });

@@ -36,11 +36,10 @@ export class PermissionsService {
     return codes;
   }
 
-  async getUserRoleCodes(userId: string): Promise<Set<string>> {
-    const { data, error } = await this.supabase.client
-      .from('role_assignments')
-      .select('roles(code)')
-      .eq('user_id', userId);
+  async getUserRoleCodes(userId: string, options?: { globalOnly?: boolean }): Promise<Set<string>> {
+    let query = this.supabase.client.from('role_assignments').select('roles(code)').eq('user_id', userId);
+    if (options?.globalOnly) query = query.is('community_id', null);
+    const { data, error } = await query;
     if (error) throw new InternalServerErrorException(error.message);
 
     const codes = new Set<string>();
