@@ -63,6 +63,7 @@ export class PrayerEngineService {
         const program = await this.programsService.findById(slot.program_id);
         const roomId = toRoomId(program.community_id);
         this.gateway.emitSlotEnded(roomId, slot.id);
+        this.gateway.clearActiveSpeakers(roomId);
 
         const durationSeconds = Math.max(
           1,

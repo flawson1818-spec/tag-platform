@@ -43,6 +43,7 @@ export function PrayerRoomPage() {
   const [activeSpeakers, setActiveSpeakers] = useState<RoomPerson[]>([]);
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
   const [roomError, setRoomError] = useState<string | null>(null);
+  const [roomNotice, setRoomNotice] = useState<string | null>(null);
   const [musicQuery, setMusicQuery] = useState('');
   const [musicPlatform, setMusicPlatform] = useState<MusicPlatform>('youtube');
   const [musicLinkInput, setMusicLinkInput] = useState('');
@@ -50,6 +51,12 @@ export function PrayerRoomPage() {
   const [nowPlaying, setNowPlaying] = useState<{ videoId: string; title: string } | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
+  // The room:join effect below only runs once on mount, so its socket handlers close over
+  // `user` as it was at that instant; reading this ref instead keeps them seeing the latest one.
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const handRaisedByMe = Boolean(user && raisedHands.some((p) => p.userId === user.id));
   const speakPendingByMe = Boolean(user && pendingSpeakers.some((p) => p.userId === user.id));
@@ -122,6 +129,13 @@ export function PrayerRoomPage() {
       setActiveSpeakers(payload.active);
     });
 
+    socket.on('speak:revoked', (payload: { userIds: string[] }) => {
+      const me = userRef.current;
+      if (me && payload.userIds.includes(me.id)) {
+        setRoomNotice('Vous avez été remis en écoute.');
+      }
+    });
+
     socket.on('reaction:new', (payload: { emoji: string }) => {
       const id = Date.now() + Math.random();
       setReactions((prev) => [...prev, { id, emoji: payload.emoji }]);
@@ -153,6 +167,12 @@ export function PrayerRoomPage() {
     const timeout = setTimeout(() => setRoomError(null), 4000);
     return () => clearTimeout(timeout);
   }, [roomError]);
+
+  useEffect(() => {
+    if (!roomNotice) return;
+    const timeout = setTimeout(() => setRoomNotice(null), 4000);
+    return () => clearTimeout(timeout);
+  }, [roomNotice]);
 
   useEffect(() => {
     const list = chatListRef.current;
@@ -246,6 +266,9 @@ export function PrayerRoomPage() {
           <div className="room-progress">
             <div className="room-progress-fill" style={{ width: `${progressPct}%` }} />
           </div>
+          {remainingSeconds > 0 && remainingSeconds <= 5 && (
+            <p className="hint room-ending-soon">Fin du sujet dans {remainingSeconds}s</p>
+          )}
 
           <h3>{slot.title}</h3>
           {slot.guided_text && <p className="room-guided-text">{slot.guided_text}</p>}
@@ -294,6 +317,7 @@ export function PrayerRoomPage() {
       </div>
 
       {roomError && <p className="error room-action-error">{roomError}</p>}
+      {roomNotice && <p className="hint room-action-error">{roomNotice}</p>}
 
       {(raisedHands.length > 0 || pendingSpeakers.length > 0 || activeSpeakers.length > 0) && (
         <div className="room-live-status">

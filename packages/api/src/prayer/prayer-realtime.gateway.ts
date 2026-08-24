@@ -370,4 +370,22 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   emitSlotEnded(roomId: string, slotId: string): void {
     this.server?.to(roomId).emit('slot:ended', { roomId, slotId });
   }
+
+  /**
+   * Engine-only, called right after emitSlotEnded (docs/07_UX_UI_SPECIFICATION.md §3 cas
+   * d'erreur: a slot ending mid-speech must be a "coupure douce", not a silent carry-over —
+   * without this, activeSpeakers is untouched by slot transitions and someone granted the
+   * floor for one topic would stay marked as speaking into every topic after it, forever).
+   * Broadcasts the now-empty speaker list plus a distinct event naming who lost the floor, so
+   * only those specific clients show "Vous avez été remis en écoute" instead of everyone.
+   */
+  clearActiveSpeakers(roomId: string): string[] {
+    const active = this.activeSpeakers.get(roomId);
+    if (!active || active.size === 0) return [];
+    const revokedUserIds = Array.from(active.keys());
+    active.clear();
+    this.broadcastSpeakUpdate(roomId);
+    this.server?.to(roomId).emit('speak:revoked', { roomId, userIds: revokedUserIds });
+    return revokedUserIds;
+  }
 }

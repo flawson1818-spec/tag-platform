@@ -504,6 +504,13 @@ nav button {
   box-shadow: var(--shadow-lg);
 }
 
+.room-ending-soon {
+  text-align: center;
+  color: var(--color-danger);
+  font-weight: 600;
+  margin-top: 0.4rem;
+}
+
 .room-chips {
   display: flex;
   justify-content: center;

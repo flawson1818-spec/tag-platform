@@ -34,6 +34,7 @@ function buildDeps() {
     emitSlotStarted: vi.fn(),
     emitSlotTick: vi.fn(),
     emitSlotEnded: vi.fn(),
+    clearActiveSpeakers: vi.fn().mockReturnValue([]),
   };
   const service = new PrayerEngineService(slotsService as never, programsService as never, gateway as never);
   return { service, slotsService, programsService, gateway };
@@ -65,6 +66,7 @@ describe('PrayerEngineService', () => {
       expect(slotsService.findByOrderIndex).toHaveBeenCalledWith('program-1', 1);
       expect(slotsService.activate).toHaveBeenCalledWith('slot-2', 300);
       expect(gateway.emitSlotEnded).toHaveBeenCalledWith('community-1', 'slot-1');
+      expect(gateway.clearActiveSpeakers).toHaveBeenCalledWith('community-1');
       expect(gateway.emitSlotStarted).toHaveBeenCalledWith(
         'community-1',
         expect.objectContaining({ id: 'slot-2' }),
