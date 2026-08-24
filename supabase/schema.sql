@@ -619,6 +619,25 @@ alter table notifications enable row level security;
 alter table emails enable row level security;
 alter table social_publications enable row level security;
 
+-- docs/02_AI_AGENTS_SPECIFICATION.md section 6: "un Administrateur active explicitement le mode
+-- 'auto-publish' pour un canal ... donné" — one row per channel; absent = auto-publish off.
+create table if not exists social_publication_channel_settings (
+  channel text primary key,
+  auto_publish boolean not null default false,
+  updated_by uuid references users (id) on delete set null,
+  updated_at timestamptz not null default now(),
+  constraint social_publication_channel_settings_channel_check check (channel in (
+    'Facebook', 'Instagram', 'TikTok', 'YouTube', 'X', 'LinkedIn', 'Threads'
+  ))
+);
+
+drop trigger if exists social_publication_channel_settings_set_updated_at on social_publication_channel_settings;
+create trigger social_publication_channel_settings_set_updated_at
+  before update on social_publication_channel_settings
+  for each row execute function set_updated_at();
+
+alter table social_publication_channel_settings enable row level security;
+
 -- Not in the docs/06_RBAC_SPECIFICATION.md matrix (the matrix is an explicit "extrait
 -- représentatif", section 3 note), but named in docs/05_API_SPECIFICATION.md section 6 as
 -- "Responsable+" for approving social publications, and docs/06_RBAC_SPECIFICATION.md section 5
@@ -874,3 +893,66 @@ $$;
 -- (no column ever exposed to a public/anon key); a KMS-encrypted-at-rest column would be a
 -- reasonable hardening step for a true production rollout, out of scope for this MVP pass.
 alter table users add column if not exists mfa_secret text;
+
+-- ============================================================================
+-- EVENTS DOMAIN
+-- See docs/01_FUNCTIONAL_SPECIFICATION.md and docs/07_UX_UI_SPECIFICATION.md section 7
+-- (veillées, jeûnes, croisades, études bibliques...). Reuses the prayer-session state machine
+-- for Event.status (docs/10_STATE_MACHINES.md) rather than inventing a parallel one. This
+-- domain was built and exercised against the live project directly; added here after the fact
+-- so a fresh environment provisioned from this file gets the same tables.
+-- ============================================================================
+
+create table if not exists events (
+  id uuid primary key default gen_random_uuid(),
+  community_id uuid references communities (id) on delete cascade,
+  type text not null,
+  title text not null,
+  description text,
+  scheduled_at timestamptz not null,
+  status text not null default 'CREATED',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  created_by uuid references users (id) on delete set null,
+  updated_by uuid references users (id) on delete set null,
+  constraint events_type_check check (type in (
+    'VEILLEE', 'JEUNE', 'CROISADE', 'CONFERENCE', 'ETUDE_BIBLIQUE',
+    'DEBAT_BIBLIQUE', 'FORMATION', 'INTERCESSION_SPECIALE'
+  )),
+  constraint events_status_check check (status in ('CREATED', 'SCHEDULED', 'OPEN', 'RUNNING', 'FINISHED', 'ARCHIVED'))
+);
+
+create index if not exists events_community_idx on events (community_id);
+create index if not exists events_scheduled_at_idx on events (scheduled_at);
+
+drop trigger if exists events_set_updated_at on events;
+create trigger events_set_updated_at
+  before update on events
+  for each row execute function set_updated_at();
+
+create table if not exists event_participants (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  user_id uuid not null references users (id) on delete cascade,
+  role_in_event text not null default 'ATTENDEE',
+  hand_raised_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint event_participants_role_check check (role_in_event in ('ATTENDEE', 'SPEAKER', 'MODERATOR')),
+  constraint event_participants_unique unique (event_id, user_id)
+);
+
+create index if not exists event_participants_user_idx on event_participants (user_id);
+
+alter table events enable row level security;
+alter table event_participants enable row level security;
+
+insert into permissions (code) values ('event.manage')
+on conflict (code) do nothing;
+
+insert into role_permissions (role_id, permission_id)
+select r.id, p.id
+from permissions p
+join roles r on r.code = any(array['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'])
+where p.code = 'event.manage'
+on conflict (role_id, permission_id) do nothing;
