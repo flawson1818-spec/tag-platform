@@ -98,6 +98,7 @@ const TYPE_LABELS: Record<string, string> = {
   TESTIMONY_PUBLISHED: 'Ton témoignage a été publié',
   TESTIMONY_REJECTED: 'Ton témoignage a été refusé',
   PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
+  AI_CRISIS_ESCALATION: "Alerte IA : un utilisateur pourrait être en situation de crise",
 };
 
 function describe(notification: AppNotification): string {
@@ -116,6 +117,8 @@ function resourceLink(notification: AppNotification): string | null {
       return '/testimonies';
     case 'PRAYER_REQUEST_ANSWERED':
       return '/prayer-requests';
+    case 'AI_CRISIS_ESCALATION':
+      return '/admin/users';
     default:
       return null;
   }
