@@ -1,9 +1,22 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../access/decorators/current-user.decorator';
-import { RequirePermission } from '../access/decorators/require-permission.decorator';
 import { JwtAuthGuard } from '../access/jwt-auth.guard';
-import { PermissionGuard } from '../access/permission.guard';
+import { PermissionsService } from '../access/permissions.service';
 import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.interface';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventsQueryDto } from './dto/list-events.query.dto';
@@ -12,10 +25,28 @@ import { UpdateParticipantRoleDto } from './dto/update-participant-role.dto';
 import { EventStatus } from './event.entity';
 import { EventsService } from './events.service';
 
+const EVENT_PERMISSION = 'event.manage';
+
 @ApiTags('events')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly permissionsService: PermissionsService,
+  ) {}
+
+  /**
+   * docs/06_RBAC_SPECIFICATION.md section 1: a community-scoped role assignment must
+   * count within its own community, not only global assignments — event.manage checked
+   * via the plain @RequirePermission guard never passed communityId, so a Responsable+
+   * scoped to one community could never manage that community's own events.
+   */
+  private async assertCanManage(userId: string, communityId: string | null): Promise<void> {
+    const permissions = await this.permissionsService.getUserPermissionCodes(userId, communityId ?? undefined);
+    if (!permissions.has(EVENT_PERMISSION)) {
+      throw new ForbiddenException(`Missing permission: ${EVENT_PERMISSION}`);
+    }
+  }
 
   @Get()
   list(@Query() query: ListEventsQueryDto) {
@@ -34,30 +65,32 @@ export class EventsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionGuard)
-  @RequirePermission('event.manage')
-  create(@CurrentUser() currentUser: AuthenticatedUser, @Body() dto: CreateEventDto) {
+  @UseGuards(JwtAuthGuard)
+  async create(@CurrentUser() currentUser: AuthenticatedUser, @Body() dto: CreateEventDto) {
+    await this.assertCanManage(currentUser.id, dto.communityId ?? null);
     return this.eventsService.create(dto, currentUser.id);
   }
 
   @Patch(':id/status')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionGuard)
-  @RequirePermission('event.manage')
-  updateStatus(
+  @UseGuards(JwtAuthGuard)
+  async updateStatus(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEventStatusDto,
   ) {
+    const event = await this.eventsService.findById(id);
+    await this.assertCanManage(currentUser.id, event.community_id);
     return this.eventsService.updateStatus(id, dto.status as EventStatus, currentUser.id);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionGuard)
-  @RequirePermission('event.manage')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+  async remove(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    const event = await this.eventsService.findById(id);
+    await this.assertCanManage(currentUser.id, event.community_id);
     return this.eventsService.softDelete(id, currentUser.id);
   }
 
@@ -87,14 +120,16 @@ export class EventsController {
 
   @Patch(':id/participants/:userId/role')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionGuard)
-  @RequirePermission('event.manage')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  setParticipantRole(
+  async setParticipantRole(
+    @CurrentUser() currentUser: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: UpdateParticipantRoleDto,
   ) {
+    const event = await this.eventsService.findById(id);
+    await this.assertCanManage(currentUser.id, event.community_id);
     return this.eventsService.setParticipantRole(id, userId, dto.role);
   }
 }
