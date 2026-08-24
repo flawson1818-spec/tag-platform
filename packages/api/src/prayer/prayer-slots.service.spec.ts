@@ -136,6 +136,7 @@ describe('PrayerSlotsService', () => {
     it('auto-assigns the next order_index when none is given', async () => {
       const supabase = createSupabaseServiceMock({
         prayer_slots: [
+          createQueryChain({ data: [], error: null }), // assertNoOverlap: no conflicts
           createQueryChain({ data: { order_index: 2 }, error: null }), // nextOrderIndex lookup
           createQueryChain({ data: { ...RUNNING_SLOT_A, order_index: 3 }, error: null }), // insert
         ],
@@ -155,6 +156,7 @@ describe('PrayerSlotsService', () => {
     it('starts at order_index 0 for the first slot in a program', async () => {
       const supabase = createSupabaseServiceMock({
         prayer_slots: [
+          createQueryChain({ data: [], error: null }), // assertNoOverlap: no conflicts
           createQueryChain({ data: null, error: null }), // nextOrderIndex: no existing slots
           createQueryChain({ data: { ...RUNNING_SLOT_A, order_index: 0 }, error: null }), // insert
         ],
@@ -169,6 +171,61 @@ describe('PrayerSlotsService', () => {
       } as never);
 
       expect(result.order_index).toBe(0);
+    });
+
+    it('rejects a slot that overlaps an existing one in the same program', async () => {
+      const chain = createQueryChain({
+        data: [{ title: 'Ouverture', start_at: '2026-01-01T08:05:00.000Z', end_at: '2026-01-01T08:10:00.000Z' }],
+        error: null,
+      });
+      const supabase = createSupabaseServiceMock({ prayer_slots: chain });
+      const service = new PrayerSlotsService(supabase as never);
+
+      await expect(
+        service.create('program-1', {
+          title: 'Nouveau',
+          category: 'Famille',
+          startAt: '2026-01-01T08:08:00.000Z',
+          endAt: '2026-01-01T08:15:00.000Z',
+        } as never),
+      ).rejects.toThrow(/chevauche/);
+      expect(chain.insert).not.toHaveBeenCalled();
+    });
+
+    it('rejects a slot whose endAt is not after startAt', async () => {
+      const chain = createQueryChain({ data: [], error: null });
+      const supabase = createSupabaseServiceMock({ prayer_slots: chain });
+      const service = new PrayerSlotsService(supabase as never);
+
+      await expect(
+        service.create('program-1', {
+          title: 'Invalide',
+          category: 'Famille',
+          startAt: '2026-01-01T08:10:00.000Z',
+          endAt: '2026-01-01T08:10:00.000Z',
+        } as never),
+      ).rejects.toThrow('endAt must be after startAt');
+      expect(chain.select).not.toHaveBeenCalled();
+    });
+
+    it('allows a slot immediately adjacent to (not overlapping) an existing one', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_slots: [
+          createQueryChain({ data: [], error: null }), // assertNoOverlap: adjacent, no conflicts
+          createQueryChain({ data: null, error: null }), // nextOrderIndex
+          createQueryChain({ data: { ...RUNNING_SLOT_A, order_index: 0 }, error: null }), // insert
+        ],
+      });
+      const service = new PrayerSlotsService(supabase as never);
+
+      const result = await service.create('program-1', {
+        title: 'Suivant',
+        category: 'Famille',
+        startAt: '2026-01-01T08:10:00.000Z',
+        endAt: '2026-01-01T08:20:00.000Z',
+      } as never);
+
+      expect(result).toBeDefined();
     });
   });
 

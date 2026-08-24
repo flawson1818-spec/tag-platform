@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -28,6 +29,7 @@ export class PrayerSlotsService {
   }
 
   async create(programId: string, dto: CreateSlotDto): Promise<PrayerSlot> {
+    await this.assertNoOverlap(programId, dto.startAt, dto.endAt);
     const orderIndex = dto.orderIndex ?? (await this.nextOrderIndex(programId));
     const { data, error } = await this.db
       .insert({
@@ -202,6 +204,29 @@ export class PrayerSlotsService {
     return Array.from(byId, ([id, display_name]) => ({ id, display_name })).sort((a, b) =>
       a.display_name.localeCompare(b.display_name),
     );
+  }
+
+  /**
+   * 07_UX_UI_SPECIFICATION.md §4 — a program is a single timeline; the engine also assumes
+   * at most one RUNNING slot at a time, so two overlapping SCHEDULED slots would eventually
+   * fight over that assumption. Rejected up front, at create time, with the conflicting
+   * slot(s) named — never silently accepted.
+   */
+  private async assertNoOverlap(programId: string, startAt: string, endAt: string): Promise<void> {
+    if (new Date(startAt).getTime() >= new Date(endAt).getTime()) {
+      throw new BadRequestException('endAt must be after startAt');
+    }
+    const { data, error } = await this.db
+      .select('title, start_at, end_at')
+      .eq('program_id', programId)
+      .lt('start_at', endAt)
+      .gt('end_at', startAt);
+    if (error) throw new InternalServerErrorException(error.message);
+    const conflicts = (data ?? []) as { title: string; start_at: string; end_at: string }[];
+    if (conflicts.length > 0) {
+      const names = conflicts.map((c) => `« ${c.title} » (${c.start_at} – ${c.end_at})`).join(', ');
+      throw new ConflictException(`Ce créneau chevauche un créneau existant : ${names}`);
+    }
   }
 
   private async nextOrderIndex(programId: string): Promise<number> {
