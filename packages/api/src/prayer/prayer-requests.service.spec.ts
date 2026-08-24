@@ -18,6 +18,9 @@ const NEW_REQUEST = {
 
 function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
   const slotsService = overrides.slotsService ?? { create: vi.fn() };
+  const programsService =
+    overrides.programsService ?? { findById: vi.fn().mockResolvedValue({ id: 'program-1', community_id: 'community-1' }) };
+  const gateway = overrides.gateway ?? { emitSlotStarted: vi.fn(), emitSlotEnded: vi.fn() };
   const notificationsService = overrides.notificationsService ?? { create: vi.fn().mockResolvedValue(undefined) };
   const pushNotificationsService = overrides.pushNotificationsService ?? { send: vi.fn().mockResolvedValue([]) };
   const aiModerationService =
@@ -28,13 +31,26 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
   const service = new PrayerRequestsService(
     supabase as never,
     slotsService as never,
+    programsService as never,
+    gateway as never,
     notificationsService as never,
     pushNotificationsService as never,
     aiModerationService as never,
     aiAgentsService as never,
     filesService as never,
   );
-  return { service, slotsService, notificationsService, pushNotificationsService, aiModerationService, aiAgentsService, filesService, supabase };
+  return {
+    service,
+    slotsService,
+    programsService,
+    gateway,
+    notificationsService,
+    pushNotificationsService,
+    aiModerationService,
+    aiAgentsService,
+    filesService,
+    supabase,
+  };
 }
 
 describe('PrayerRequestsService', () => {
@@ -216,12 +232,14 @@ describe('PrayerRequestsService', () => {
           createQueryChain({ data: { ...NEW_REQUEST, status: 'ASSIGNED', promoted_slot_id: 'slot-1' }, error: null }),
         ],
       });
-      const slotsService = { create: vi.fn().mockResolvedValue({ id: 'slot-1' }) };
+      const slotsService = {
+        injectUrgent: vi.fn().mockResolvedValue({ interrupted: null, activated: { id: 'slot-1' } }),
+      };
       const { service } = buildDeps({ supabase, slotsService });
 
       await service.promote('request-1', { programId: 'program-1' } as never, 'moderator-1');
 
-      expect(slotsService.create).toHaveBeenCalledWith(
+      expect(slotsService.injectUrgent).toHaveBeenCalledWith(
         'program-1',
         expect.objectContaining({ category: 'Famille', guidedText: expect.stringContaining('à valider') }),
       );
@@ -234,13 +252,15 @@ describe('PrayerRequestsService', () => {
           createQueryChain({ data: { ...NEW_REQUEST, status: 'ASSIGNED' }, error: null }),
         ],
       });
-      const slotsService = { create: vi.fn().mockResolvedValue({ id: 'slot-1' }) };
+      const slotsService = {
+        injectUrgent: vi.fn().mockResolvedValue({ interrupted: null, activated: { id: 'slot-1' } }),
+      };
       const aiAgentsService = { draftGuidedPrayer: vi.fn().mockResolvedValue('Prions avec confiance pour cette famille.') };
       const { service } = buildDeps({ supabase, slotsService, aiAgentsService });
 
       await service.promote('request-1', { programId: 'program-1' } as never, 'moderator-1');
 
-      expect(slotsService.create).toHaveBeenCalledWith(
+      expect(slotsService.injectUrgent).toHaveBeenCalledWith(
         'program-1',
         expect.objectContaining({ guidedText: 'Prions avec confiance pour cette famille.' }),
       );
@@ -253,12 +273,57 @@ describe('PrayerRequestsService', () => {
           createQueryChain({ data: { ...NEW_REQUEST, status: 'ASSIGNED' }, error: null }),
         ],
       });
-      const slotsService = { create: vi.fn().mockResolvedValue({ id: 'slot-1' }) };
+      const slotsService = {
+        injectUrgent: vi.fn().mockResolvedValue({ interrupted: null, activated: { id: 'slot-1' } }),
+      };
       const { service } = buildDeps({ supabase, slotsService });
 
       await service.promote('request-1', { programId: 'program-1' } as never, 'moderator-1');
 
-      expect(slotsService.create).toHaveBeenCalledWith('program-1', expect.objectContaining({ category: 'Autre' }));
+      expect(slotsService.injectUrgent).toHaveBeenCalledWith('program-1', expect.objectContaining({ category: 'Autre' }));
+    });
+
+    it('cuts the current slot short and broadcasts both the end and the urgent start immediately', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_requests: [
+          createQueryChain({ data: NEW_REQUEST, error: null }),
+          createQueryChain({ data: { ...NEW_REQUEST, status: 'ASSIGNED', promoted_slot_id: 'slot-urgent' }, error: null }),
+        ],
+      });
+      const slotsService = {
+        injectUrgent: vi.fn().mockResolvedValue({
+          interrupted: { id: 'slot-current' },
+          activated: { id: 'slot-urgent' },
+        }),
+      };
+      const gateway = { emitSlotStarted: vi.fn(), emitSlotEnded: vi.fn() };
+      const programsService = { findById: vi.fn().mockResolvedValue({ id: 'program-1', community_id: 'community-1' }) };
+      const { service } = buildDeps({ supabase, slotsService, gateway, programsService });
+
+      const result = await service.promote('request-1', { programId: 'program-1' } as never, 'moderator-1');
+
+      expect(gateway.emitSlotEnded).toHaveBeenCalledWith('community-1', 'slot-current');
+      expect(gateway.emitSlotStarted).toHaveBeenCalledWith('community-1', { id: 'slot-urgent' }, expect.any(Number));
+      expect(result.promoted_slot_id).toBe('slot-urgent');
+    });
+
+    it('does not emit slot:ended when nothing was running to interrupt', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_requests: [
+          createQueryChain({ data: NEW_REQUEST, error: null }),
+          createQueryChain({ data: { ...NEW_REQUEST, status: 'ASSIGNED' }, error: null }),
+        ],
+      });
+      const slotsService = {
+        injectUrgent: vi.fn().mockResolvedValue({ interrupted: null, activated: { id: 'slot-urgent' } }),
+      };
+      const gateway = { emitSlotStarted: vi.fn(), emitSlotEnded: vi.fn() };
+      const { service } = buildDeps({ supabase, slotsService, gateway });
+
+      await service.promote('request-1', { programId: 'program-1' } as never, 'moderator-1');
+
+      expect(gateway.emitSlotEnded).not.toHaveBeenCalled();
+      expect(gateway.emitSlotStarted).toHaveBeenCalled();
     });
 
     it('rejects promoting a request that is not NEW', async () => {

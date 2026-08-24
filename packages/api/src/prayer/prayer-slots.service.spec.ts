@@ -229,6 +229,55 @@ describe('PrayerSlotsService', () => {
     });
   });
 
+  describe('injectUrgent', () => {
+    it('cuts short the running slot and activates the urgent one in its place', async () => {
+      const urgentSlot = { ...RUNNING_SLOT_A, id: 'slot-urgent', order_index: 4, importance: 'Urgent' };
+      const chains = [
+        createQueryChain({ data: [RUNNING_SLOT_A], error: null }), // findRunningSlotByProgram
+        createQueryChain({ data: null, error: null }), // cutShort
+        createQueryChain({ data: [], error: null }), // assertNoOverlap: no conflicts
+        createQueryChain({ data: { order_index: 3 }, error: null }), // nextOrderIndex
+        createQueryChain({ data: urgentSlot, error: null }), // insert
+        createQueryChain({ data: { ...urgentSlot, status: 'RUNNING' }, error: null }), // activate
+      ];
+      const supabase = createSupabaseServiceMock({ prayer_slots: chains });
+      const service = new PrayerSlotsService(supabase as never);
+
+      const result = await service.injectUrgent('program-1', {
+        title: 'Sujet urgent',
+        category: 'Urgence',
+        durationSeconds: 300,
+      });
+
+      expect(result.interrupted?.id).toBe('slot-a');
+      expect(chains[1].update).toHaveBeenCalledWith(expect.objectContaining({ status: 'FINISHED' }));
+      expect(result.activated.id).toBe('slot-urgent');
+      expect(result.activated.status).toBe('RUNNING');
+    });
+
+    it('activates the urgent slot directly when nothing is currently running', async () => {
+      const urgentSlot = { ...RUNNING_SLOT_A, id: 'slot-urgent', order_index: 0, importance: 'Urgent' };
+      const chains = [
+        createQueryChain({ data: [], error: null }), // findRunningSlotByProgram: none
+        createQueryChain({ data: [], error: null }), // assertNoOverlap: no conflicts
+        createQueryChain({ data: null, error: null }), // nextOrderIndex: no existing slots
+        createQueryChain({ data: urgentSlot, error: null }), // insert
+        createQueryChain({ data: { ...urgentSlot, status: 'RUNNING' }, error: null }), // activate
+      ];
+      const supabase = createSupabaseServiceMock({ prayer_slots: chains });
+      const service = new PrayerSlotsService(supabase as never);
+
+      const result = await service.injectUrgent('program-1', {
+        title: 'Sujet urgent',
+        category: 'Urgence',
+        durationSeconds: 300,
+      });
+
+      expect(result.interrupted).toBeNull();
+      expect(result.activated.id).toBe('slot-urgent');
+    });
+  });
+
   describe('listLeaderCandidates', () => {
     it('deduplicates a user who holds multiple eligible roles', async () => {
       const rows = [

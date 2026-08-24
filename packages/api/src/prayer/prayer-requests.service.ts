@@ -14,6 +14,9 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { CreatePrayerRequestDto } from './dto/create-prayer-request.dto';
 import { ListPrayerRequestsQueryDto } from './dto/list-prayer-requests.query.dto';
 import { PromotePrayerRequestDto } from './dto/promote-prayer-request.dto';
+import { toRoomId } from './prayer-constants';
+import { PrayerProgramsService } from './prayer-programs.service';
+import { PrayerRealtimeGateway } from './prayer-realtime.gateway';
 import { PrayerRequest, PrayerRequestStatus } from './prayer-request.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
 import { assertRequestTransition } from './prayer-state-machines';
@@ -49,6 +52,8 @@ export class PrayerRequestsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly slotsService: PrayerSlotsService,
+    private readonly programsService: PrayerProgramsService,
+    private readonly gateway: PrayerRealtimeGateway,
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationsService: PushNotificationsService,
     private readonly aiModerationService: AiModerationService,
@@ -193,6 +198,14 @@ export class PrayerRequestsService {
     return updated;
   }
 
+  /**
+   * "Promoting" a request means it becomes the room's urgent topic right now (07_UX_UI_SPECIFICATION.md
+   * §4 "injection d'un sujet d'urgence") — not a normal future-scheduled slot. A plain
+   * slotsService.create() with startAt=now would almost always collide with whatever is already
+   * RUNNING in a continuously-looping room, so this goes through injectUrgent() instead, which
+   * cuts the current slot short first, and then broadcasts the change immediately rather than
+   * waiting for the engine's next tick to notice.
+   */
   async promote(id: string, dto: PromotePrayerRequestDto, actorId: string): Promise<PrayerRequest> {
     const request = await this.findById(id, true);
     assertRequestTransition(request.status, 'ASSIGNED');
@@ -204,16 +217,20 @@ export class PrayerRequestsService {
           `[Texte généré automatiquement par l'IA Intercession — à valider] Prions pour : ${request.description}`,
       );
 
-    const slot = await this.slotsService.create(dto.programId, {
+    const { interrupted, activated } = await this.slotsService.injectUrgent(dto.programId, {
       title: `${request.category} — demande de prière`,
       category: REQUEST_TO_SLOT_CATEGORY[request.category] ?? 'Autre',
-      startAt: new Date().toISOString(),
-      endAt: new Date(Date.now() + DEFAULT_PROMOTED_SLOT_DURATION_SECONDS * 1000).toISOString(),
       guidedText,
+      durationSeconds: DEFAULT_PROMOTED_SLOT_DURATION_SECONDS,
     });
 
+    const program = await this.programsService.findById(dto.programId);
+    const roomId = toRoomId(program.community_id);
+    if (interrupted) this.gateway.emitSlotEnded(roomId, interrupted.id);
+    this.gateway.emitSlotStarted(roomId, activated, DEFAULT_PROMOTED_SLOT_DURATION_SECONDS);
+
     const { data, error } = await this.db
-      .update({ status: 'ASSIGNED', promoted_slot_id: slot.id, updated_by: actorId })
+      .update({ status: 'ASSIGNED', promoted_slot_id: activated.id, updated_by: actorId })
       .eq('id', id)
       .select(REQUEST_COLUMNS)
       .single();

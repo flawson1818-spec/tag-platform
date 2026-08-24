@@ -176,6 +176,41 @@ export class PrayerSlotsService {
   }
 
   /**
+   * 07_UX_UI_SPECIFICATION.md §4 — "injection d'un sujet d'urgence": cuts short whatever is
+   * currently RUNNING in the program (if anything) and activates the urgent slot in its place
+   * right away. The interrupted slot is marked FINISHED with end_at truncated to now, exactly
+   * like a natural transition just early, so assertNoOverlap doesn't see its original window as
+   * still occupying "now". The urgent slot is appended after the program's existing slots
+   * (nextOrderIndex) rather than reusing the interrupted slot's order_index, so it can never
+   * collide with another slot at the same position — the tradeoff (flagged deliberately, not an
+   * oversight) is that once the urgent slot ends the engine wraps to the first slot rather than
+   * resuming mid-sequence, so the rest of the interrupted pass resumes on the next loop.
+   */
+  async injectUrgent(
+    programId: string,
+    input: { title: string; category: string; guidedText?: string; durationSeconds: number },
+  ): Promise<{ interrupted: PrayerSlot | null; activated: PrayerSlot }> {
+    const running = await this.findRunningSlotByProgram(programId);
+    if (running) await this.cutShort(running.id);
+
+    const created = await this.create(programId, {
+      title: input.title,
+      category: input.category,
+      importance: 'Urgent',
+      startAt: new Date().toISOString(),
+      endAt: new Date(Date.now() + input.durationSeconds * 1000).toISOString(),
+      guidedText: input.guidedText,
+    });
+    const activated = await this.activate(created.id, input.durationSeconds);
+    return { interrupted: running, activated };
+  }
+
+  private async cutShort(id: string): Promise<void> {
+    const { error } = await this.db.update({ status: 'FINISHED', end_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw new InternalServerErrorException(error.message);
+  }
+
+  /**
    * Best-effort presence tracking for analytics (peak hours). Errors are swallowed on purpose
    * so a presence-tracking hiccup never breaks the realtime join flow.
    */
