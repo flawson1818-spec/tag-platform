@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getAccessToken } from '../auth/AuthContext';
 import { AppNotification, notificationsApi, pushApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
@@ -96,10 +97,28 @@ function PushNotificationsToggle() {
 const TYPE_LABELS: Record<string, string> = {
   TESTIMONY_PUBLISHED: 'Ton témoignage a été publié',
   TESTIMONY_REJECTED: 'Ton témoignage a été refusé',
+  PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
 };
 
 function describe(notification: AppNotification): string {
   return TYPE_LABELS[notification.type] ?? notification.type;
+}
+
+/**
+ * Neither testimonies nor prayer requests have an individual detail route (only their list
+ * pages do), so "lien direct vers la ressource" (docs/07_UX_UI_SPECIFICATION.md §11) points at
+ * the relevant list rather than a resource page that doesn't exist yet.
+ */
+function resourceLink(notification: AppNotification): string | null {
+  switch (notification.type) {
+    case 'TESTIMONY_PUBLISHED':
+    case 'TESTIMONY_REJECTED':
+      return '/testimonies';
+    case 'PRAYER_REQUEST_ANSWERED':
+      return '/prayer-requests';
+    default:
+      return null;
+  }
 }
 
 const FILTERS = [
@@ -182,21 +201,25 @@ export function NotificationsPage() {
       {error && <p className="error">{error}</p>}
 
       <ul className="request-list">
-        {notifications.map((n) => (
-          <li key={n.id} className="request-row">
-            <div className="request-meta">
-              <span className="chip">{n.status}</span>
-              <span className="hint">{new Date(n.created_at).toLocaleString('fr-FR')}</span>
-            </div>
-            <p>{describe(n)}</p>
-            <div className="request-form">
-              {n.status !== 'READ' && n.status !== 'ARCHIVED' && (
-                <button onClick={() => handleMarkRead(n.id)}>Marquer comme lue</button>
-              )}
-              {n.status !== 'ARCHIVED' && <button onClick={() => handleArchive(n.id)}>Archiver</button>}
-            </div>
-          </li>
-        ))}
+        {notifications.map((n) => {
+          const link = resourceLink(n);
+          return (
+            <li key={n.id} className="request-row">
+              <div className="request-meta">
+                <span className="chip">{n.status}</span>
+                <span className="hint">{new Date(n.created_at).toLocaleString('fr-FR')}</span>
+              </div>
+              <p>{describe(n)}</p>
+              <div className="request-form">
+                {link && <Link to={link}>Voir</Link>}
+                {n.status !== 'READ' && n.status !== 'ARCHIVED' && (
+                  <button onClick={() => handleMarkRead(n.id)}>Marquer comme lue</button>
+                )}
+                {n.status !== 'ARCHIVED' && <button onClick={() => handleArchive(n.id)}>Archiver</button>}
+              </div>
+            </li>
+          );
+        })}
       </ul>
       {!loading && notifications.length === 0 && !error && <p className="hint">Aucune notification.</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
