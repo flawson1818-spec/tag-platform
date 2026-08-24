@@ -380,6 +380,13 @@ export interface SocialPublication {
   created_at: string;
 }
 
+export interface SocialPublicationChannelSetting {
+  channel: string;
+  auto_publish: boolean;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 export const socialPublicationsApi = {
   list: (token: string, status?: string, page = 1) =>
     request<PaginatedResult<SocialPublication>>(
@@ -395,6 +402,14 @@ export const socialPublicationsApi = {
     request<SocialPublication>(`/social-publications/${id}/reject`, {
       method: 'PATCH',
       headers: authHeaders(token),
+    }),
+  listChannelSettings: (token: string) =>
+    request<SocialPublicationChannelSetting[]>('/social-publications/settings', { headers: authHeaders(token) }),
+  setChannelAutoPublish: (token: string, channel: string, autoPublish: boolean) =>
+    request<SocialPublicationChannelSetting>(`/social-publications/settings/${encodeURIComponent(channel)}`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ autoPublish }),
     }),
 };
 
@@ -722,6 +737,7 @@ export interface EventParticipant {
   user_id: string;
   display_name: string | null;
   role_in_event: string;
+  hand_raised_at: string | null;
   created_at: string;
 }
 
@@ -758,6 +774,16 @@ export const eventsApi = {
   join: (token: string, id: string) =>
     request<EventParticipant>(`/events/${id}/join`, { method: 'POST', headers: authHeaders(token) }),
   listParticipants: (id: string) => request<EventParticipant[]>(`/events/${id}/participants`),
+  raiseHand: (token: string, id: string) =>
+    request<EventParticipant>(`/events/${id}/hand-raise`, { method: 'POST', headers: authHeaders(token) }),
+  lowerHand: (token: string, id: string) =>
+    request<void>(`/events/${id}/hand-lower`, { method: 'POST', headers: authHeaders(token) }),
+  setParticipantRole: (token: string, id: string, userId: string, role: string) =>
+    request<EventParticipant>(`/events/${id}/participants/${userId}/role`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ role }),
+    }),
 };
 
 export const CAMPAIGN_STATUSES = ['DRAFT', 'PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED'] as const;

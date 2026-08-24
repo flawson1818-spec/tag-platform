@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAccessToken } from '../auth/AuthContext';
-import { SocialPublication, socialPublicationsApi } from '../../lib/api';
+import { SocialPublication, SocialPublicationChannelSetting, socialPublicationsApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 
 export function SocialPublicationsPage() {
@@ -11,6 +11,32 @@ export function SocialPublicationsPage() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [channelSettings, setChannelSettings] = useState<SocialPublicationChannelSetting[] | null>(null);
+  const [togglingChannel, setTogglingChannel] = useState<string | null>(null);
+
+  useEffect(() => {
+    const currentToken = getAccessToken();
+    if (!currentToken) return;
+    socialPublicationsApi
+      .listChannelSettings(currentToken)
+      .then(setChannelSettings)
+      .catch(() => setChannelSettings(null)); // likely a permission 403 — this section is opt-in for admins
+  }, []);
+
+  const toggleAutoPublish = async (channel: string, next: boolean) => {
+    const currentToken = getAccessToken();
+    if (!currentToken) return;
+    setTogglingChannel(channel);
+    try {
+      const updated = await socialPublicationsApi.setChannelAutoPublish(currentToken, channel, next);
+      setChannelSettings((prev) => prev?.map((s) => (s.channel === channel ? updated : s)) ?? prev);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setTogglingChannel(null);
+    }
+  };
 
   const refresh = () => {
     const currentToken = getAccessToken();
@@ -49,9 +75,34 @@ export function SocialPublicationsPage() {
       <h2>Brouillons de publication</h2>
       <p className="hint">
         Générés automatiquement par l'IA Communication à chaque témoignage approuvé — un brouillon par
-        réseau, toujours soumis à validation humaine avant envoi.
+        réseau, toujours soumis à validation humaine avant envoi, sauf canal en mode auto-publish ci-dessous.
       </p>
       {error && <p className="error">{error}</p>}
+
+      {channelSettings && (
+        <div className="panel-section">
+          <h3>Auto-publish par canal</h3>
+          <p className="hint">
+            Réservé au Super Administrateur. Un canal activé ici publie ses brouillons directement,
+            sans passer par cette file d'attente.
+          </p>
+          <ul className="channel-settings-list">
+            {channelSettings.map((s) => (
+              <li key={s.channel} className="channel-settings-row">
+                <span>{s.channel}</span>
+                <button
+                  type="button"
+                  className={s.auto_publish ? 'active' : ''}
+                  disabled={togglingChannel === s.channel}
+                  onClick={() => toggleAutoPublish(s.channel, !s.auto_publish)}
+                >
+                  {s.auto_publish ? 'Auto-publish activé' : 'Auto-publish désactivé'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {drafts.length === 0 && <p className="hint">Aucun brouillon en attente.</p>}
       <ul className="request-list">

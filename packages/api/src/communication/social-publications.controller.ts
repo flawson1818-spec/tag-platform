@@ -7,9 +7,11 @@ import { PermissionGuard } from '../access/permission.guard';
 import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.interface';
 import { CreateSocialPublicationDto } from './dto/create-social-publication.dto';
 import { ListSocialPublicationsQueryDto } from './dto/list-social-publications.query.dto';
+import { SetChannelAutoPublishDto } from './dto/set-channel-auto-publish.dto';
 import { SocialPublicationsService } from './social-publications.service';
 
 const APPROVE_PERMISSION = 'social_publication.approve';
+const CONFIGURE_PERMISSION = 'system.configure';
 
 @ApiTags('social-publications')
 @ApiBearerAuth()
@@ -28,6 +30,24 @@ export class SocialPublicationsController {
   @Get()
   list(@Query() query: ListSocialPublicationsQueryDto) {
     return this.publicationsService.list(query);
+  }
+
+  @Get('settings')
+  @UseGuards(PermissionGuard)
+  @RequirePermission(CONFIGURE_PERMISSION)
+  listSettings() {
+    return this.publicationsService.listChannelSettings();
+  }
+
+  @Patch('settings/:channel')
+  @UseGuards(PermissionGuard)
+  @RequirePermission(CONFIGURE_PERMISSION)
+  setChannelAutoPublish(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('channel') channel: string,
+    @Body() dto: SetChannelAutoPublishDto,
+  ) {
+    return this.publicationsService.setChannelAutoPublish(channel, dto.autoPublish, currentUser.id);
   }
 
   @Patch(':id/approve')

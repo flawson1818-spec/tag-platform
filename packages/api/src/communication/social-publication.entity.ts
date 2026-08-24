@@ -22,3 +22,11 @@ export interface SocialPublication {
   created_at: string;
   updated_at: string;
 }
+
+/** docs/02_AI_AGENTS_SPECIFICATION.md section 6 — per-channel "auto-publish" toggle. */
+export interface SocialPublicationChannelSetting {
+  channel: SocialChannel;
+  auto_publish: boolean;
+  updated_by: string | null;
+  updated_at: string;
+}
