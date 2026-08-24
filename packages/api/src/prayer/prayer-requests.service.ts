@@ -142,6 +142,7 @@ export class PrayerRequestsService {
   async list(
     query: ListPrayerRequestsQueryDto,
     canSeePrivate: boolean,
+    currentUserId?: string,
   ): Promise<PaginatedResult<PrayerRequest>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
@@ -152,7 +153,13 @@ export class PrayerRequestsService {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(from, to);
-    if (!canSeePrivate) request = request.neq('confidentiality', 'PRIVATE');
+    if (query.mine && currentUserId) {
+      // Owner sees every one of their own requests, private included — an ANONYMOUS submission
+      // has no author_id at all (see create()), so it naturally never appears here either.
+      request = request.eq('author_id', currentUserId);
+    } else if (!canSeePrivate) {
+      request = request.neq('confidentiality', 'PRIVATE');
+    }
     if (query.status) request = request.eq('status', query.status);
     if (query.category) request = request.eq('category', query.category);
 

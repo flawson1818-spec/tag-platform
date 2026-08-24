@@ -129,6 +129,29 @@ describe('PrayerRequestsService', () => {
     });
   });
 
+  describe('list — mine filter', () => {
+    it('filters to the caller\'s own author_id when mine is set, ignoring canSeePrivate', async () => {
+      const chain = createQueryChain({ data: [NEW_REQUEST], error: null, count: 1 });
+      const supabase = createSupabaseServiceMock({ prayer_requests: chain });
+      const { service } = buildDeps({ supabase });
+
+      await service.list({ mine: true } as never, false, 'user-1');
+
+      expect(chain.eq).toHaveBeenCalledWith('author_id', 'user-1');
+      expect(chain.neq).not.toHaveBeenCalledWith('confidentiality', 'PRIVATE');
+    });
+
+    it('excludes PRIVATE requests for a non-moderator browsing everyone\'s requests', async () => {
+      const chain = createQueryChain({ data: [NEW_REQUEST], error: null, count: 1 });
+      const supabase = createSupabaseServiceMock({ prayer_requests: chain });
+      const { service } = buildDeps({ supabase });
+
+      await service.list({} as never, false, 'user-1');
+
+      expect(chain.neq).toHaveBeenCalledWith('confidentiality', 'PRIVATE');
+    });
+  });
+
   describe('updateStatus — permission gate', () => {
     it('lets the owner move their own NEW request', async () => {
       const supabase = createSupabaseServiceMock({

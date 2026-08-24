@@ -5,10 +5,93 @@ import {
   usersApi,
   filesApi,
   gamificationApi,
+  prayerRequestsApi,
+  testimoniesApi,
   MyGamificationStats,
   CommunityGoal,
   LeaderboardEntry,
+  PrayerRequest,
+  Testimony,
 } from '../../lib/api';
+import { Pagination } from '../Pagination';
+
+function MyPrayerRequestsSection() {
+  const [requests, setRequests] = useState<PrayerRequest[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+    prayerRequestsApi
+      .listMine(token, page)
+      .then((res) => {
+        setRequests(res.data);
+        setTotalPages(res.meta.totalPages);
+      })
+      .catch((err) => setError((err as Error).message));
+  }, [page]);
+
+  return (
+    <div className="gamification">
+      <h3>Mes demandes de prière</h3>
+      {error && <p className="error">{error}</p>}
+      {requests.length === 0 && !error && <p className="hint">Aucune demande (les demandes anonymes n'apparaissent pas ici).</p>}
+      <ul className="request-list">
+        {requests.map((r) => (
+          <li key={r.id} className="request-row">
+            <div className="request-meta">
+              <span className="chip">{r.category}</span>
+              <span className="chip chip-status">{r.status}</span>
+            </div>
+            <p>{r.description}</p>
+          </li>
+        ))}
+      </ul>
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+    </div>
+  );
+}
+
+function MyTestimoniesSection() {
+  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+    testimoniesApi
+      .listMine(token, page)
+      .then((res) => {
+        setTestimonies(res.data);
+        setTotalPages(res.meta.totalPages);
+      })
+      .catch((err) => setError((err as Error).message));
+  }, [page]);
+
+  return (
+    <div className="gamification">
+      <h3>Mes témoignages</h3>
+      {error && <p className="error">{error}</p>}
+      {testimonies.length === 0 && !error && <p className="hint">Aucun témoignage partagé pour l'instant.</p>}
+      <ul className="request-list">
+        {testimonies.map((t) => (
+          <li key={t.id} className="request-row">
+            <div className="request-meta">
+              <span className="chip chip-status">{t.status}</span>
+            </div>
+            <p>{t.content ?? `Témoignage ${t.media_type.toLowerCase()}`}</p>
+            {t.moderation_reason && <p className="hint">Motif : {t.moderation_reason}</p>}
+          </li>
+        ))}
+      </ul>
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+    </div>
+  );
+}
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -339,6 +422,8 @@ export function ProfilePage() {
       {error && <p className="error">{error}</p>}
 
       <GamificationSection />
+      <MyPrayerRequestsSection />
+      <MyTestimoniesSection />
       <PrivacySection />
     </div>
   );

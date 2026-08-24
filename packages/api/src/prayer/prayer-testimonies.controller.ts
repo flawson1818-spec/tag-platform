@@ -59,7 +59,7 @@ export class PrayerTestimoniesController {
     const canModerate = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(
       MODERATE_PERMISSION,
     );
-    return this.testimoniesService.list(query, canModerate);
+    return this.testimoniesService.list(query, canModerate, currentUser.id);
   }
 
   @Patch(':id/approve')

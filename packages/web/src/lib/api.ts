@@ -318,6 +318,11 @@ export const prayerRequestsApi = {
     request<PaginatedResult<PrayerRequest>>(`/prayer-requests?page=${page}&limit=20`, {
       headers: authHeaders(token),
     }),
+  /** docs/07_UX_UI_SPECIFICATION.md §8 (Profil — "Mes demandes"). */
+  listMine: (token: string, page = 1) =>
+    request<PaginatedResult<PrayerRequest>>(`/prayer-requests?mine=true&page=${page}&limit=20`, {
+      headers: authHeaders(token),
+    }),
   listFlagged: (token: string) =>
     request<FlaggedPrayerRequest[]>('/prayer-requests/flagged', { headers: authHeaders(token) }),
   mediaUrl: (token: string, id: string, kind: 'photo' | 'attachment') =>
@@ -356,6 +361,11 @@ export const testimoniesApi = {
       `/testimonies?page=${page}&limit=20${status ? `&status=${status}` : ''}`,
       { headers: authHeaders(token) },
     ),
+  /** docs/07_UX_UI_SPECIFICATION.md §8 (Profil — "Mes témoignages"), any status. */
+  listMine: (token: string, page = 1) =>
+    request<PaginatedResult<Testimony>>(`/testimonies?mine=true&page=${page}&limit=20`, {
+      headers: authHeaders(token),
+    }),
   approve: (token: string, id: string) =>
     request<Testimony>(`/testimonies/${id}/approve`, { method: 'PATCH', headers: authHeaders(token) }),
   reject: (token: string, id: string, reason: string) =>

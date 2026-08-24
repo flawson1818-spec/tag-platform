@@ -43,7 +43,7 @@ export class PrayerRequestsController {
     const canSeePrivate = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(
       MODERATE_PERMISSION,
     );
-    return this.requestsService.list(query, canSeePrivate);
+    return this.requestsService.list(query, canSeePrivate, currentUser.id);
   }
 
   @Get('flagged')

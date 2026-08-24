@@ -180,5 +180,27 @@ describe('PrayerTestimoniesService', () => {
 
       expect(chain.eq).toHaveBeenCalledWith('status', 'DRAFT');
     });
+
+    it('mine: shows the caller their own testimony of any status, not just PUBLISHED', async () => {
+      const chain = createQueryChain({ data: [DRAFT_TESTIMONY], error: null, count: 1 });
+      const supabase = createSupabaseServiceMock({ testimonies: chain });
+      const { service } = buildDeps({ supabase });
+
+      await service.list({ mine: true } as never, false, 'user-1');
+
+      expect(chain.eq).toHaveBeenCalledWith('author_id', 'user-1');
+      expect(chain.eq).not.toHaveBeenCalledWith('status', 'PUBLISHED');
+    });
+
+    it('mine: still honors an explicit status filter for the caller\'s own testimonies', async () => {
+      const chain = createQueryChain({ data: [DRAFT_TESTIMONY], error: null, count: 1 });
+      const supabase = createSupabaseServiceMock({ testimonies: chain });
+      const { service } = buildDeps({ supabase });
+
+      await service.list({ mine: true, status: 'ARCHIVED' } as never, false, 'user-1');
+
+      expect(chain.eq).toHaveBeenCalledWith('author_id', 'user-1');
+      expect(chain.eq).toHaveBeenCalledWith('status', 'ARCHIVED');
+    });
   });
 });

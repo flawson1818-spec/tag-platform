@@ -125,7 +125,11 @@ export class PrayerTestimoniesService {
     return data as unknown as Testimony[];
   }
 
-  async list(query: ListTestimoniesQueryDto, canModerate: boolean): Promise<PaginatedResult<Testimony>> {
+  async list(
+    query: ListTestimoniesQueryDto,
+    canModerate: boolean,
+    currentUserId?: string,
+  ): Promise<PaginatedResult<Testimony>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const { from, to } = paginationRange(page, limit);
@@ -135,7 +139,13 @@ export class PrayerTestimoniesService {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(from, to);
-    request = canModerate && query.status ? request.eq('status', query.status) : request.eq('status', 'PUBLISHED');
+    if (query.mine && currentUserId) {
+      // Owner sees every one of their own testimonies, any status (including a rejected DRAFT).
+      request = request.eq('author_id', currentUserId);
+      if (query.status) request = request.eq('status', query.status);
+    } else {
+      request = canModerate && query.status ? request.eq('status', query.status) : request.eq('status', 'PUBLISHED');
+    }
 
     const { data, error, count } = await request;
     if (error) throw new InternalServerErrorException(error.message);
