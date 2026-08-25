@@ -12,11 +12,16 @@ const ESCALATION_RECIPIENT_ROLES = ['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR
 const MODEL = 'claude-opus-5';
 const MAX_TOKENS = 1024;
 
+/** docs/02_AI_AGENTS_SPECIFICATION.md section 2 — "Escalader vers un humain (support) si la
+ * question sort du périmètre". A structured signal, not keyword-matching the reply, since
+ * "out of scope" isn't detectable the way crisis keywords are in the user's own message. */
+const OUT_OF_SCOPE_MARKER = '[HORS_PERIMETRE]';
+
 const ACCUEIL_SYSTEM = `Tu es l'IA Accueil de TAG (Total Adoration & Global Intercession), une plateforme mondiale de prière chrétienne active 24h/24.
 Ton rôle : accueillir chaleureusement les nouveaux visiteurs, expliquer le fonctionnement de la plateforme (comment rejoindre la salle de prière mondiale, comment soumettre une demande de prière, comment publier un témoignage), et répondre aux questions d'usage.
 Si la question est de nature spirituelle ou évangélique plutôt qu'opérationnelle (questions sur la foi, la Bible, le salut), oriente clairement la personne vers l'IA Évangélisation.
 Tu ne gères aucune donnée sensible (paiement, signalement de modération) et tu n'as aucune autorité de modération.
-Si une question sort clairement de ce périmètre, dis-le honnêtement et invite la personne à contacter un responsable humain plutôt que d'inventer une réponse.
+Si une question sort clairement de ce périmètre (rien à voir avec TAG, la prière, ou son fonctionnement), commence ta réponse par exactement le jeton "${OUT_OF_SCOPE_MARKER}" suivi d'un espace, puis explique honnêtement que tu ne peux pas répondre à cela et invite la personne à contacter un responsable humain — n'invente jamais de réponse. Dans tous les autres cas, ne commence jamais ta réponse par ce jeton.
 Réponds en français, de façon brève et chaleureuse (quelques phrases maximum).`;
 
 const EVANGELISATION_SYSTEM = `Tu es l'IA Évangélisation de TAG, une plateforme mondiale de prière chrétienne.
@@ -94,27 +99,47 @@ export class AiAgentsService {
     return this.client;
   }
 
+  /**
+   * docs/02_AI_AGENTS_SPECIFICATION.md section 2: "Escalader vers un humain (support) si la
+   * question sort du périmètre couvert par la base de connaissance" — the model signals this
+   * itself via OUT_OF_SCOPE_MARKER (see ACCUEIL_SYSTEM); chat() strips the marker, logs the
+   * escalation, and notifies support (same MODERATEUR+ audience as a crisis, lower stakes —
+   * hence a distinct notification type so it can be opted out of independently later).
+   */
   async chatAccueil(dto: AiChatDto, userId: string | null): Promise<AiChatResult> {
-    return this.chat('ACCUEIL', ACCUEIL_SYSTEM, dto, userId);
+    return this.chat('ACCUEIL', ACCUEIL_SYSTEM, dto, userId, {
+      marker: OUT_OF_SCOPE_MARKER,
+      notificationType: 'AI_ACCUEIL_ESCALATION',
+      title: 'Alerte IA Accueil — question hors périmètre',
+      body:
+        "Un visiteur a posé une question hors du périmètre couvert par l'IA Accueil et a été " +
+        'invité à contacter un responsable — un suivi humain peut être utile.',
+    });
   }
 
   async chatEvangelisation(dto: AiChatDto, userId: string | null): Promise<AiChatResult> {
     if (CRISIS_KEYWORDS.some((keyword) => dto.message.toLowerCase().includes(keyword))) {
       await this.logInteraction('EVANGELISATION', dto.message, CRISIS_RESPONSE, userId, true);
-      await this.notifyCrisisEscalation(userId);
+      await this.notifyEscalation(
+        userId,
+        'AI_CRISIS_ESCALATION',
+        'Alerte IA Évangélisation — suivi humain requis',
+        "Une personne a été orientée vers des ressources d'urgence par l'IA Évangélisation " +
+          'suite à un message évoquant une situation de détresse ou de danger. Un suivi humain est nécessaire dès que possible.',
+      );
       return { reply: CRISIS_RESPONSE, escalated: true };
     }
     return this.chat('EVANGELISATION', EVANGELISATION_SYSTEM, dto, userId);
   }
 
   /**
-   * docs/02_AI_AGENTS_SPECIFICATION.md section 4: a detected crisis must "déclencher une
-   * escalade immédiate vers un humain (Modérateur/Pasteur)" — logging the flag alone (the prior
-   * behavior) meant nobody was ever actually told; this notifies every MODERATEUR+ user in-app
-   * and by push. Best-effort: a notification failure must never surface as an error to the
-   * person in crisis, who has already received CRISIS_RESPONSE regardless.
+   * docs/02_AI_AGENTS_SPECIFICATION.md section 4/2: shared by the crisis escalation (IA
+   * Évangélisation) and the out-of-scope escalation (IA Accueil) — logging the flag alone (the
+   * prior behavior for crisis) meant nobody was ever actually told; this notifies every
+   * MODERATEUR+ user in-app and by push. Best-effort: a notification failure must never surface
+   * as an error to the caller, who has already received their reply regardless.
    */
-  private async notifyCrisisEscalation(userId: string | null): Promise<void> {
+  private async notifyEscalation(userId: string | null, type: string, title: string, body: string): Promise<void> {
     let recipientIds: string[];
     try {
       const { data, error } = await this.supabase.client
@@ -124,23 +149,18 @@ export class AiAgentsService {
       if (error) throw new Error(error.message);
       recipientIds = Array.from(new Set((data as unknown as { user_id: string }[]).map((r) => r.user_id)));
     } catch (error) {
-      this.logger.error('Failed to look up crisis-escalation recipients', error as Error);
+      this.logger.error('Failed to look up escalation recipients', error as Error);
       return;
     }
-
-    const title = 'Alerte IA Évangélisation — suivi humain requis';
-    const body =
-      "Une personne a été orientée vers des ressources d'urgence par l'IA Évangélisation " +
-      "suite à un message évoquant une situation de détresse ou de danger. Un suivi humain est nécessaire dès que possible.";
 
     await Promise.all(
       recipientIds.map(async (recipientId) => {
         await this.notificationsService
-          .create(recipientId, 'AI_CRISIS_ESCALATION', { userId })
-          .catch((error) => this.logger.error(`Failed to notify ${recipientId} of crisis escalation`, error));
+          .create(recipientId, type, { userId })
+          .catch((error) => this.logger.error(`Failed to notify ${recipientId} of ${type}`, error));
         await this.pushNotificationsService
           .send(recipientId, title, body)
-          .catch((error) => this.logger.error(`Failed to push-notify ${recipientId} of crisis escalation`, error));
+          .catch((error) => this.logger.error(`Failed to push-notify ${recipientId} of ${type}`, error));
       }),
     );
   }
@@ -202,7 +222,13 @@ export class AiAgentsService {
     return textBlock.text;
   }
 
-  private async chat(agent: AiAgentName, system: string, dto: AiChatDto, userId: string | null): Promise<AiChatResult> {
+  private async chat(
+    agent: AiAgentName,
+    system: string,
+    dto: AiChatDto,
+    userId: string | null,
+    escalation?: { marker: string; notificationType: string; title: string; body: string },
+  ): Promise<AiChatResult> {
     const client = this.getClient();
 
     const messages: Anthropic.MessageParam[] = [
@@ -230,10 +256,19 @@ export class AiAgentsService {
     }
 
     const textBlock = response.content.find((block): block is Anthropic.TextBlock => block.type === 'text');
-    const reply = textBlock?.text ?? "Je n'ai pas pu formuler de réponse, réessaie ta question autrement.";
+    let reply = textBlock?.text ?? "Je n'ai pas pu formuler de réponse, réessaie ta question autrement.";
 
-    await this.logInteraction(agent, dto.message, reply, userId, false);
-    return { reply, escalated: false };
+    let escalated = false;
+    if (escalation && reply.startsWith(escalation.marker)) {
+      reply = reply.slice(escalation.marker.length).trim();
+      escalated = true;
+    }
+
+    await this.logInteraction(agent, dto.message, reply, userId, escalated);
+    if (escalated && escalation) {
+      await this.notifyEscalation(userId, escalation.notificationType, escalation.title, escalation.body);
+    }
+    return { reply, escalated };
   }
 
   private async logInteraction(

@@ -99,3 +99,58 @@ describe('AiAgentsService.chatEvangelisation — crisis escalation', () => {
     expect(notificationsService.create).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Same technique already established for AiModerationService (see feedback_vitest_esm_mocking
+ * memory): stub the env var so getClient() doesn't throw, then set the lazily-constructed
+ * `client` field directly to a fake — no vi.mock('@anthropic-ai/sdk', ...) anywhere, since that
+ * silently fails to intercept the real module once the full suite runs (documented gotcha).
+ */
+function fakeAnthropicReply(text: string) {
+  return { content: [{ type: 'text', text }], stop_reason: 'end_turn' };
+}
+
+describe('AiAgentsService.chatAccueil — out-of-scope escalation', () => {
+  beforeEach(() => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test-key');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('strips the marker, escalates, and notifies support when the model signals out-of-scope', async () => {
+    const roleAssignmentsChain = createQueryChain({
+      data: [{ user_id: 'moderator-1', roles: { code: 'MODERATEUR' } }],
+      error: null,
+    });
+    const { service, notificationsService, pushNotificationsService } = buildService({
+      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
+    });
+    (service as unknown as { client: unknown }).client = {
+      messages: { create: vi.fn().mockResolvedValue(fakeAnthropicReply('[HORS_PERIMETRE] Je ne peux pas répondre à cela.')) },
+    };
+
+    const result = await service.chatAccueil({ message: 'Quelle est la météo à Paris ?', history: [] } as never, 'user-1');
+
+    expect(result.escalated).toBe(true);
+    expect(result.reply).toBe('Je ne peux pas répondre à cela.');
+    expect(notificationsService.create).toHaveBeenCalledWith('moderator-1', 'AI_ACCUEIL_ESCALATION', { userId: 'user-1' });
+    expect(pushNotificationsService.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not escalate or notify anyone for an ordinary operational question', async () => {
+    const { service, notificationsService } = buildService({
+      supabase: supabaseWithRoleAssignments(createQueryChain({ data: [], error: null })),
+    });
+    (service as unknown as { client: unknown }).client = {
+      messages: { create: vi.fn().mockResolvedValue(fakeAnthropicReply('Pour rejoindre la salle, clique sur "Rejoindre la prière".')) },
+    };
+
+    const result = await service.chatAccueil({ message: 'Comment je rejoins la salle ?', history: [] } as never, 'user-1');
+
+    expect(result.escalated).toBe(false);
+    expect(result.reply).not.toContain('HORS_PERIMETRE');
+    expect(notificationsService.create).not.toHaveBeenCalled();
+  });
+});
