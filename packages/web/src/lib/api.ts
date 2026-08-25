@@ -476,10 +476,13 @@ export interface Comment {
 }
 
 export const communitiesApi = {
-  list: (token: string, page = 1) =>
-    request<PaginatedResult<Community>>(`/communities?page=${page}&limit=20`, { headers: authHeaders(token) }),
+  list: (token: string, page = 1, parentId?: string) =>
+    request<PaginatedResult<Community>>(
+      `/communities?page=${page}&limit=20${parentId ? `&parentId=${parentId}` : ''}`,
+      { headers: authHeaders(token) },
+    ),
   get: (token: string, id: string) => request<Community>(`/communities/${id}`, { headers: authHeaders(token) }),
-  create: (token: string, data: { type: string; name: string; joinPolicy?: string }) =>
+  create: (token: string, data: { type: string; name: string; joinPolicy?: string; parentId?: string }) =>
     request<Community>('/communities', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   listMembers: (token: string, communityId: string, page = 1) =>
     request<PaginatedResult<CommunityMember>>(`/communities/${communityId}/members?page=${page}&limit=50`, {

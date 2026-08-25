@@ -1,15 +1,34 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
-import { Community, CommunityMember, MembershipStatus, Post, communitiesApi, postsApi } from '../../lib/api';
+import { COMMUNITY_TYPES, Community, CommunityMember, MembershipStatus, Post, communitiesApi, postsApi } from '../../lib/api';
 import { PostRow } from './PostRow';
 import { Pagination } from '../Pagination';
+
+/**
+ * docs/07_UX_UI_SPECIFICATION.md §9 "hiérarchie (cellule → église → pays)" — parent_id already
+ * existed on Community but nothing walked it. Ancestors are fetched one GET at a time (no
+ * dedicated "path to root" endpoint) — hierarchies are shallow by nature (a handful of levels),
+ * so this is simpler than adding a new endpoint for what's ultimately a breadcrumb.
+ */
+async function fetchAncestors(token: string, community: Community): Promise<Community[]> {
+  const chain: Community[] = [];
+  let current = community;
+  while (current.parent_id) {
+    const parent = await communitiesApi.get(token, current.parent_id);
+    chain.unshift(parent);
+    current = parent;
+  }
+  return chain;
+}
 
 export function CommunityDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
 
   const [community, setCommunity] = useState<Community | null>(null);
+  const [ancestors, setAncestors] = useState<Community[]>([]);
+  const [children, setChildren] = useState<Community[]>([]);
   const [members, setMembers] = useState<CommunityMember[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +46,11 @@ export function CommunityDetailPage() {
   const [postSubmitting, setPostSubmitting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
 
+  const [subType, setSubType] = useState<string>(COMMUNITY_TYPES[0]);
+  const [subName, setSubName] = useState('');
+  const [subCreating, setSubCreating] = useState(false);
+  const [subError, setSubError] = useState<string | null>(null);
+
   const refresh = () => {
     const token = getAccessToken();
     if (!token || !id) return;
@@ -35,14 +59,18 @@ export function CommunityDetailPage() {
       communitiesApi.listMembers(token, id),
       postsApi.listForCommunity(token, id, postsPage),
       communitiesApi.getMembership(token, id),
+      communitiesApi.list(token, 1, id),
     ])
-      .then(([c, m, p, membership]) => {
+      .then(([c, m, p, membership, sub]) => {
         setCommunity(c);
         setMembers(m.data);
         setPosts(p.data);
         setPostsTotalPages(p.meta.totalPages);
         setMembershipStatus(membership.status);
+        setChildren(sub.data);
+        return fetchAncestors(token, c);
       })
+      .then(setAncestors)
       .catch((err) => setError((err as Error).message))
       .finally(() => setLoading(false));
     // Reserved to a Responsable+ — a 403 here just means this viewer isn't one, so the section
@@ -87,6 +115,23 @@ export function CommunityDetailPage() {
     }
   };
 
+  const handleCreateSub = async (e: FormEvent) => {
+    e.preventDefault();
+    const token = getAccessToken();
+    if (!token || !id) return;
+    setSubError(null);
+    setSubCreating(true);
+    try {
+      await communitiesApi.create(token, { type: subType, name: subName, parentId: id });
+      setSubName('');
+      refresh();
+    } catch (err) {
+      setSubError((err as Error).message);
+    } finally {
+      setSubCreating(false);
+    }
+  };
+
   const handlePost = async (e: FormEvent) => {
     e.preventDefault();
     const token = getAccessToken();
@@ -114,10 +159,57 @@ export function CommunityDetailPage() {
 
   return (
     <div className="communities-page">
+      {ancestors.length > 0 && (
+        <p className="hint">
+          {ancestors.map((a) => (
+            <span key={a.id}>
+              <Link to={`/communities/${a.id}`}>{a.name}</Link>
+              {' → '}
+            </span>
+          ))}
+          {community.name}
+        </p>
+      )}
       <h2>{community.name}</h2>
       <p className="hint">
         {community.type} · {members.length} membre{members.length > 1 ? 's' : ''}
       </p>
+
+      <h3>Sous-communautés</h3>
+      {children.length > 0 && (
+        <ul className="request-list">
+          {children.map((c) => (
+            <li key={c.id} className="request-row">
+              <div className="request-meta">
+                <span className="chip">{c.type}</span>
+              </div>
+              <p>
+                <Link to={`/communities/${c.id}`}>{c.name}</Link>
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={handleCreateSub} className="request-form">
+        <select value={subType} onChange={(e) => setSubType(e.target.value)}>
+          {COMMUNITY_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Nom de la sous-communauté"
+          value={subName}
+          onChange={(e) => setSubName(e.target.value)}
+          required
+        />
+        <button type="submit" disabled={subCreating}>
+          {subCreating ? 'Création…' : 'Ajouter une sous-communauté'}
+        </button>
+      </form>
+      {subError && <p className="error">{subError}</p>}
 
       {membershipStatus === 'NONE' && (
         <div>
