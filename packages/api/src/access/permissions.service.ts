@@ -36,6 +36,17 @@ export class PermissionsService {
     return codes;
   }
 
+  /** Every distinct user holding at least one of the given role codes, anywhere (global or scoped). */
+  async listUserIdsWithAnyRole(roleCodes: string[]): Promise<string[]> {
+    const { data, error } = await this.supabase.client
+      .from('role_assignments')
+      .select('user_id, roles!inner(code)')
+      .in('roles.code', roleCodes);
+    if (error) throw new InternalServerErrorException(error.message);
+    const userIds = new Set((data as unknown as { user_id: string }[]).map((r) => r.user_id));
+    return Array.from(userIds);
+  }
+
   async getUserRoleCodes(userId: string, options?: { globalOnly?: boolean }): Promise<Set<string>> {
     let query = this.supabase.client.from('role_assignments').select('roles(code)').eq('user_id', userId);
     if (options?.globalOnly) query = query.is('community_id', null);

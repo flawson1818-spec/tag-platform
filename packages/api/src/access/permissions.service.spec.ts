@@ -135,4 +135,43 @@ describe('PermissionsService', () => {
       expect(chain.is).not.toHaveBeenCalled();
     });
   });
+
+  describe('listUserIdsWithAnyRole', () => {
+    it('deduplicates a user holding more than one matching role', async () => {
+      const supabase = createSupabaseServiceMock({
+        role_assignments: createQueryChain({
+          data: [
+            { user_id: 'user-1', roles: { code: 'MODERATEUR' } },
+            { user_id: 'user-1', roles: { code: 'PASTEUR' } },
+            { user_id: 'user-2', roles: { code: 'MODERATEUR' } },
+          ],
+          error: null,
+        }),
+      });
+      const service = new PermissionsService(supabase as never);
+
+      const result = await service.listUserIdsWithAnyRole(['MODERATEUR', 'PASTEUR']);
+
+      expect(result.sort()).toEqual(['user-1', 'user-2']);
+    });
+
+    it('filters role_assignments by the given role codes', async () => {
+      const chain = createQueryChain({ data: [], error: null });
+      const supabase = createSupabaseServiceMock({ role_assignments: chain });
+      const service = new PermissionsService(supabase as never);
+
+      await service.listUserIdsWithAnyRole(['ADMINISTRATEUR']);
+
+      expect(chain.in).toHaveBeenCalledWith('roles.code', ['ADMINISTRATEUR']);
+    });
+
+    it('throws InternalServerErrorException when the query errors', async () => {
+      const supabase = createSupabaseServiceMock({
+        role_assignments: createQueryChain({ data: null, error: { message: 'db down' } }),
+      });
+      const service = new PermissionsService(supabase as never);
+
+      await expect(service.listUserIdsWithAnyRole(['MODERATEUR'])).rejects.toThrow('db down');
+    });
+  });
 });

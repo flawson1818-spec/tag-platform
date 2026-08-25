@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, ServiceUnavailableException } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { SupabaseService } from '../supabase/supabase.service';
+import { PermissionsService } from '../access/permissions.service';
 import { NotificationsService } from '../communication/notifications.service';
 import { PushNotificationsService } from '../communication/push-notifications.service';
 import { SocialChannel } from '../communication/social-publication.entity';
@@ -85,6 +86,7 @@ export class AiAgentsService {
     private readonly supabase: SupabaseService,
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationsService: PushNotificationsService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   private getClient(): Anthropic {
@@ -142,12 +144,7 @@ export class AiAgentsService {
   private async notifyEscalation(userId: string | null, type: string, title: string, body: string): Promise<void> {
     let recipientIds: string[];
     try {
-      const { data, error } = await this.supabase.client
-        .from('role_assignments')
-        .select('user_id, roles!inner(code)')
-        .in('roles.code', ESCALATION_RECIPIENT_ROLES);
-      if (error) throw new Error(error.message);
-      recipientIds = Array.from(new Set((data as unknown as { user_id: string }[]).map((r) => r.user_id)));
+      recipientIds = await this.permissionsService.listUserIdsWithAnyRole(ESCALATION_RECIPIENT_ROLES);
     } catch (error) {
       this.logger.error('Failed to look up escalation recipients', error as Error);
       return;

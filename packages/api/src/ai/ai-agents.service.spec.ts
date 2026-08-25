@@ -1,33 +1,30 @@
 import { AiAgentsService } from './ai-agents.service';
 import { createQueryChain, createSupabaseServiceMock } from '../testing/supabase-query-mock';
 
-/** Every chatEvangelisation call logs to ai_interaction_logs regardless of outcome. */
-function supabaseWithRoleAssignments(roleAssignmentsChain: ReturnType<typeof createQueryChain>) {
-  return createSupabaseServiceMock({
-    role_assignments: roleAssignmentsChain,
-    ai_interaction_logs: createQueryChain({ data: null, error: null }),
-  });
+/** Every chat call logs to ai_interaction_logs regardless of outcome. */
+function supabaseForLogging() {
+  return createSupabaseServiceMock({ ai_interaction_logs: createQueryChain({ data: null, error: null }) });
 }
 
 function buildService(overrides: Partial<Record<string, unknown>> = {}) {
   const notificationsService = overrides.notificationsService ?? { create: vi.fn().mockResolvedValue(undefined) };
   const pushNotificationsService = overrides.pushNotificationsService ?? { send: vi.fn().mockResolvedValue([]) };
-  const supabase = overrides.supabase ?? createSupabaseServiceMock({});
-  const service = new AiAgentsService(supabase as never, notificationsService as never, pushNotificationsService as never);
-  return { service, notificationsService, pushNotificationsService, supabase };
+  const permissionsService =
+    overrides.permissionsService ?? { listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]) };
+  const supabase = overrides.supabase ?? supabaseForLogging();
+  const service = new AiAgentsService(
+    supabase as never,
+    notificationsService as never,
+    pushNotificationsService as never,
+    permissionsService as never,
+  );
+  return { service, notificationsService, pushNotificationsService, permissionsService, supabase };
 }
 
 describe('AiAgentsService.chatEvangelisation — crisis escalation', () => {
   it('detects a crisis keyword, returns the safe response, and notifies every MODERATEUR+ user', async () => {
-    const roleAssignmentsChain = createQueryChain({
-      data: [
-        { user_id: 'moderator-1', roles: { code: 'MODERATEUR' } },
-        { user_id: 'pastor-1', roles: { code: 'PASTEUR' } },
-      ],
-      error: null,
-    });
     const { service, notificationsService, pushNotificationsService } = buildService({
-      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
+      permissionsService: { listUserIdsWithAnyRole: vi.fn().mockResolvedValue(['moderator-1', 'pastor-1']) },
     });
 
     const result = await service.chatEvangelisation({ message: 'je veux me suicider', history: [] } as never, 'user-1');
@@ -39,27 +36,24 @@ describe('AiAgentsService.chatEvangelisation — crisis escalation', () => {
     expect(pushNotificationsService.send).toHaveBeenCalledTimes(2);
   });
 
-  it('deduplicates a recipient who holds more than one eligible role', async () => {
-    const roleAssignmentsChain = createQueryChain({
-      data: [
-        { user_id: 'moderator-1', roles: { code: 'MODERATEUR' } },
-        { user_id: 'moderator-1', roles: { code: 'PASTEUR' } },
-      ],
-      error: null,
-    });
-    const { service, notificationsService } = buildService({
-      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
-    });
+  it('asks for the shared MODERATEUR+ role set', async () => {
+    const listUserIdsWithAnyRole = vi.fn().mockResolvedValue([]);
+    const { service } = buildService({ permissionsService: { listUserIdsWithAnyRole } });
 
-    await service.chatEvangelisation({ message: 'il me frappe', history: [] } as never, 'user-1');
+    await service.chatEvangelisation({ message: 'abus sexuel', history: [] } as never, 'user-1');
 
-    expect(notificationsService.create).toHaveBeenCalledTimes(1);
+    expect(listUserIdsWithAnyRole).toHaveBeenCalledWith([
+      'MODERATEUR',
+      'RESPONSABLE_EQUIPE',
+      'PASTEUR',
+      'ADMINISTRATEUR',
+      'SUPER_ADMINISTRATEUR',
+    ]);
   });
 
   it('still returns the safe response even when the recipient lookup fails', async () => {
-    const roleAssignmentsChain = createQueryChain({ data: null, error: { message: 'db down' } });
     const { service, notificationsService } = buildService({
-      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
+      permissionsService: { listUserIdsWithAnyRole: vi.fn().mockRejectedValue(new Error('db down')) },
     });
 
     const result = await service.chatEvangelisation({ message: 'automutilation', history: [] } as never, 'user-1');
@@ -69,12 +63,8 @@ describe('AiAgentsService.chatEvangelisation — crisis escalation', () => {
   });
 
   it('still returns the safe response even when notifying a recipient fails', async () => {
-    const roleAssignmentsChain = createQueryChain({
-      data: [{ user_id: 'moderator-1', roles: { code: 'MODERATEUR' } }],
-      error: null,
-    });
     const { service, notificationsService } = buildService({
-      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
+      permissionsService: { listUserIdsWithAnyRole: vi.fn().mockResolvedValue(['moderator-1']) },
       notificationsService: { create: vi.fn().mockRejectedValue(new Error('notify failed')) },
     });
 
@@ -85,18 +75,16 @@ describe('AiAgentsService.chatEvangelisation — crisis escalation', () => {
   });
 
   it('does not escalate or notify anyone for an ordinary faith question', async () => {
-    const roleAssignmentsChain = createQueryChain({ data: [{ user_id: 'moderator-1', roles: { code: 'MODERATEUR' } }], error: null });
-    const { notificationsService, supabase } = buildService({
-      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
+    const { service, notificationsService, permissionsService } = buildService({
+      permissionsService: { listUserIdsWithAnyRole: vi.fn().mockResolvedValue(['moderator-1']) },
     });
     // No ANTHROPIC_API_KEY in this test environment, so a non-crisis message hits getClient()'s
     // ServiceUnavailableException — proof enough that the crisis branch was correctly skipped.
-    const service = new AiAgentsService(supabase as never, notificationsService as never, { send: vi.fn() } as never);
-
     await expect(
       service.chatEvangelisation({ message: 'Que dit la Bible sur le pardon ?', history: [] } as never, 'user-1'),
     ).rejects.toThrow(/ANTHROPIC_API_KEY/);
     expect(notificationsService.create).not.toHaveBeenCalled();
+    expect(permissionsService.listUserIdsWithAnyRole).not.toHaveBeenCalled();
   });
 });
 
@@ -120,12 +108,8 @@ describe('AiAgentsService.chatAccueil — out-of-scope escalation', () => {
   });
 
   it('strips the marker, escalates, and notifies support when the model signals out-of-scope', async () => {
-    const roleAssignmentsChain = createQueryChain({
-      data: [{ user_id: 'moderator-1', roles: { code: 'MODERATEUR' } }],
-      error: null,
-    });
     const { service, notificationsService, pushNotificationsService } = buildService({
-      supabase: supabaseWithRoleAssignments(roleAssignmentsChain),
+      permissionsService: { listUserIdsWithAnyRole: vi.fn().mockResolvedValue(['moderator-1']) },
     });
     (service as unknown as { client: unknown }).client = {
       messages: { create: vi.fn().mockResolvedValue(fakeAnthropicReply('[HORS_PERIMETRE] Je ne peux pas répondre à cela.')) },
@@ -140,9 +124,7 @@ describe('AiAgentsService.chatAccueil — out-of-scope escalation', () => {
   });
 
   it('does not escalate or notify anyone for an ordinary operational question', async () => {
-    const { service, notificationsService } = buildService({
-      supabase: supabaseWithRoleAssignments(createQueryChain({ data: [], error: null })),
-    });
+    const { service, notificationsService } = buildService();
     (service as unknown as { client: unknown }).client = {
       messages: { create: vi.fn().mockResolvedValue(fakeAnthropicReply('Pour rejoindre la salle, clique sur "Rejoindre la prière".')) },
     };

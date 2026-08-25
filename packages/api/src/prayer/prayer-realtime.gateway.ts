@@ -6,11 +6,14 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { PermissionsService } from '../access/permissions.service';
 import { TokenService } from '../access/token.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AiModerationService } from '../ai/ai-moderation.service';
+import { NotificationsService } from '../communication/notifications.service';
+import { PushNotificationsService } from '../communication/push-notifications.service';
 import { ChatMessagesService } from './chat-messages.service';
 import { ChatMessage } from './chat-message.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
@@ -51,6 +54,7 @@ interface MusicPlayPayload {
 const CHAT_SEND_PERMISSION = 'room.chat.send';
 const CHAT_MODERATE_PERMISSION = 'room.moderate';
 const CHAT_MAX_LENGTH = 500;
+const CRITICAL_FLAG_RECIPIENT_ROLES = ['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'];
 const ALLOWED_REACTIONS = ['🙏', '❤️', '🙌', '✨', '🔥', '😢'];
 const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 
@@ -78,6 +82,8 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
+  private readonly logger = new Logger(PrayerRealtimeGateway.name);
+
   private readonly raisedHands = new Map<string, Map<string, string>>(); // roomId -> userId -> displayName
   private readonly pendingSpeakers = new Map<string, Map<string, string>>();
   private readonly activeSpeakers = new Map<string, Map<string, string>>();
@@ -91,6 +97,8 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     private readonly permissionsService: PermissionsService,
     private readonly supabase: SupabaseService,
     private readonly aiModerationService: AiModerationService,
+    private readonly notificationsService: NotificationsService,
+    private readonly pushNotificationsService: PushNotificationsService,
   ) {}
 
   @SubscribeMessage('room:join')
@@ -174,7 +182,40 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     if (result.critical) {
       await this.chatMessagesService.hide(message.id);
       this.server?.to(roomId).emit('chat:messageHidden', { roomId, messageId: message.id });
+      await this.notifyCriticalFlag(message.id, authorId);
     }
+  }
+
+  /**
+   * docs/02_AI_AGENTS_SPECIFICATION.md section 5: a critical auto-quarantine must come "avec
+   * notification immédiate à un modérateur humain" — the message was already being auto-hidden,
+   * but nobody was ever actually told. Best-effort: never lets a notification failure surface
+   * back to the chat flow, which has already completed by the time this runs.
+   */
+  private async notifyCriticalFlag(messageId: string, authorId: string): Promise<void> {
+    let recipientIds: string[];
+    try {
+      recipientIds = await this.permissionsService.listUserIdsWithAnyRole(CRITICAL_FLAG_RECIPIENT_ROLES);
+    } catch (error) {
+      this.logger.error('Failed to look up critical-flag recipients', error as Error);
+      return;
+    }
+
+    const title = 'Alerte IA Modératrice — contenu critique mis en quarantaine';
+    const body =
+      'Un message de chat a été automatiquement masqué (contenu manifestement illégal ou ' +
+      'dangereux) — une revue humaine est requise dès que possible.';
+
+    await Promise.all(
+      recipientIds.map(async (recipientId) => {
+        await this.notificationsService
+          .create(recipientId, 'AI_CRITICAL_CONTENT_FLAGGED', { messageId, authorId })
+          .catch((error) => this.logger.error(`Failed to notify ${recipientId} of a critical flag`, error));
+        await this.pushNotificationsService
+          .send(recipientId, title, body)
+          .catch((error) => this.logger.error(`Failed to push-notify ${recipientId} of a critical flag`, error));
+      }),
+    );
   }
 
   @SubscribeMessage('chat:hide')
