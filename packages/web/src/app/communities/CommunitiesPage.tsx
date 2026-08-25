@@ -17,6 +17,7 @@ export function CommunitiesPage() {
   );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState('');
 
   const [type, setType] = useState<string>(COMMUNITY_TYPES[0]);
   const [name, setName] = useState('');
@@ -29,7 +30,7 @@ export function CommunitiesPage() {
     if (!token) return;
     setLoading(true);
     communitiesApi
-      .list(token, page)
+      .list(token, page, undefined, search || undefined)
       .then((res) => {
         setCommunities(res.data);
         setTotalPages(res.meta.totalPages);
@@ -38,7 +39,12 @@ export function CommunitiesPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(refresh, [page]);
+  useEffect(refresh, [page, search]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
@@ -64,6 +70,14 @@ export function CommunitiesPage() {
       <p className="hint">
         Groupes, équipes, cellules, églises… La création est réservée aux Responsables d'équipe et au-dessus.
       </p>
+
+      <input
+        type="text"
+        placeholder="Rechercher une communauté par nom…"
+        value={search}
+        onChange={(e) => handleSearchChange(e.target.value)}
+        style={{ marginBottom: '1rem', width: '100%' }}
+      />
 
       <form onSubmit={handleCreate} className="request-form">
         <select value={type} onChange={(e) => setType(e.target.value)}>

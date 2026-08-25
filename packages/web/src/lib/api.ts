@@ -476,9 +476,11 @@ export interface Comment {
 }
 
 export const communitiesApi = {
-  list: (token: string, page = 1, parentId?: string) =>
+  list: (token: string, page = 1, parentId?: string, search?: string) =>
     request<PaginatedResult<Community>>(
-      `/communities?page=${page}&limit=20${parentId ? `&parentId=${parentId}` : ''}`,
+      `/communities?page=${page}&limit=20${parentId ? `&parentId=${parentId}` : ''}${
+        search ? `&search=${encodeURIComponent(search)}` : ''
+      }`,
       { headers: authHeaders(token) },
     ),
   get: (token: string, id: string) => request<Community>(`/communities/${id}`, { headers: authHeaders(token) }),

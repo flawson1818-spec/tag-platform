@@ -240,6 +240,16 @@ describe('CommunitiesService', () => {
       expect(result.meta.total).toBe(1);
     });
 
+    it('applies a case-insensitive name search when provided', async () => {
+      const chain = createQueryChain({ data: [COMMUNITY], error: null, count: 1 });
+      const supabase = createSupabaseServiceMock({ communities: chain });
+      const service = new CommunitiesService(supabase as never);
+
+      await service.list({ search: 'Soviépé' } as never);
+
+      expect(chain.ilike).toHaveBeenCalledWith('name', '%Soviépé%');
+    });
+
     it('skips filters that were not provided', async () => {
       const chain = createQueryChain({ data: [], error: null, count: 0 });
       const supabase = createSupabaseServiceMock({ communities: chain });

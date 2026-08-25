@@ -48,6 +48,7 @@ export class CommunitiesService {
       .range(from, to);
     if (query.type) request = request.eq('type', query.type);
     if (query.parentId) request = request.eq('parent_id', query.parentId);
+    if (query.search) request = request.ilike('name', `%${query.search}%`);
 
     const { data, error, count } = await request;
     if (error) throw new InternalServerErrorException(error.message);

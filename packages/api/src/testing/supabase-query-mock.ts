@@ -30,6 +30,7 @@ export function createQueryChain<T = unknown>(result: QueryResult<T>) {
     'or',
     'is',
     'in',
+    'ilike',
     'order',
     'range',
     'limit',
