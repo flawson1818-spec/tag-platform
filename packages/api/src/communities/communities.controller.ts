@@ -86,9 +86,36 @@ export class CommunitiesController {
   }
 
   @Post(':id/join')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async join(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.communitiesService.join(id, currentUser.id);
+  }
+
+  /** So the UI can show "en attente" explicitly on reload, not just right after clicking join. */
+  @Get(':id/membership')
+  async getMembership(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    const status = await this.communitiesService.getMembershipStatus(id, currentUser.id);
+    return { status };
+  }
+
+  @Get(':id/members/pending')
+  async listPendingMembers(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: PaginationQueryDto,
+  ) {
+    await this.assertPermission(currentUser.id, id, COMMUNITY_MANAGE_MEMBERS);
+    return this.communitiesService.listPendingMembers(id, query);
+  }
+
+  @Patch(':id/members/:userId/approve')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async approveMember(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+  ) {
+    await this.assertPermission(currentUser.id, id, COMMUNITY_MANAGE_MEMBERS);
+    return this.communitiesService.approveMembership(id, userId);
   }
 
   @Post(':id/members')

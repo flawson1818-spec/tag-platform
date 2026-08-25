@@ -8,10 +8,13 @@ const COMMUNITY = {
   parent_id: null,
   language: 'fr',
   timezone: 'Africa/Abidjan',
+  join_policy: 'OPEN',
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
   deleted_at: null,
 };
+
+const APPROVAL_COMMUNITY = { ...COMMUNITY, join_policy: 'APPROVAL' };
 
 describe('CommunitiesService', () => {
   describe('findById', () => {
@@ -72,7 +75,7 @@ describe('CommunitiesService', () => {
   });
 
   describe('join', () => {
-    it('checks the community exists, then adds the caller as a member', async () => {
+    it('checks the community exists, then adds the caller as an ACTIVE member for an OPEN policy', async () => {
       const communitiesChain = createQueryChain({ data: COMMUNITY, error: null });
       const membersChain = createQueryChain({ data: null, error: null });
       const supabase = createSupabaseServiceMock({
@@ -81,11 +84,29 @@ describe('CommunitiesService', () => {
       });
       const service = new CommunitiesService(supabase as never);
 
-      await service.join('community-1', 'user-1');
+      const result = await service.join('community-1', 'user-1');
 
       expect(membersChain.insert).toHaveBeenCalledWith(
-        expect.objectContaining({ community_id: 'community-1', user_id: 'user-1' }),
+        expect.objectContaining({ community_id: 'community-1', user_id: 'user-1', status: 'ACTIVE' }),
       );
+      expect(result).toEqual({ status: 'ACTIVE' });
+    });
+
+    it('adds the caller as PENDING for an APPROVAL policy, and reports that back', async () => {
+      const communitiesChain = createQueryChain({ data: APPROVAL_COMMUNITY, error: null });
+      const membersChain = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({
+        communities: communitiesChain,
+        community_members: membersChain,
+      });
+      const service = new CommunitiesService(supabase as never);
+
+      const result = await service.join('community-1', 'user-1');
+
+      expect(membersChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ community_id: 'community-1', user_id: 'user-1', status: 'PENDING' }),
+      );
+      expect(result).toEqual({ status: 'PENDING' });
     });
 
     it('propagates NotFoundException for an unknown community without touching community_members', async () => {
@@ -110,7 +131,50 @@ describe('CommunitiesService', () => {
       });
       const service = new CommunitiesService(supabase as never);
 
-      await expect(service.join('community-1', 'user-1')).resolves.toBeUndefined();
+      await expect(service.join('community-1', 'user-1')).resolves.toEqual({ status: 'ACTIVE' });
+    });
+  });
+
+  describe('getMembershipStatus', () => {
+    it('returns NONE when there is no membership row at all', async () => {
+      const supabase = createSupabaseServiceMock({
+        community_members: createQueryChain({ data: null, error: null }),
+      });
+      const service = new CommunitiesService(supabase as never);
+
+      await expect(service.getMembershipStatus('community-1', 'user-1')).resolves.toBe('NONE');
+    });
+
+    it('returns the row status when a membership exists', async () => {
+      const supabase = createSupabaseServiceMock({
+        community_members: createQueryChain({ data: { status: 'PENDING' }, error: null }),
+      });
+      const service = new CommunitiesService(supabase as never);
+
+      await expect(service.getMembershipStatus('community-1', 'user-1')).resolves.toBe('PENDING');
+    });
+  });
+
+  describe('approveMembership', () => {
+    it('moves a PENDING request to ACTIVE', async () => {
+      const chain = createQueryChain({ data: { id: 'member-1' }, error: null });
+      const supabase = createSupabaseServiceMock({ community_members: chain });
+      const service = new CommunitiesService(supabase as never);
+
+      await service.approveMembership('community-1', 'user-1');
+
+      expect(chain.update).toHaveBeenCalledWith({ status: 'ACTIVE' });
+      expect(chain.eq).toHaveBeenCalledWith('status', 'PENDING');
+    });
+
+    it('throws NotFoundException when there is no matching pending request', async () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({ community_members: chain });
+      const service = new CommunitiesService(supabase as never);
+
+      await expect(service.approveMembership('community-1', 'user-1')).rejects.toThrow(
+        'No pending membership request found for this user',
+      );
     });
   });
 

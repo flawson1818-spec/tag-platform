@@ -1,4 +1,5 @@
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { JOIN_POLICIES } from '../community.entity';
 
 export class UpdateCommunityDto {
   @IsOptional()
@@ -16,4 +17,8 @@ export class UpdateCommunityDto {
   @IsString()
   @MaxLength(60)
   timezone?: string;
+
+  @IsOptional()
+  @IsIn(JOIN_POLICIES)
+  joinPolicy?: string;
 }

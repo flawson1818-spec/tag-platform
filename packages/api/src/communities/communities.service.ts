@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { buildPaginationMeta, PaginatedResult, paginationRange } from '../common/pagination';
 import { SupabaseService } from '../supabase/supabase.service';
-import { CommunityMemberWithUser } from './community-member.entity';
+import { CommunityMemberWithUser, MembershipStatus } from './community-member.entity';
 import { Community } from './community.entity';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateCommunityDto } from './dto/create-community.dto';
@@ -13,7 +13,9 @@ import { ListCommunitiesQueryDto } from './dto/list-communities.query.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
-const COMMUNITY_COLUMNS = 'id, type, name, parent_id, language, timezone, created_at, updated_at, deleted_at';
+const COMMUNITY_COLUMNS =
+  'id, type, name, parent_id, language, timezone, join_policy, created_at, updated_at, deleted_at';
+const MEMBER_COLUMNS = 'id, community_id, user_id, internal_role, status, joined_at, users(id, display_name, avatar_file_id)';
 
 @Injectable()
 export class CommunitiesService {
@@ -61,6 +63,7 @@ export class CommunitiesService {
         parent_id: dto.parentId ?? null,
         language: dto.language,
         timezone: dto.timezone,
+        join_policy: dto.joinPolicy ?? 'OPEN',
         created_by: actorId,
         updated_by: actorId,
       })
@@ -69,7 +72,8 @@ export class CommunitiesService {
     if (error) throw new InternalServerErrorException(error.message);
 
     const community = data as unknown as Community;
-    await this.addMember(community.id, { userId: actorId });
+    // The creator is always an immediate ACTIVE member of their own community, regardless of join_policy.
+    await this.addMember(community.id, { userId: actorId }, 'ACTIVE');
     return community;
   }
 
@@ -80,6 +84,7 @@ export class CommunitiesService {
         name: dto.name,
         language: dto.language,
         timezone: dto.timezone,
+        join_policy: dto.joinPolicy,
         updated_by: actorId,
       })
       .eq('id', id)
@@ -96,25 +101,56 @@ export class CommunitiesService {
   }
 
   /**
-   * Self-service join (docs/07_UX_UI_SPECIFICATION.md §9 "adhésion directe") — deliberately not
-   * gated behind `community.manage_members` (that permission is for a Responsable adding someone
-   * *else*; requiring it here made it impossible for an ordinary member to ever join a community
-   * themselves). No approval workflow yet — every community currently allows immediate join.
+   * Self-service join (docs/07_UX_UI_SPECIFICATION.md §9 "adhésion directe" / "demande
+   * d'adhésion") — deliberately not gated behind `community.manage_members` (that permission is
+   * for a Responsable adding someone *else*; requiring it here made it impossible for an
+   * ordinary member to ever join a community themselves). A community with join_policy
+   * 'APPROVAL' inserts the caller as PENDING instead of ACTIVE — see approveMembership().
    */
-  async join(communityId: string, userId: string): Promise<void> {
-    await this.findById(communityId);
-    await this.addMember(communityId, { userId });
+  async join(communityId: string, userId: string): Promise<{ status: MembershipStatus }> {
+    const community = await this.findById(communityId);
+    const status: MembershipStatus = community.join_policy === 'APPROVAL' ? 'PENDING' : 'ACTIVE';
+    await this.addMember(communityId, { userId }, status);
+    return { status };
   }
 
-  async addMember(communityId: string, dto: AddMemberDto): Promise<void> {
+  /** "NONE" (no row at all) is a valid, common result — not an error. */
+  async getMembershipStatus(communityId: string, userId: string): Promise<MembershipStatus | 'NONE'> {
+    const { data, error } = await this.supabase.client
+      .from('community_members')
+      .select('status')
+      .eq('community_id', communityId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    return (data as { status: MembershipStatus } | null)?.status ?? 'NONE';
+  }
+
+  async addMember(communityId: string, dto: AddMemberDto, status: MembershipStatus = 'ACTIVE'): Promise<void> {
     const { error } = await this.supabase.client.from('community_members').insert({
       community_id: communityId,
       user_id: dto.userId,
       internal_role: dto.internalRole ?? null,
+      status,
     });
     if (error && error.code !== '23505') throw new InternalServerErrorException(error.message);
   }
 
+  /** Responsable-only: moves a PENDING request to ACTIVE. */
+  async approveMembership(communityId: string, userId: string): Promise<void> {
+    const { data, error } = await this.supabase.client
+      .from('community_members')
+      .update({ status: 'ACTIVE' })
+      .eq('community_id', communityId)
+      .eq('user_id', userId)
+      .eq('status', 'PENDING')
+      .select('id')
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    if (!data) throw new NotFoundException('No pending membership request found for this user');
+  }
+
+  /** Also doubles as "reject a pending request" — deleting a PENDING row is the same action. */
   async removeMember(communityId: string, userId: string): Promise<void> {
     const { error } = await this.supabase.client
       .from('community_members')
@@ -128,16 +164,31 @@ export class CommunitiesService {
     communityId: string,
     query: PaginationQueryDto,
   ): Promise<PaginatedResult<CommunityMemberWithUser>> {
+    return this.listMembersByStatus(communityId, query, 'ACTIVE');
+  }
+
+  /** Responsable-only: requests still awaiting approval. */
+  async listPendingMembers(
+    communityId: string,
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResult<CommunityMemberWithUser>> {
+    return this.listMembersByStatus(communityId, query, 'PENDING');
+  }
+
+  private async listMembersByStatus(
+    communityId: string,
+    query: PaginationQueryDto,
+    status: MembershipStatus,
+  ): Promise<PaginatedResult<CommunityMemberWithUser>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const { from, to } = paginationRange(page, limit);
 
     const { data, error, count } = await this.supabase.client
       .from('community_members')
-      .select('id, community_id, user_id, internal_role, joined_at, users(id, display_name, avatar_file_id)', {
-        count: 'exact',
-      })
+      .select(MEMBER_COLUMNS, { count: 'exact' })
       .eq('community_id', communityId)
+      .eq('status', status)
       .order('joined_at', { ascending: true })
       .range(from, to);
     if (error) throw new InternalServerErrorException(error.message);

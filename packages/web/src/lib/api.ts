@@ -432,6 +432,8 @@ export const socialPublicationsApi = {
 
 export const COMMUNITY_TYPES = ['GROUP', 'TEAM', 'CELL', 'COUNTRY', 'CITY', 'CHURCH', 'MINISTRY'] as const;
 
+export const JOIN_POLICIES = ['OPEN', 'APPROVAL'] as const;
+
 export interface Community {
   id: string;
   type: string;
@@ -439,14 +441,18 @@ export interface Community {
   parent_id: string | null;
   language: string;
   timezone: string;
+  join_policy: (typeof JOIN_POLICIES)[number];
   created_at: string;
 }
+
+export type MembershipStatus = 'ACTIVE' | 'PENDING' | 'NONE';
 
 export interface CommunityMember {
   id: string;
   community_id: string;
   user_id: string;
   internal_role: string | null;
+  status: 'ACTIVE' | 'PENDING';
   joined_at: string;
   users: { id: string; display_name: string; avatar_file_id: string | null } | null;
 }
@@ -473,15 +479,33 @@ export const communitiesApi = {
   list: (token: string, page = 1) =>
     request<PaginatedResult<Community>>(`/communities?page=${page}&limit=20`, { headers: authHeaders(token) }),
   get: (token: string, id: string) => request<Community>(`/communities/${id}`, { headers: authHeaders(token) }),
-  create: (token: string, data: { type: string; name: string }) =>
+  create: (token: string, data: { type: string; name: string; joinPolicy?: string }) =>
     request<Community>('/communities', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   listMembers: (token: string, communityId: string, page = 1) =>
     request<PaginatedResult<CommunityMember>>(`/communities/${communityId}/members?page=${page}&limit=50`, {
       headers: authHeaders(token),
     }),
+  /** Responsable-only: requests still awaiting approval. */
+  listPendingMembers: (token: string, communityId: string, page = 1) =>
+    request<PaginatedResult<CommunityMember>>(`/communities/${communityId}/members/pending?page=${page}&limit=50`, {
+      headers: authHeaders(token),
+    }),
+  approveMember: (token: string, communityId: string, userId: string) =>
+    request<void>(`/communities/${communityId}/members/${userId}/approve`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+    }),
+  removeMember: (token: string, communityId: string, userId: string) =>
+    request<void>(`/communities/${communityId}/members/${userId}`, { method: 'DELETE', headers: authHeaders(token) }),
   /** Self-service join — the member is always the authenticated caller, inferred from the token. */
   join: (token: string, communityId: string) =>
-    request<void>(`/communities/${communityId}/join`, { method: 'POST', headers: authHeaders(token) }),
+    request<{ status: 'ACTIVE' | 'PENDING' }>(`/communities/${communityId}/join`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
+  /** The caller's own membership state — lets the UI show "en attente" explicitly on reload. */
+  getMembership: (token: string, communityId: string) =>
+    request<{ status: MembershipStatus }>(`/communities/${communityId}/membership`, { headers: authHeaders(token) }),
 };
 
 export const postsApi = {

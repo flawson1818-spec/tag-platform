@@ -1,8 +1,13 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAccessToken } from '../auth/AuthContext';
-import { COMMUNITY_TYPES, Community, communitiesApi } from '../../lib/api';
+import { COMMUNITY_TYPES, Community, JOIN_POLICIES, communitiesApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
+
+const JOIN_POLICY_LABELS: Record<string, string> = {
+  OPEN: 'Adhésion directe',
+  APPROVAL: "Sur validation d'un Responsable",
+};
 
 export function CommunitiesPage() {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -15,6 +20,7 @@ export function CommunitiesPage() {
 
   const [type, setType] = useState<string>(COMMUNITY_TYPES[0]);
   const [name, setName] = useState('');
+  const [joinPolicy, setJoinPolicy] = useState<string>(JOIN_POLICIES[0]);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -41,7 +47,7 @@ export function CommunitiesPage() {
     setCreateError(null);
     setCreating(true);
     try {
-      await communitiesApi.create(token, { type, name });
+      await communitiesApi.create(token, { type, name, joinPolicy });
       setName('');
       if (page === 1) refresh();
       else setPage(1);
@@ -74,6 +80,13 @@ export function CommunitiesPage() {
           onChange={(e) => setName(e.target.value)}
           required
         />
+        <select value={joinPolicy} onChange={(e) => setJoinPolicy(e.target.value)}>
+          {JOIN_POLICIES.map((p) => (
+            <option key={p} value={p}>
+              {JOIN_POLICY_LABELS[p]}
+            </option>
+          ))}
+        </select>
         <button type="submit" disabled={creating}>
           {creating ? 'Création…' : 'Créer la communauté'}
         </button>

@@ -963,3 +963,11 @@ on conflict (role_id, permission_id) do nothing;
 -- type off). A jsonb column rather than one boolean column per type since the type set is
 -- expected to grow with new notification triggers.
 alter table users add column if not exists notification_prefs jsonb not null default '{}'::jsonb;
+
+-- docs/07_UX_UI_SPECIFICATION.md §9: "Communauté à adhésion validée par un Responsable : état
+-- 'en attente' affiché explicitement". join_policy is application-validated (IsIn), not a DB
+-- check constraint, matching the plain-column style already used for the other late additions
+-- in this file. Existing community_members rows default to ACTIVE (they were already full
+-- members before this column existed).
+alter table communities add column if not exists join_policy text not null default 'OPEN';
+alter table community_members add column if not exists status text not null default 'ACTIVE';

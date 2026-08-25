@@ -1,5 +1,5 @@
 import { IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
-import { COMMUNITY_TYPES } from '../community.entity';
+import { COMMUNITY_TYPES, JOIN_POLICIES } from '../community.entity';
 
 export class CreateCommunityDto {
   @IsIn(COMMUNITY_TYPES)
@@ -23,4 +23,8 @@ export class CreateCommunityDto {
   @IsString()
   @MaxLength(60)
   timezone?: string;
+
+  @IsOptional()
+  @IsIn(JOIN_POLICIES)
+  joinPolicy?: string;
 }

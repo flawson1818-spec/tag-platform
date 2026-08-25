@@ -10,6 +10,9 @@ export const COMMUNITY_TYPES = [
 
 export type CommunityType = (typeof COMMUNITY_TYPES)[number];
 
+export const JOIN_POLICIES = ['OPEN', 'APPROVAL'] as const;
+export type JoinPolicy = (typeof JOIN_POLICIES)[number];
+
 export interface Community {
   id: string;
   type: CommunityType;
@@ -17,6 +20,7 @@ export interface Community {
   parent_id: string | null;
   language: string;
   timezone: string;
+  join_policy: JoinPolicy;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
