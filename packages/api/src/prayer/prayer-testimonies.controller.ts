@@ -9,6 +9,7 @@ import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.
 import { CreateTestimonyDto } from './dto/create-testimony.dto';
 import { ListTestimoniesQueryDto } from './dto/list-testimonies.query.dto';
 import { RejectTestimonyDto } from './dto/reject-testimony.dto';
+import { UpdateTestimonyDto } from './dto/update-testimony.dto';
 import { PrayerTestimoniesService } from './prayer-testimonies.service';
 
 const MODERATE_PERMISSION = 'testimony.approve';
@@ -60,6 +61,17 @@ export class PrayerTestimoniesController {
       MODERATE_PERMISSION,
     );
     return this.testimoniesService.list(query, canModerate, currentUser.id);
+  }
+
+  /** Author-only, and only while still DRAFT — see PrayerTestimoniesService.update(). */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTestimonyDto,
+  ) {
+    return this.testimoniesService.update(id, dto, currentUser.id);
   }
 
   @Patch(':id/approve')

@@ -17,6 +17,7 @@ import { FilesService } from '../storage/files.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateTestimonyDto } from './dto/create-testimony.dto';
 import { ListTestimoniesQueryDto } from './dto/list-testimonies.query.dto';
+import { UpdateTestimonyDto } from './dto/update-testimony.dto';
 import { Testimony } from './testimony.entity';
 
 const TESTIMONY_COLUMNS =
@@ -65,6 +66,43 @@ export class PrayerTestimoniesService {
         created_by: authorId,
         updated_by: authorId,
       })
+      .select(TESTIMONY_COLUMNS)
+      .single();
+    if (error) throw new InternalServerErrorException(error.message);
+    return data as unknown as Testimony;
+  }
+
+  /**
+   * docs/07_UX_UI_SPECIFICATION.md §6 — a rejected testimony is notified to its author "avec
+   * possibilité de resoumettre". There was no update path at all before this: a rejection left
+   * the row stuck at DRAFT with moderation_reason set, and the author's only option was creating
+   * an unrelated new testimony from scratch. Editing clears the rejection (clean slate for
+   * re-review) and re-runs moderation only when the content actually changed.
+   */
+  async update(id: string, dto: UpdateTestimonyDto, authorId: string): Promise<Testimony> {
+    const testimony = await this.findById(id);
+    if (testimony.author_id !== authorId) throw new ForbiddenException('Permission denied');
+    if (testimony.status !== 'DRAFT') {
+      throw new ConflictException(`Testimony ${id} can no longer be edited`);
+    }
+
+    const moderation = dto.content
+      ? await this.aiModerationService.moderate(dto.content, authorId)
+      : { flagged: testimony.ai_flagged, confidence: testimony.ai_flag_confidence ?? 0, reason: testimony.ai_flag_reason };
+
+    const { data, error } = await this.db
+      .update({
+        media_type: dto.mediaType ?? testimony.media_type,
+        content: dto.content ?? testimony.content,
+        file_id: dto.fileId ?? testimony.file_id,
+        moderated_by: null,
+        moderation_reason: null,
+        ai_flagged: moderation.flagged,
+        ai_flag_reason: moderation.reason,
+        ai_flag_confidence: moderation.confidence,
+        updated_by: authorId,
+      })
+      .eq('id', id)
       .select(TESTIMONY_COLUMNS)
       .single();
     if (error) throw new InternalServerErrorException(error.message);

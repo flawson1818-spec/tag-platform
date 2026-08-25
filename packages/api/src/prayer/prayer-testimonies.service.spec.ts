@@ -160,6 +160,64 @@ describe('PrayerTestimoniesService', () => {
     });
   });
 
+  describe('update', () => {
+    it('rejects an edit from anyone other than the author', async () => {
+      const supabase = createSupabaseServiceMock({
+        testimonies: createQueryChain({ data: DRAFT_TESTIMONY, error: null }),
+      });
+      const { service } = buildDeps({ supabase });
+
+      await expect(
+        service.update('testimony-1', { content: 'x' } as never, 'someone-else'),
+      ).rejects.toThrow('Permission denied');
+    });
+
+    it('rejects editing a testimony that is no longer DRAFT', async () => {
+      const supabase = createSupabaseServiceMock({
+        testimonies: createQueryChain({ data: { ...DRAFT_TESTIMONY, status: 'PUBLISHED' }, error: null }),
+      });
+      const { service } = buildDeps({ supabase });
+
+      await expect(
+        service.update('testimony-1', { content: 'x' } as never, 'user-1'),
+      ).rejects.toThrow('can no longer be edited');
+    });
+
+    it('clears a prior rejection and re-runs moderation when the author revises the content', async () => {
+      const rejected = { ...DRAFT_TESTIMONY, moderation_reason: 'Contenu inapproprié', moderated_by: 'moderator-1' };
+      const revised = { ...DRAFT_TESTIMONY, content: 'Version corrigée', moderation_reason: null, moderated_by: null };
+      const supabase = createSupabaseServiceMock({
+        testimonies: [
+          createQueryChain({ data: rejected, error: null }), // findById
+          createQueryChain({ data: revised, error: null }), // update
+        ],
+      });
+      const aiModerationService = { moderate: vi.fn().mockResolvedValue({ flagged: false, confidence: 0, reason: null, critical: false }) };
+      const { service } = buildDeps({ supabase, aiModerationService });
+
+      const result = await service.update('testimony-1', { content: 'Version corrigée' } as never, 'user-1');
+
+      expect(aiModerationService.moderate).toHaveBeenCalledWith('Version corrigée', 'user-1');
+      expect(result.moderation_reason).toBeNull();
+      expect(result.content).toBe('Version corrigée');
+    });
+
+    it('does not re-run moderation when only the media, not the content, changes', async () => {
+      const supabase = createSupabaseServiceMock({
+        testimonies: [
+          createQueryChain({ data: DRAFT_TESTIMONY, error: null }),
+          createQueryChain({ data: { ...DRAFT_TESTIMONY, file_id: 'file-2' }, error: null }),
+        ],
+      });
+      const aiModerationService = { moderate: vi.fn() };
+      const { service } = buildDeps({ supabase, aiModerationService });
+
+      await service.update('testimony-1', { fileId: 'file-2' } as never, 'user-1');
+
+      expect(aiModerationService.moderate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('list', () => {
     it('a non-moderator only ever sees PUBLISHED testimonies, regardless of the requested status', async () => {
       const chain = createQueryChain({ data: [], error: null, count: 0 });

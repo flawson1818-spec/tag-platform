@@ -61,8 +61,11 @@ function MyTestimoniesSection() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [resubmitting, setResubmitting] = useState(false);
 
-  useEffect(() => {
+  const refresh = () => {
     const token = getAccessToken();
     if (!token) return;
     testimoniesApi
@@ -72,7 +75,30 @@ function MyTestimoniesSection() {
         setTotalPages(res.meta.totalPages);
       })
       .catch((err) => setError((err as Error).message));
-  }, [page]);
+  };
+
+  useEffect(refresh, [page]);
+
+  const startEdit = (t: Testimony) => {
+    setEditingId(t.id);
+    setEditContent(t.content ?? '');
+  };
+
+  const resubmit = async (id: string) => {
+    const token = getAccessToken();
+    if (!token) return;
+    setResubmitting(true);
+    setError(null);
+    try {
+      await testimoniesApi.update(token, id, { content: editContent });
+      setEditingId(null);
+      refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setResubmitting(false);
+    }
+  };
 
   return (
     <div className="gamification">
@@ -86,7 +112,28 @@ function MyTestimoniesSection() {
               <span className="chip chip-status">{t.status}</span>
             </div>
             <p>{t.content ?? `Témoignage ${t.media_type.toLowerCase()}`}</p>
-            {t.moderation_reason && <p className="hint">Motif : {t.moderation_reason}</p>}
+            {t.moderation_reason && <p className="hint">Motif du refus : {t.moderation_reason}</p>}
+            {t.status === 'DRAFT' && t.moderation_reason && editingId !== t.id && (
+              <button type="button" onClick={() => startEdit(t)}>
+                Modifier et resoumettre
+              </button>
+            )}
+            {editingId === t.id && (
+              <div className="reject-row">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={3}
+                  style={{ width: '100%' }}
+                />
+                <button type="button" disabled={resubmitting} onClick={() => resubmit(t.id)}>
+                  {resubmitting ? 'Envoi…' : 'Resoumettre'}
+                </button>
+                <button type="button" onClick={() => setEditingId(null)}>
+                  Annuler
+                </button>
+              </div>
+            )}
           </li>
         ))}
       </ul>

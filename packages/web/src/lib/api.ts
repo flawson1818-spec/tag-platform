@@ -366,6 +366,13 @@ export const testimoniesApi = {
     request<PaginatedResult<Testimony>>(`/testimonies?mine=true&page=${page}&limit=20`, {
       headers: authHeaders(token),
     }),
+  /** Author-only, and only while still DRAFT — lets a rejected testimony be revised and resubmitted. */
+  update: (token: string, id: string, data: { mediaType?: string; content?: string; fileId?: string }) =>
+    request<Testimony>(`/testimonies/${id}`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify(data),
+    }),
   approve: (token: string, id: string) =>
     request<Testimony>(`/testimonies/${id}/approve`, { method: 'PATCH', headers: authHeaders(token) }),
   reject: (token: string, id: string, reason: string) =>
