@@ -49,6 +49,11 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
   };
   const emailService = { send: vi.fn().mockResolvedValue(undefined) };
   const mfaService = { generateSecret: vi.fn(), keyUri: vi.fn(), verify: vi.fn() };
+  const mfaRecoveryCodesService = {
+    generate: vi.fn().mockResolvedValue(['AAAA-BBBB-CCCC']),
+    consume: vi.fn(),
+    deleteAll: vi.fn().mockResolvedValue(undefined),
+  };
   const supabase = createSupabaseServiceMock({
     refresh_tokens: createQueryChain({ data: null, error: null }),
     password_reset_tokens: createQueryChain({ data: null, error: null }),
@@ -63,6 +68,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     tokenService,
     emailService,
     mfaService,
+    mfaRecoveryCodesService,
     supabase,
     ...overrides,
   };
@@ -73,6 +79,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     deps.tokenService as never,
     deps.emailService as never,
     deps.mfaService as never,
+    deps.mfaRecoveryCodesService as never,
     deps.supabase as never,
   );
   return { service, ...deps };
@@ -236,14 +243,63 @@ describe('AuthService', () => {
       expect(usersService.setMfaEnabled).not.toHaveBeenCalled();
     });
 
-    it('turns MFA on once the confirmation code is correct', async () => {
-      const { service, usersService, mfaService } = buildDeps();
+    it('turns MFA on and returns freshly generated recovery codes once the confirmation code is correct', async () => {
+      const { service, usersService, mfaService, mfaRecoveryCodesService } = buildDeps();
       usersService.getMfaSecret.mockResolvedValue('SECRET');
       mfaService.verify.mockReturnValue(true);
+      mfaRecoveryCodesService.generate.mockResolvedValue(['AAAA-BBBB-CCCC', 'DDDD-EEEE-FFFF']);
 
-      await service.enableMfa('user-1', '123456');
+      const result = await service.enableMfa('user-1', '123456');
 
       expect(usersService.setMfaEnabled).toHaveBeenCalledWith('user-1', true);
+      expect(mfaRecoveryCodesService.generate).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual({ recoveryCodes: ['AAAA-BBBB-CCCC', 'DDDD-EEEE-FFFF'] });
+    });
+
+    it('still turns MFA on and succeeds with an empty code list when recovery-code generation fails', async () => {
+      const { service, usersService, mfaService, mfaRecoveryCodesService } = buildDeps();
+      usersService.getMfaSecret.mockResolvedValue('SECRET');
+      mfaService.verify.mockReturnValue(true);
+      mfaRecoveryCodesService.generate.mockRejectedValue(new Error('relation "mfa_recovery_codes" does not exist'));
+
+      const result = await service.enableMfa('user-1', '123456');
+
+      expect(usersService.setMfaEnabled).toHaveBeenCalledWith('user-1', true);
+      expect(result).toEqual({ recoveryCodes: [] });
+    });
+  });
+
+  describe('mfaRecoveryChallenge', () => {
+    it('rejects an invalid or expired mfaToken', async () => {
+      const { service, tokenService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue(null);
+
+      await expect(service.mfaRecoveryChallenge('bad-token', 'AAAA-BBBB-CCCC')).rejects.toThrow(
+        'Invalid or expired MFA challenge',
+      );
+    });
+
+    it('rejects a recovery code that does not match any unused code', async () => {
+      const { service, tokenService, usersService, mfaRecoveryCodesService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      mfaRecoveryCodesService.consume.mockResolvedValue(false);
+
+      await expect(service.mfaRecoveryChallenge('mfa-pending-token', 'WRONG-CODE-0000')).rejects.toThrow(
+        'Invalid or already-used recovery code',
+      );
+    });
+
+    it('issues real tokens once a valid unused recovery code is consumed', async () => {
+      const { service, tokenService, usersService, mfaRecoveryCodesService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      mfaRecoveryCodesService.consume.mockResolvedValue(true);
+
+      const result = await service.mfaRecoveryChallenge('mfa-pending-token', 'AAAA-BBBB-CCCC');
+
+      expect(mfaRecoveryCodesService.consume).toHaveBeenCalledWith('user-1', 'AAAA-BBBB-CCCC');
+      expect(result.access_token).toBe('access-token');
     });
   });
 
@@ -257,14 +313,15 @@ describe('AuthService', () => {
       expect(usersService.setMfaEnabled).not.toHaveBeenCalled();
     });
 
-    it('turns MFA off once the code is correct', async () => {
-      const { service, usersService, mfaService } = buildDeps();
+    it('turns MFA off and deletes any leftover recovery codes once the code is correct', async () => {
+      const { service, usersService, mfaService, mfaRecoveryCodesService } = buildDeps();
       usersService.getMfaSecret.mockResolvedValue('SECRET');
       mfaService.verify.mockReturnValue(true);
 
       await service.disableMfa('user-1', '123456');
 
       expect(usersService.setMfaEnabled).toHaveBeenCalledWith('user-1', false);
+      expect(mfaRecoveryCodesService.deleteAll).toHaveBeenCalledWith('user-1');
     });
   });
 

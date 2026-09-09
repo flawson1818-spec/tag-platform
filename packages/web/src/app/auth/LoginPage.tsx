@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 export function LoginPage() {
-  const { login, completeMfaChallenge } = useAuth();
+  const { login, completeMfaChallenge, completeMfaRecovery } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [code, setCode] = useState('');
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,7 +38,11 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await completeMfaChallenge(mfaToken, code);
+      if (useRecoveryCode) {
+        await completeMfaRecovery(mfaToken, recoveryCode);
+      } else {
+        await completeMfaChallenge(mfaToken, code);
+      }
       navigate('/dashboard');
     } catch (err) {
       setError((err as Error).message);
@@ -49,23 +55,50 @@ export function LoginPage() {
     return (
       <div className="auth-page">
         <h2>Vérification en deux étapes</h2>
-        <p className="hint">Entre le code à 6 chiffres généré par ton application d'authentification.</p>
+        {useRecoveryCode ? (
+          <p className="hint">Entre l'un de tes codes de récupération à usage unique.</p>
+        ) : (
+          <p className="hint">Entre le code à 6 chiffres généré par ton application d'authentification.</p>
+        )}
         <form onSubmit={handleMfaSubmit} className="auth-form">
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="Code à 6 chiffres"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            maxLength={6}
-            required
-            autoFocus
-          />
-          <button type="submit" disabled={submitting || code.length !== 6}>
+          {useRecoveryCode ? (
+            <input
+              type="text"
+              placeholder="Code de récupération"
+              value={recoveryCode}
+              onChange={(e) => setRecoveryCode(e.target.value)}
+              required
+              autoFocus
+            />
+          ) : (
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Code à 6 chiffres"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              maxLength={6}
+              required
+              autoFocus
+            />
+          )}
+          <button type="submit" disabled={submitting || (useRecoveryCode ? !recoveryCode : code.length !== 6)}>
             {submitting ? 'Vérification…' : 'Valider'}
           </button>
         </form>
         {error && <p className="error">{error}</p>}
+        <p>
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => {
+              setUseRecoveryCode((prev) => !prev);
+              setError(null);
+            }}
+          >
+            {useRecoveryCode ? "J'ai mon application d'authentification" : "J'ai perdu mon appareil — utiliser un code de récupération"}
+          </button>
+        </p>
         <p>
           <button type="button" className="link-button" onClick={() => setMfaToken(null)}>
             Retour

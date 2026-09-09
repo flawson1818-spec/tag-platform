@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { MfaChallengeDto } from './dto/mfa-challenge.dto';
+import { MfaRecoveryChallengeDto } from './dto/mfa-recovery-challenge.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -84,6 +85,14 @@ export class AuthController {
     return this.authService.mfaChallenge(dto.mfaToken, dto.code);
   }
 
+  /** Public: same pending-token flow as mfa/challenge, for a lost authenticator device. */
+  @Post('mfa/recovery')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: seconds(60) } })
+  mfaRecoveryChallenge(@Body() dto: MfaRecoveryChallengeDto) {
+    return this.authService.mfaRecoveryChallenge(dto.mfaToken, dto.recoveryCode);
+  }
+
   @Post('mfa/setup')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
@@ -92,10 +101,11 @@ export class AuthController {
     return this.authService.setupMfa(currentUser.id);
   }
 
+  /** Returns freshly generated recovery codes — shown to the caller once, never retrievable again. */
   @Post('mfa/enable')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   enableMfa(@CurrentUser() currentUser: AuthenticatedUser, @Body() dto: VerifyMfaCodeDto) {
     return this.authService.enableMfa(currentUser.id, dto.code);
   }

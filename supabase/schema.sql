@@ -971,3 +971,19 @@ alter table users add column if not exists notification_prefs jsonb not null def
 -- members before this column existed).
 alter table communities add column if not exists join_policy text not null default 'OPEN';
 alter table community_members add column if not exists status text not null default 'ACTIVE';
+
+-- docs/12_SECURITY_SPECIFICATION.md MFA section lists "Recovery Codes" alongside TOTP/Trusted
+-- Devices — TOTP existed but losing the authenticator device meant permanent lockout, no way
+-- back in. A brand-new, isolated table only touched by the new enableMfa()/recovery-challenge
+-- code paths (unlike communities.join_policy above, nothing existing reads this).
+create table if not exists mfa_recovery_codes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  code_hash text not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists mfa_recovery_codes_user_idx on mfa_recovery_codes (user_id);
+
+alter table mfa_recovery_codes enable row level security;

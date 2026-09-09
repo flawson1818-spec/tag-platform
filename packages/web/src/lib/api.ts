@@ -582,13 +582,21 @@ export const authApi = {
     request<AuthResponse | MfaRequiredResponse>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   mfaChallenge: (mfaToken: string, code: string) =>
     request<AuthResponse>('/auth/mfa/challenge', { method: 'POST', body: JSON.stringify({ mfaToken, code }) }),
+  /** For a lost authenticator device — same pending mfaToken, a recovery code instead of a TOTP code. */
+  mfaRecoveryChallenge: (mfaToken: string, recoveryCode: string) =>
+    request<AuthResponse>('/auth/mfa/recovery', { method: 'POST', body: JSON.stringify({ mfaToken, recoveryCode }) }),
   mfaSetup: (token: string) =>
     request<{ secret: string; otpauthUrl: string }>('/auth/mfa/setup', {
       method: 'POST',
       headers: authHeaders(token),
     }),
+  /** Returns freshly generated recovery codes, shown once — never retrievable again after this call. */
   mfaEnable: (token: string, code: string) =>
-    request<void>('/auth/mfa/enable', { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ code }) }),
+    request<{ recoveryCodes: string[] }>('/auth/mfa/enable', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ code }),
+    }),
   mfaDisable: (token: string, code: string) =>
     request<void>('/auth/mfa/disable', {
       method: 'POST',

@@ -3,8 +3,10 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { MfaRecoveryCodesService } from '../access/mfa-recovery-codes.service';
 import { MfaService } from '../access/mfa.service';
 import { PasswordService } from '../access/password.service';
 import { TokenService } from '../access/token.service';
@@ -27,6 +29,8 @@ const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly rolesService: RolesService,
@@ -34,6 +38,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly emailService: EmailService,
     private readonly mfaService: MfaService,
+    private readonly mfaRecoveryCodesService: MfaRecoveryCodesService,
     private readonly supabase: SupabaseService,
   ) {}
 
@@ -144,6 +149,24 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
+  /**
+   * docs/12_SECURITY_SPECIFICATION.md MFA section — "Recovery Codes", the standard fallback for
+   * a lost authenticator device. Same pending-token flow as mfaChallenge(), but consumes a
+   * single-use recovery code instead of a TOTP code.
+   */
+  async mfaRecoveryChallenge(mfaToken: string, recoveryCode: string): Promise<AuthResponseDto> {
+    const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
+    if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    const user = await this.usersService.findById(userId).catch(() => null);
+    if (!user || user.status !== 'ACTIVE') throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    const consumed = await this.mfaRecoveryCodesService.consume(userId, recoveryCode);
+    if (!consumed) throw new UnauthorizedException('Invalid or already-used recovery code');
+
+    return this.issueTokens(user);
+  }
+
   /** Step 1 of enabling MFA: generates and stores a secret (not yet active — mfa_enabled stays
    *  false until enableMfa() confirms the user can actually generate valid codes with it). */
   async setupMfa(userId: string): Promise<{ secret: string; otpauthUrl: string }> {
@@ -153,14 +176,29 @@ export class AuthService {
     return { secret, otpauthUrl: this.mfaService.keyUri(user.email, secret) };
   }
 
-  /** Step 2: proves the user's authenticator app is correctly configured before it becomes the
-   *  account's real second factor. */
-  async enableMfa(userId: string, code: string): Promise<void> {
+  /**
+   * Step 2: proves the user's authenticator app is correctly configured before it becomes the
+   * account's real second factor. Also (re-)generates recovery codes — shown to the caller in
+   * plaintext exactly once here, never retrievable again (docs/12_SECURITY_SPECIFICATION.md).
+   * MFA itself is already fully turned on by the time recovery-code generation runs, and this
+   * capability is strictly additive to a flow that worked before it existed — a failure here
+   * (e.g. the mfa_recovery_codes table not migrated yet on this environment) must never undo
+   * that or block the caller, just come back with no codes.
+   */
+  async enableMfa(userId: string, code: string): Promise<{ recoveryCodes: string[] }> {
     const secret = await this.usersService.getMfaSecret(userId);
     if (!secret) throw new BadRequestException('Call POST /auth/mfa/setup first');
     if (!this.mfaService.verify(code, secret)) throw new BadRequestException('Invalid code');
 
     await this.usersService.setMfaEnabled(userId, true);
+
+    const recoveryCodes = await this.mfaRecoveryCodesService
+      .generate(userId)
+      .catch((error) => {
+        this.logger.error(`Failed to generate MFA recovery codes for user ${userId}`, error as Error);
+        return [] as string[];
+      });
+    return { recoveryCodes };
   }
 
   async disableMfa(userId: string, code: string): Promise<void> {
@@ -170,6 +208,9 @@ export class AuthService {
     }
 
     await this.usersService.setMfaEnabled(userId, false);
+    await this.mfaRecoveryCodesService
+      .deleteAll(userId)
+      .catch((error) => this.logger.error(`Failed to delete MFA recovery codes for user ${userId}`, error as Error));
   }
 
   async refresh(dto: RefreshTokenDto): Promise<AuthResponseDto> {

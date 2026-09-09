@@ -14,6 +14,7 @@ interface AuthContextValue {
   status: 'loading' | 'authenticated' | 'anonymous';
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaToken: string, code: string) => Promise<void>;
+  completeMfaRecovery: (mfaToken: string, recoveryCode: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -90,6 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persistSession],
   );
 
+  const completeMfaRecovery = useCallback(
+    async (mfaToken: string, recoveryCode: string) => {
+      const res = await authApi.mfaRecoveryChallenge(mfaToken, recoveryCode);
+      persistSession(res.access_token, res.refresh_token, res.user);
+    },
+    [persistSession],
+  );
+
   const register = useCallback(
     async (email: string, password: string, displayName: string) => {
       const res = await authApi.register({ email, password, displayName });
@@ -106,7 +115,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSession();
   }, [clearSession]);
 
-  const value: AuthContextValue = { user, status, login, completeMfaChallenge, register, logout };
+  const value: AuthContextValue = {
+    user,
+    status,
+    login,
+    completeMfaChallenge,
+    completeMfaRecovery,
+    register,
+    logout,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

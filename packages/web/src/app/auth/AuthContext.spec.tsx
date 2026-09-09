@@ -213,4 +213,36 @@ describe('AuthProvider', () => {
     expect(mfaChallengeSpy).toHaveBeenCalledWith('pending-token', '123456');
     expect(getAccessToken()).toBe('a2');
   });
+
+  it('completeMfaRecovery persists the session once a valid recovery code is consumed', async () => {
+    const mfaRecoverySpy = vi.spyOn(authApi, 'mfaRecoveryChallenge').mockResolvedValue({
+      access_token: 'a3',
+      refresh_token: 'r3',
+      expires_in: 900,
+      token_type: 'Bearer',
+      user: USER,
+    } as never);
+
+    function RecoveryProbe() {
+      const { status, completeMfaRecovery } = useAuth();
+      return (
+        <div>
+          <span data-testid="status">{status}</span>
+          <button onClick={() => completeMfaRecovery('pending-token', 'AAAA-BBBB-CCCC')}>recover</button>
+        </div>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <RecoveryProbe />
+      </AuthProvider>,
+    );
+
+    screen.getByText('recover').click();
+
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('authenticated'));
+    expect(mfaRecoverySpy).toHaveBeenCalledWith('pending-token', 'AAAA-BBBB-CCCC');
+    expect(getAccessToken()).toBe('a3');
+  });
 });

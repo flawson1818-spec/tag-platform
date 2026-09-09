@@ -10,6 +10,7 @@ export function MfaSettingsPage() {
   const [secret, setSecret] = useState<string | null>(null);
   const [otpauthUrl, setOtpauthUrl] = useState<string | null>(null);
   const [code, setCode] = useState('');
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,9 +38,10 @@ export function MfaSettingsPage() {
     setSubmitting(true);
     authApi
       .mfaEnable(token, code)
-      .then(() => {
+      .then((res) => {
         setStep('enabled');
         setCode('');
+        setRecoveryCodes(res.recoveryCodes.length > 0 ? res.recoveryCodes : null);
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setSubmitting(false));
@@ -58,6 +60,7 @@ export function MfaSettingsPage() {
         setSecret(null);
         setOtpauthUrl(null);
         setCode('');
+        setRecoveryCodes(null);
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setSubmitting(false));
@@ -110,6 +113,27 @@ export function MfaSettingsPage() {
       {step === 'enabled' && (
         <>
           <p className="hint">La vérification en deux étapes est activée sur ce compte.</p>
+
+          {recoveryCodes && (
+            <div className="confirmation">
+              <p>
+                <strong>Note ces codes de récupération dans un endroit sûr.</strong> Chacun ne peut
+                être utilisé qu'une seule fois, si tu perds l'accès à ton application
+                d'authentification. Ils ne seront plus jamais affichés.
+              </p>
+              <ul>
+                {recoveryCodes.map((c) => (
+                  <li key={c}>
+                    <code>{c}</code>
+                  </li>
+                ))}
+              </ul>
+              <button type="button" onClick={() => setRecoveryCodes(null)}>
+                J'ai bien noté mes codes
+              </button>
+            </div>
+          )}
+
           <form onSubmit={handleDisable} className="auth-form">
             <input
               type="text"
