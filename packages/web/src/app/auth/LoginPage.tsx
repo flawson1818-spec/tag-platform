@@ -11,6 +11,7 @@ export function LoginPage() {
   const [code, setCode] = useState('');
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
+  const [trustDevice, setTrustDevice] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,9 +40,9 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       if (useRecoveryCode) {
-        await completeMfaRecovery(mfaToken, recoveryCode);
+        await completeMfaRecovery(mfaToken, recoveryCode, trustDevice);
       } else {
-        await completeMfaChallenge(mfaToken, code);
+        await completeMfaChallenge(mfaToken, code, trustDevice);
       }
       navigate('/dashboard');
     } catch (err) {
@@ -82,6 +83,10 @@ export function LoginPage() {
               autoFocus
             />
           )}
+          <label className="hint">
+            <input type="checkbox" checked={trustDevice} onChange={(e) => setTrustDevice(e.target.checked)} />
+            {' '}Se souvenir de cet appareil pendant 30 jours
+          </label>
           <button type="submit" disabled={submitting || (useRecoveryCode ? !recoveryCode : code.length !== 6)}>
             {submitting ? 'Vérification…' : 'Valider'}
           </button>

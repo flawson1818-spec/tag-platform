@@ -10,6 +10,8 @@ import { MfaRecoveryCodesService } from '../access/mfa-recovery-codes.service';
 import { MfaService } from '../access/mfa.service';
 import { PasswordService } from '../access/password.service';
 import { TokenService } from '../access/token.service';
+import { TrustedDevice } from '../access/trusted-device.entity';
+import { TrustedDevicesService } from '../access/trusted-devices.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { EmailService } from '../communication/email.service';
 import { RolesService } from '../roles/roles.service';
@@ -39,6 +41,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly mfaService: MfaService,
     private readonly mfaRecoveryCodesService: MfaRecoveryCodesService,
+    private readonly trustedDevicesService: TrustedDevicesService,
     private readonly supabase: SupabaseService,
   ) {}
 
@@ -123,6 +126,11 @@ export class AuthService {
     if (user.status !== 'ACTIVE') throw new UnauthorizedException('Account is not active');
 
     if (user.mfa_enabled) {
+      const trusted = dto.deviceToken
+        ? await this.trustedDevicesService.isTrusted(user.id, dto.deviceToken).catch(() => false)
+        : false;
+      if (trusted) return this.issueTokens(user);
+
       return {
         mfaRequired: true,
         mfaToken: this.tokenService.createMfaPendingToken({ sub: user.id, email: user.email }),
@@ -134,7 +142,7 @@ export class AuthService {
 
   /** Completes a login that returned mfaRequired, by exchanging the pending token + TOTP code
    *  for a real session — the only path that can issue tokens for an MFA-enabled account. */
-  async mfaChallenge(mfaToken: string, code: string): Promise<AuthResponseDto> {
+  async mfaChallenge(mfaToken: string, code: string, trustDevice = false): Promise<AuthResponseDto> {
     const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
     if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');
 
@@ -146,7 +154,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid MFA code');
     }
 
-    return this.issueTokens(user);
+    return this.issueTokens(user, trustDevice);
   }
 
   /**
@@ -154,7 +162,7 @@ export class AuthService {
    * a lost authenticator device. Same pending-token flow as mfaChallenge(), but consumes a
    * single-use recovery code instead of a TOTP code.
    */
-  async mfaRecoveryChallenge(mfaToken: string, recoveryCode: string): Promise<AuthResponseDto> {
+  async mfaRecoveryChallenge(mfaToken: string, recoveryCode: string, trustDevice = false): Promise<AuthResponseDto> {
     const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
     if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');
 
@@ -164,7 +172,15 @@ export class AuthService {
     const consumed = await this.mfaRecoveryCodesService.consume(userId, recoveryCode);
     if (!consumed) throw new UnauthorizedException('Invalid or already-used recovery code');
 
-    return this.issueTokens(user);
+    return this.issueTokens(user, trustDevice);
+  }
+
+  async listTrustedDevices(userId: string): Promise<TrustedDevice[]> {
+    return this.trustedDevicesService.list(userId);
+  }
+
+  async revokeTrustedDevice(userId: string, deviceId: string): Promise<void> {
+    await this.trustedDevicesService.revoke(userId, deviceId);
   }
 
   /** Step 1 of enabling MFA: generates and stores a secret (not yet active — mfa_enabled stays
@@ -211,6 +227,9 @@ export class AuthService {
     await this.mfaRecoveryCodesService
       .deleteAll(userId)
       .catch((error) => this.logger.error(`Failed to delete MFA recovery codes for user ${userId}`, error as Error));
+    await this.trustedDevicesService
+      .revokeAll(userId)
+      .catch((error) => this.logger.error(`Failed to revoke trusted devices for user ${userId}`, error as Error));
   }
 
   async refresh(dto: RefreshTokenDto): Promise<AuthResponseDto> {
@@ -308,9 +327,21 @@ export class AuthService {
     await this.revokeAllRefreshTokensForUser(row.user_id);
   }
 
-  private async issueTokens(user: User): Promise<AuthResponseDto> {
+  /**
+   * trustDevice is only ever true from mfaChallenge()/mfaRecoveryChallenge() (an explicit,
+   * one-time opt-in) — fail-open on the trust() write itself: never let a lookup/insert hiccup
+   * (e.g. the table not migrated yet on this environment) turn a successful login into a failure.
+   */
+  private async issueTokens(user: User, trustDevice = false): Promise<AuthResponseDto> {
     const refreshTokenPair = this.tokenService.createRefreshTokenPair();
     await this.storeRefreshToken(user.id, refreshTokenPair);
+
+    const deviceToken = trustDevice
+      ? await this.trustedDevicesService.trust(user.id).catch((error) => {
+          this.logger.error(`Failed to register trusted device for user ${user.id}`, error as Error);
+          return undefined;
+        })
+      : undefined;
 
     return {
       access_token: this.tokenService.createAccessToken({ sub: user.id, email: user.email }),
@@ -318,6 +349,7 @@ export class AuthService {
       expires_in: this.tokenService.accessTokenExpiresInSeconds,
       token_type: 'Bearer',
       user: toUserResponse(user),
+      ...(deviceToken ? { device_token: deviceToken } : {}),
     };
   }
 

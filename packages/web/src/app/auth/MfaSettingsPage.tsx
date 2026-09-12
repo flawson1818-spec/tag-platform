@@ -1,8 +1,12 @@
-import { FormEvent, useState } from 'react';
-import { authApi } from '../../lib/api';
+import { FormEvent, useEffect, useState } from 'react';
+import { TrustedDevice, authApi } from '../../lib/api';
 import { getAccessToken, useAuth } from './AuthContext';
 
 type Step = 'idle' | 'awaiting-code' | 'enabled';
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 export function MfaSettingsPage() {
   const { user } = useAuth();
@@ -13,6 +17,26 @@ export function MfaSettingsPage() {
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [trustedDevices, setTrustedDevices] = useState<TrustedDevice[]>([]);
+
+  const refreshTrustedDevices = () => {
+    const token = getAccessToken();
+    if (!token) return;
+    authApi.listTrustedDevices(token).then(setTrustedDevices).catch(() => setTrustedDevices([]));
+  };
+
+  useEffect(() => {
+    if (step === 'enabled') refreshTrustedDevices();
+  }, [step]);
+
+  const handleRevokeDevice = (id: string) => {
+    const token = getAccessToken();
+    if (!token) return;
+    authApi
+      .revokeTrustedDevice(token, id)
+      .then(refreshTrustedDevices)
+      .catch((err) => setError((err as Error).message));
+  };
 
   const startSetup = () => {
     const token = getAccessToken();
@@ -148,6 +172,28 @@ export function MfaSettingsPage() {
               {submitting ? 'Désactivation…' : 'Désactiver'}
             </button>
           </form>
+
+          <div className="request-row" style={{ marginTop: '1rem' }}>
+            <h3>Appareils de confiance</h3>
+            <p className="hint">
+              Un appareil sur lequel tu as coché « Se souvenir de cet appareil » ne redemande pas
+              de code de vérification pendant 30 jours.
+            </p>
+            {trustedDevices.length === 0 && <p className="hint">Aucun appareil de confiance enregistré.</p>}
+            <ul className="request-list">
+              {trustedDevices.map((device) => (
+                <li key={device.id} className="request-row">
+                  <div className="request-meta">
+                    <span>{device.label ?? 'Appareil sans nom'}</span>
+                    <span className="hint">Expire le {formatDate(device.expires_at)}</span>
+                  </div>
+                  <button type="button" className="link-button" onClick={() => handleRevokeDevice(device.id)}>
+                    Révoquer
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )}
 

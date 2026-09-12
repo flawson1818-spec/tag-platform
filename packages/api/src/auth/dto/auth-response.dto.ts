@@ -6,4 +6,6 @@ export interface AuthResponseDto {
   expires_in: number;
   token_type: 'Bearer';
   user: UserResponseDto;
+  /** Only present when the caller just opted into "remember this device" during an MFA challenge. */
+  device_token?: string;
 }

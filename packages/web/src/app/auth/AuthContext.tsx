@@ -3,6 +3,7 @@ import { AuthUser, authApi, isMfaRequired } from '../../lib/api';
 
 const ACCESS_TOKEN_KEY = 'tag.accessToken';
 const REFRESH_TOKEN_KEY = 'tag.refreshToken';
+const DEVICE_TOKEN_KEY = 'tag.deviceToken';
 
 export interface LoginResult {
   mfaRequired: boolean;
@@ -13,8 +14,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   status: 'loading' | 'authenticated' | 'anonymous';
   login: (email: string, password: string) => Promise<LoginResult>;
-  completeMfaChallenge: (mfaToken: string, code: string) => Promise<void>;
-  completeMfaRecovery: (mfaToken: string, recoveryCode: string) => Promise<void>;
+  completeMfaChallenge: (mfaToken: string, code: string, trustDevice?: boolean) => Promise<void>;
+  completeMfaRecovery: (mfaToken: string, recoveryCode: string, trustDevice?: boolean) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -73,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string): Promise<LoginResult> => {
-      const res = await authApi.login({ email, password });
+      const deviceToken = localStorage.getItem(DEVICE_TOKEN_KEY) ?? undefined;
+      const res = await authApi.login({ email, password, deviceToken });
       if (isMfaRequired(res)) {
         return { mfaRequired: true, mfaToken: res.mfaToken };
       }
@@ -84,16 +86,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const completeMfaChallenge = useCallback(
-    async (mfaToken: string, code: string) => {
-      const res = await authApi.mfaChallenge(mfaToken, code);
+    async (mfaToken: string, code: string, trustDevice = false) => {
+      const res = await authApi.mfaChallenge(mfaToken, code, trustDevice);
+      if (res.device_token) localStorage.setItem(DEVICE_TOKEN_KEY, res.device_token);
       persistSession(res.access_token, res.refresh_token, res.user);
     },
     [persistSession],
   );
 
   const completeMfaRecovery = useCallback(
-    async (mfaToken: string, recoveryCode: string) => {
-      const res = await authApi.mfaRecoveryChallenge(mfaToken, recoveryCode);
+    async (mfaToken: string, recoveryCode: string, trustDevice = false) => {
+      const res = await authApi.mfaRecoveryChallenge(mfaToken, recoveryCode, trustDevice);
+      if (res.device_token) localStorage.setItem(DEVICE_TOKEN_KEY, res.device_token);
       persistSession(res.access_token, res.refresh_token, res.user);
     },
     [persistSession],

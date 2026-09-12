@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsEmail()
@@ -7,4 +7,9 @@ export class LoginDto {
   @IsString()
   @MinLength(1)
   password!: string;
+
+  /** docs/12_SECURITY_SPECIFICATION.md "Trusted Devices" — skips the MFA challenge when valid. */
+  @IsOptional()
+  @IsString()
+  deviceToken?: string;
 }

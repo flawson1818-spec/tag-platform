@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle, seconds } from '@nestjs/throttler';
 import { CurrentUser } from '../access/decorators/current-user.decorator';
@@ -82,7 +82,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: seconds(60) } })
   mfaChallenge(@Body() dto: MfaChallengeDto) {
-    return this.authService.mfaChallenge(dto.mfaToken, dto.code);
+    return this.authService.mfaChallenge(dto.mfaToken, dto.code, dto.trustDevice);
   }
 
   /** Public: same pending-token flow as mfa/challenge, for a lost authenticator device. */
@@ -90,7 +90,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: seconds(60) } })
   mfaRecoveryChallenge(@Body() dto: MfaRecoveryChallengeDto) {
-    return this.authService.mfaRecoveryChallenge(dto.mfaToken, dto.recoveryCode);
+    return this.authService.mfaRecoveryChallenge(dto.mfaToken, dto.recoveryCode, dto.trustDevice);
   }
 
   @Post('mfa/setup')
@@ -116,5 +116,21 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   disableMfa(@CurrentUser() currentUser: AuthenticatedUser, @Body() dto: VerifyMfaCodeDto) {
     return this.authService.disableMfa(currentUser.id, dto.code);
+  }
+
+  /** docs/12_SECURITY_SPECIFICATION.md "Trusted Devices" — never returns the token itself, just the metadata. */
+  @Get('mfa/trusted-devices')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  listTrustedDevices(@CurrentUser() currentUser: AuthenticatedUser) {
+    return this.authService.listTrustedDevices(currentUser.id);
+  }
+
+  @Delete('mfa/trusted-devices/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  revokeTrustedDevice(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.authService.revokeTrustedDevice(currentUser.id, id);
   }
 }

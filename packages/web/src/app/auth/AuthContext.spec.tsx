@@ -210,7 +210,7 @@ describe('AuthProvider', () => {
     screen.getByText('verify').click();
 
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('authenticated'));
-    expect(mfaChallengeSpy).toHaveBeenCalledWith('pending-token', '123456');
+    expect(mfaChallengeSpy).toHaveBeenCalledWith('pending-token', '123456', false);
     expect(getAccessToken()).toBe('a2');
   });
 
@@ -242,7 +242,7 @@ describe('AuthProvider', () => {
     screen.getByText('recover').click();
 
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('authenticated'));
-    expect(mfaRecoverySpy).toHaveBeenCalledWith('pending-token', 'AAAA-BBBB-CCCC');
+    expect(mfaRecoverySpy).toHaveBeenCalledWith('pending-token', 'AAAA-BBBB-CCCC', false);
     expect(getAccessToken()).toBe('a3');
   });
 });

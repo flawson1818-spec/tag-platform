@@ -54,6 +54,13 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     consume: vi.fn(),
     deleteAll: vi.fn().mockResolvedValue(undefined),
   };
+  const trustedDevicesService = {
+    trust: vi.fn().mockResolvedValue('device-token-raw'),
+    isTrusted: vi.fn().mockResolvedValue(false),
+    list: vi.fn().mockResolvedValue([]),
+    revoke: vi.fn().mockResolvedValue(undefined),
+    revokeAll: vi.fn().mockResolvedValue(undefined),
+  };
   const supabase = createSupabaseServiceMock({
     refresh_tokens: createQueryChain({ data: null, error: null }),
     password_reset_tokens: createQueryChain({ data: null, error: null }),
@@ -69,6 +76,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     emailService,
     mfaService,
     mfaRecoveryCodesService,
+    trustedDevicesService,
     supabase,
     ...overrides,
   };
@@ -80,6 +88,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     deps.emailService as never,
     deps.mfaService as never,
     deps.mfaRecoveryCodesService as never,
+    deps.trustedDevicesService as never,
     deps.supabase as never,
   );
   return { service, ...deps };
@@ -172,6 +181,47 @@ describe('AuthService', () => {
         email: 'believer@example.com',
       });
     });
+
+    it('skips the MFA challenge and issues tokens directly for a trusted device', async () => {
+      const { service, usersService, passwordService, trustedDevicesService } = buildDeps();
+      usersService.findByEmail.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      passwordService.verify.mockResolvedValue(true);
+      trustedDevicesService.isTrusted.mockResolvedValue(true);
+
+      const result = await service.login({
+        email: 'believer@example.com',
+        password: 'right',
+        deviceToken: 'known-device',
+      } as never);
+
+      expect(trustedDevicesService.isTrusted).toHaveBeenCalledWith('user-1', 'known-device');
+      expect(result).toMatchObject({ access_token: 'access-token' });
+    });
+
+    it('does not even look up trusted devices when no deviceToken is given', async () => {
+      const { service, usersService, passwordService, trustedDevicesService } = buildDeps();
+      usersService.findByEmail.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      passwordService.verify.mockResolvedValue(true);
+
+      await service.login({ email: 'believer@example.com', password: 'right' } as never);
+
+      expect(trustedDevicesService.isTrusted).not.toHaveBeenCalled();
+    });
+
+    it('still requires the MFA challenge when the trusted-device lookup itself fails (fail-open to untrusted)', async () => {
+      const { service, usersService, passwordService, trustedDevicesService } = buildDeps();
+      usersService.findByEmail.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      passwordService.verify.mockResolvedValue(true);
+      trustedDevicesService.isTrusted.mockRejectedValue(new Error('table missing'));
+
+      const result = await service.login({
+        email: 'believer@example.com',
+        password: 'right',
+        deviceToken: 'known-device',
+      } as never);
+
+      expect(result).toEqual({ mfaRequired: true, mfaToken: 'mfa-pending-token' });
+    });
   });
 
   describe('mfaChallenge', () => {
@@ -205,6 +255,46 @@ describe('AuthService', () => {
 
       expect(mfaService.verify).toHaveBeenCalledWith('123456', 'SECRET');
       expect(result.access_token).toBe('access-token');
+    });
+
+    it('does not register a trusted device when trustDevice is not requested', async () => {
+      const { service, tokenService, usersService, mfaService, trustedDevicesService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      usersService.getMfaSecret.mockResolvedValue('SECRET');
+      mfaService.verify.mockReturnValue(true);
+
+      const result = await service.mfaChallenge('mfa-pending-token', '123456');
+
+      expect(trustedDevicesService.trust).not.toHaveBeenCalled();
+      expect(result.device_token).toBeUndefined();
+    });
+
+    it('registers and returns a trusted device when trustDevice is requested', async () => {
+      const { service, tokenService, usersService, mfaService, trustedDevicesService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      usersService.getMfaSecret.mockResolvedValue('SECRET');
+      mfaService.verify.mockReturnValue(true);
+
+      const result = await service.mfaChallenge('mfa-pending-token', '123456', true);
+
+      expect(trustedDevicesService.trust).toHaveBeenCalledWith('user-1');
+      expect(result.device_token).toBe('device-token-raw');
+    });
+
+    it('still succeeds without a device_token when trust registration itself fails', async () => {
+      const { service, tokenService, usersService, mfaService, trustedDevicesService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      usersService.getMfaSecret.mockResolvedValue('SECRET');
+      mfaService.verify.mockReturnValue(true);
+      trustedDevicesService.trust.mockRejectedValue(new Error('table missing'));
+
+      const result = await service.mfaChallenge('mfa-pending-token', '123456', true);
+
+      expect(result.access_token).toBe('access-token');
+      expect(result.device_token).toBeUndefined();
     });
   });
 
@@ -301,6 +391,18 @@ describe('AuthService', () => {
       expect(mfaRecoveryCodesService.consume).toHaveBeenCalledWith('user-1', 'AAAA-BBBB-CCCC');
       expect(result.access_token).toBe('access-token');
     });
+
+    it('registers a trusted device when trustDevice is requested', async () => {
+      const { service, tokenService, usersService, mfaRecoveryCodesService, trustedDevicesService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      mfaRecoveryCodesService.consume.mockResolvedValue(true);
+
+      const result = await service.mfaRecoveryChallenge('mfa-pending-token', 'AAAA-BBBB-CCCC', true);
+
+      expect(trustedDevicesService.trust).toHaveBeenCalledWith('user-1');
+      expect(result.device_token).toBe('device-token-raw');
+    });
   });
 
   describe('disableMfa', () => {
@@ -313,8 +415,8 @@ describe('AuthService', () => {
       expect(usersService.setMfaEnabled).not.toHaveBeenCalled();
     });
 
-    it('turns MFA off and deletes any leftover recovery codes once the code is correct', async () => {
-      const { service, usersService, mfaService, mfaRecoveryCodesService } = buildDeps();
+    it('turns MFA off and deletes any leftover recovery codes and trusted devices once the code is correct', async () => {
+      const { service, usersService, mfaService, mfaRecoveryCodesService, trustedDevicesService } = buildDeps();
       usersService.getMfaSecret.mockResolvedValue('SECRET');
       mfaService.verify.mockReturnValue(true);
 
@@ -322,6 +424,27 @@ describe('AuthService', () => {
 
       expect(usersService.setMfaEnabled).toHaveBeenCalledWith('user-1', false);
       expect(mfaRecoveryCodesService.deleteAll).toHaveBeenCalledWith('user-1');
+      expect(trustedDevicesService.revokeAll).toHaveBeenCalledWith('user-1');
+    });
+  });
+
+  describe('trusted devices', () => {
+    it('listTrustedDevices delegates to TrustedDevicesService', async () => {
+      const { service, trustedDevicesService } = buildDeps();
+      trustedDevicesService.list.mockResolvedValue([{ id: 'device-1' }]);
+
+      const result = await service.listTrustedDevices('user-1');
+
+      expect(trustedDevicesService.list).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual([{ id: 'device-1' }]);
+    });
+
+    it('revokeTrustedDevice delegates to TrustedDevicesService', async () => {
+      const { service, trustedDevicesService } = buildDeps();
+
+      await service.revokeTrustedDevice('user-1', 'device-1');
+
+      expect(trustedDevicesService.revoke).toHaveBeenCalledWith('user-1', 'device-1');
     });
   });
 

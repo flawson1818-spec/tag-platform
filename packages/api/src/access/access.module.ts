@@ -12,6 +12,7 @@ import { PermissionGuard } from './permission.guard';
 import { PermissionsService } from './permissions.service';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
+import { TrustedDevicesService } from './trusted-devices.service';
 import { UserMutesService } from './user-mutes.service';
 
 @Module({
@@ -39,6 +40,7 @@ import { UserMutesService } from './user-mutes.service';
     PermissionsService,
     PasswordService,
     TokenService,
+    TrustedDevicesService,
     UserMutesService,
   ],
   exports: [
@@ -50,6 +52,7 @@ import { UserMutesService } from './user-mutes.service';
     PermissionsService,
     PasswordService,
     TokenService,
+    TrustedDevicesService,
     UserMutesService,
   ],
 })

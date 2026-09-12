@@ -1,4 +1,4 @@
-import { IsString, Length, MinLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, Length, MinLength } from 'class-validator';
 
 export class MfaChallengeDto {
   @IsString()
@@ -8,4 +8,9 @@ export class MfaChallengeDto {
   @IsString()
   @Length(6, 6)
   code!: string;
+
+  /** docs/12_SECURITY_SPECIFICATION.md "Trusted Devices" — opt-in, returns a device_token to remember. */
+  @IsOptional()
+  @IsBoolean()
+  trustDevice?: boolean;
 }

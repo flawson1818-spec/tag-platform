@@ -1066,3 +1066,26 @@ create index if not exists event_poll_votes_poll_id_idx on event_poll_votes (pol
 
 alter table event_polls enable row level security;
 alter table event_poll_votes enable row level security;
+
+-- docs/12_SECURITY_SPECIFICATION.md MFA section lists "Trusted Devices" right after "Recovery
+-- Codes" (mfa_recovery_codes, added a prior session) — remembering a device so a later login
+-- from it can skip the MFA challenge. A brand-new, isolated table only touched by
+-- TrustedDevicesService. Unlike mfa_recovery_codes (argon2id, checked at most a handful of
+-- times per user), this token is checked on every login attempt, so it follows the faster
+-- sha256-via-TokenService.hashToken() pattern already used for refresh_tokens/
+-- password_reset_tokens/email_verification_tokens — a direct indexed lookup by hash rather
+-- than looping and verifying candidates.
+create table if not exists trusted_devices (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  token_hash text not null,
+  label text,
+  last_used_at timestamptz,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists trusted_devices_user_id_idx on trusted_devices (user_id);
+create unique index if not exists trusted_devices_token_hash_idx on trusted_devices (token_hash);
+
+alter table trusted_devices enable row level security;

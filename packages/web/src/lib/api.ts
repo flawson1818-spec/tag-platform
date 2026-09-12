@@ -126,6 +126,15 @@ export interface AuthResponse {
   expires_in: number;
   token_type: string;
   user: AuthUser;
+  device_token?: string;
+}
+
+export interface TrustedDevice {
+  id: string;
+  label: string | null;
+  last_used_at: string | null;
+  expires_at: string;
+  created_at: string;
 }
 
 export interface PrayerSlot {
@@ -578,13 +587,23 @@ export function isMfaRequired(res: AuthResponse | MfaRequiredResponse): res is M
 export const authApi = {
   register: (data: { email: string; password: string; displayName: string }) =>
     request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data: { email: string; password: string }) =>
+  login: (data: { email: string; password: string; deviceToken?: string }) =>
     request<AuthResponse | MfaRequiredResponse>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
-  mfaChallenge: (mfaToken: string, code: string) =>
-    request<AuthResponse>('/auth/mfa/challenge', { method: 'POST', body: JSON.stringify({ mfaToken, code }) }),
+  mfaChallenge: (mfaToken: string, code: string, trustDevice = false) =>
+    request<AuthResponse>('/auth/mfa/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ mfaToken, code, trustDevice }),
+    }),
   /** For a lost authenticator device — same pending mfaToken, a recovery code instead of a TOTP code. */
-  mfaRecoveryChallenge: (mfaToken: string, recoveryCode: string) =>
-    request<AuthResponse>('/auth/mfa/recovery', { method: 'POST', body: JSON.stringify({ mfaToken, recoveryCode }) }),
+  mfaRecoveryChallenge: (mfaToken: string, recoveryCode: string, trustDevice = false) =>
+    request<AuthResponse>('/auth/mfa/recovery', {
+      method: 'POST',
+      body: JSON.stringify({ mfaToken, recoveryCode, trustDevice }),
+    }),
+  listTrustedDevices: (token: string) =>
+    request<TrustedDevice[]>('/auth/mfa/trusted-devices', { headers: authHeaders(token) }),
+  revokeTrustedDevice: (token: string, id: string) =>
+    request<void>(`/auth/mfa/trusted-devices/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
   mfaSetup: (token: string) =>
     request<{ secret: string; otpauthUrl: string }>('/auth/mfa/setup', {
       method: 'POST',
