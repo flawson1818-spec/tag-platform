@@ -1148,3 +1148,19 @@ create index if not exists prayer_reminders_user_id_idx on prayer_reminders (use
 create index if not exists prayer_reminders_enabled_idx on prayer_reminders (enabled);
 
 alter table prayer_reminders enable row level security;
+
+-- Real bug found while working on RBAC, unrelated to that change: PrayerRealtimeGateway's
+-- chat:send handler has always gated on 'room.chat.send', but that permission was never
+-- actually seeded anywhere in this file — every role's `getUserPermissionCodes()` result is
+-- missing it, so nobody, at any role, has ever been able to send a chat message in any room
+-- (reading history/chat:hide/moderation all still worked, only sending was silently broken).
+-- Granted to the same role set as room.view — any authenticated participant, not moderator-only.
+insert into permissions (code) values ('room.chat.send')
+on conflict (code) do nothing;
+
+insert into role_permissions (role_id, permission_id)
+select r.id, p.id
+from permissions p
+join roles r on r.code = any(array['VISITEUR', 'NOUVEAU_CONVERTI', 'INTERCESSEUR', 'MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'])
+where p.code = 'room.chat.send'
+on conflict (role_id, permission_id) do nothing;
