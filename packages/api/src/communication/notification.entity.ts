@@ -7,6 +7,7 @@ export const NOTIFICATION_TYPES = [
   'PRAYER_REQUEST_ANSWERED',
   'PRAYER_REMINDER',
   'EVENT_CREATED',
+  'EVENT_REMINDER',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

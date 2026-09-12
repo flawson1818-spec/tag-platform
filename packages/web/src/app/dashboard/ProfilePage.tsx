@@ -320,6 +320,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
   PRAYER_REMINDER: 'Tes rappels de prière planifiés',
   EVENT_CREATED: 'Un nouvel événement dans une de tes communautés',
+  EVENT_REMINDER: 'Rappel avant un événement auquel tu es inscrit',
 };
 
 function NotificationPreferencesSection() {
