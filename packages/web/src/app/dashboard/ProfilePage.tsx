@@ -319,6 +319,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   TESTIMONY_REJECTED: 'Ton témoignage est refusé',
   PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
   PRAYER_REMINDER: 'Tes rappels de prière planifiés',
+  EVENT_CREATED: 'Un nouvel événement dans une de tes communautés',
 };
 
 function NotificationPreferencesSection() {

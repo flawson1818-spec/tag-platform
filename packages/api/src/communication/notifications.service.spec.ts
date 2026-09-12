@@ -1,4 +1,5 @@
 import { NotificationsService } from './notifications.service';
+import { NOTIFICATION_TYPES } from './notification.entity';
 import { createQueryChain, createSupabaseServiceMock } from '../testing/supabase-query-mock';
 
 describe('NotificationsService', () => {
@@ -60,12 +61,7 @@ describe('NotificationsService', () => {
 
       const result = await service.getPreferences('user-1');
 
-      expect(result).toEqual([
-        { type: 'TESTIMONY_PUBLISHED', enabled: true },
-        { type: 'TESTIMONY_REJECTED', enabled: true },
-        { type: 'PRAYER_REQUEST_ANSWERED', enabled: true },
-        { type: 'PRAYER_REMINDER', enabled: true },
-      ]);
+      expect(result).toEqual(NOTIFICATION_TYPES.map((type) => ({ type, enabled: true })));
     });
 
     it('reflects an explicitly disabled type', async () => {
@@ -94,12 +90,12 @@ describe('NotificationsService', () => {
       expect(chains[1].update).toHaveBeenCalledWith({
         notification_prefs: { TESTIMONY_PUBLISHED: false, TESTIMONY_REJECTED: false },
       });
-      expect(result).toEqual([
-        { type: 'TESTIMONY_PUBLISHED', enabled: false },
-        { type: 'TESTIMONY_REJECTED', enabled: false },
-        { type: 'PRAYER_REQUEST_ANSWERED', enabled: true },
-        { type: 'PRAYER_REMINDER', enabled: true },
-      ]);
+      expect(result).toEqual(
+        NOTIFICATION_TYPES.map((type) => ({
+          type,
+          enabled: type === 'TESTIMONY_PUBLISHED' || type === 'TESTIMONY_REJECTED' ? false : true,
+        })),
+      );
     });
 
     it('rejects an unknown notification type', async () => {

@@ -1,5 +1,6 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { buildPaginationMeta, PaginatedResult, paginationRange } from '../common/pagination';
+import { NotificationsService } from '../communication/notifications.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventsQueryDto } from './dto/list-events.query.dto';
@@ -13,7 +14,12 @@ const PARTICIPANT_COLUMNS =
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  private readonly logger = new Logger(EventsService.name);
+
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private get db() {
     return this.supabase.client.from('events');
@@ -38,7 +44,40 @@ export class EventsService {
       .select(EVENT_COLUMNS)
       .single();
     if (error) throw new InternalServerErrorException(error.message);
-    return data as unknown as Event;
+    const event = data as unknown as Event;
+
+    void this.notifyCommunityOfNewEvent(event, actorId);
+    return event;
+  }
+
+  /**
+   * docs/01_FUNCTIONAL_SPECIFICATION.md §11 notification triggers list a new event in a
+   * followed community. Only for community-scoped events — a nation-wide one (community_id
+   * null) has no natural bounded recipient list, so it's deliberately not broadcast to every
+   * user on the platform. Best-effort and fire-and-forget: notification delivery must never
+   * make event creation itself slower or fail.
+   */
+  private async notifyCommunityOfNewEvent(event: Event, actorId: string): Promise<void> {
+    if (!event.community_id) return;
+    try {
+      const { data, error } = await this.supabase.client
+        .from('community_members')
+        .select('user_id')
+        .eq('community_id', event.community_id)
+        .eq('status', 'ACTIVE');
+      if (error) throw new InternalServerErrorException(error.message);
+
+      const memberIds = (data as unknown as { user_id: string }[]).map((m) => m.user_id).filter((id) => id !== actorId);
+      await Promise.all(
+        memberIds.map((memberId) =>
+          this.notificationsService
+            .create(memberId, 'EVENT_CREATED', { eventId: event.id, title: event.title })
+            .catch((notifyError) => this.logger.error(`Failed to notify ${memberId} of new event ${event.id}`, notifyError as Error)),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(`Failed to look up members to notify for event ${event.id}`, error as Error);
+    }
   }
 
   async findById(id: string): Promise<Event> {

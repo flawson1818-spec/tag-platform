@@ -6,6 +6,7 @@ export const NOTIFICATION_TYPES = [
   'TESTIMONY_REJECTED',
   'PRAYER_REQUEST_ANSWERED',
   'PRAYER_REMINDER',
+  'EVENT_CREATED',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

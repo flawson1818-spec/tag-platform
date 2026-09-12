@@ -101,6 +101,7 @@ const TYPE_LABELS: Record<string, string> = {
   AI_CRISIS_ESCALATION: "Alerte IA : un utilisateur pourrait être en situation de crise",
   AI_USER_AUTO_MUTED: "IA Modératrice : un utilisateur a été mis en sourdine automatiquement",
   PRAYER_REMINDER: "C'est l'heure de ton rappel de prière",
+  EVENT_CREATED: "Un nouvel événement a été créé dans une communauté dont tu es membre",
 };
 
 function describe(notification: AppNotification): string {
@@ -125,6 +126,8 @@ function resourceLink(notification: AppNotification): string | null {
       return '/room';
     case 'PRAYER_REMINDER':
       return '/room';
+    case 'EVENT_CREATED':
+      return '/events';
     default:
       return null;
   }

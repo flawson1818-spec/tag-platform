@@ -14,8 +14,11 @@ const CREATED_EVENT = {
   deleted_at: null,
 };
 
-function buildService(supabase: ReturnType<typeof createSupabaseServiceMock>) {
-  return new EventsService(supabase as never);
+function buildService(
+  supabase: ReturnType<typeof createSupabaseServiceMock>,
+  notificationsService: Partial<Record<string, unknown>> = { create: vi.fn().mockResolvedValue(undefined) },
+) {
+  return new EventsService(supabase as never, notificationsService as never);
 }
 
 describe('EventsService', () => {
@@ -224,6 +227,74 @@ describe('EventsService', () => {
       const service = buildService(supabase);
 
       await expect(service.softDelete('missing', 'actor-1')).rejects.toThrow('Event missing not found');
+    });
+  });
+
+  describe('create', () => {
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it('returns the created event immediately without waiting on member notification', async () => {
+      const supabase = createSupabaseServiceMock({
+        events: createQueryChain({ data: CREATED_EVENT, error: null }),
+        community_members: createQueryChain({ data: [], error: null }),
+      });
+      const service = buildService(supabase);
+
+      const result = await service.create({ type: 'VEILLEE', title: 'Veillée' } as never, 'actor-1');
+
+      expect(result).toEqual(CREATED_EVENT);
+    });
+
+    it('does not look up members at all for a nation-wide event (no community_id)', async () => {
+      const supabase = createSupabaseServiceMock({
+        events: createQueryChain({ data: CREATED_EVENT, error: null }),
+      });
+      const notificationsService = { create: vi.fn().mockResolvedValue(undefined) };
+      const service = buildService(supabase, notificationsService);
+
+      await service.create({ type: 'VEILLEE', title: 'Veillée' } as never, 'actor-1');
+      await flush();
+
+      expect(notificationsService.create).not.toHaveBeenCalled();
+    });
+
+    it('notifies every active member except the actor for a community-scoped event', async () => {
+      const communityEvent = { ...CREATED_EVENT, community_id: 'community-1' };
+      const membersChain = createQueryChain({
+        data: [{ user_id: 'member-1' }, { user_id: 'member-2' }, { user_id: 'actor-1' }],
+        error: null,
+      });
+      const supabase = createSupabaseServiceMock({
+        events: createQueryChain({ data: communityEvent, error: null }),
+        community_members: membersChain,
+      });
+      const notificationsService = { create: vi.fn().mockResolvedValue(undefined) };
+      const service = buildService(supabase, notificationsService);
+
+      await service.create({ type: 'VEILLEE', title: 'Veillée', communityId: 'community-1' } as never, 'actor-1');
+      await flush();
+
+      expect(membersChain.eq).toHaveBeenCalledWith('status', 'ACTIVE');
+      expect(notificationsService.create).toHaveBeenCalledWith('member-1', 'EVENT_CREATED', {
+        eventId: communityEvent.id,
+        title: communityEvent.title,
+      });
+      expect(notificationsService.create).toHaveBeenCalledWith('member-2', 'EVENT_CREATED', expect.anything());
+      expect(notificationsService.create).not.toHaveBeenCalledWith('actor-1', 'EVENT_CREATED', expect.anything());
+    });
+
+    it('never throws even when the member lookup fails', async () => {
+      const communityEvent = { ...CREATED_EVENT, community_id: 'community-1' };
+      const supabase = createSupabaseServiceMock({
+        events: createQueryChain({ data: communityEvent, error: null }),
+        community_members: createQueryChain({ data: null, error: { message: 'db down' } }),
+      });
+      const service = buildService(supabase);
+
+      const result = await service.create({ type: 'VEILLEE', title: 'Veillée', communityId: 'community-1' } as never, 'actor-1');
+      await flush();
+
+      expect(result).toEqual(communityEvent);
     });
   });
 });
