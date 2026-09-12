@@ -855,11 +855,34 @@ export interface AiChatResponse {
   escalated: boolean;
 }
 
+export type FaithPathStep = 'DECOUVERTE' | 'QUI_EST_JESUS' | 'EVANGILE' | 'REPONSE_PERSONNELLE' | 'COMMUNAUTE';
+export type FaithPathLevel = 'NOUVEAU' | 'CONNAIT_DEJA';
+
+export interface FaithPathProgress {
+  current_step: FaithPathStep;
+  declared_level: FaithPathLevel | null;
+  updated_at: string;
+  steps: { step: FaithPathStep; label: string }[];
+}
+
 export const aiApi = {
   chatAccueil: (message: string, history: AiChatTurn[]) =>
     request<AiChatResponse>('/ai/accueil/chat', { method: 'POST', body: JSON.stringify({ message, history }) }),
   chatEvangelisation: (message: string, history: AiChatTurn[]) =>
     request<AiChatResponse>('/ai/evangelisation/chat', { method: 'POST', body: JSON.stringify({ message, history }) }),
+  getFaithPath: (token: string) =>
+    request<FaithPathProgress>('/ai/evangelisation/faith-path', { headers: authHeaders(token) }),
+  setFaithPathLevel: (token: string, level: FaithPathLevel) =>
+    request<FaithPathProgress>('/ai/evangelisation/faith-path/level', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ level }),
+    }),
+  advanceFaithPath: (token: string) =>
+    request<FaithPathProgress>('/ai/evangelisation/faith-path/advance', {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
 };
 
 export const eventsApi = {

@@ -7,6 +7,8 @@ import { PushNotificationsService } from '../communication/push-notifications.se
 import { SocialChannel } from '../communication/social-publication.entity';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { AiAgentName } from './ai-interaction-log.entity';
+import { FAITH_PATH_STEPS, FAITH_PATH_STEP_LABELS, FaithPathProgress } from './faith-path.entity';
+import { FaithPathService } from './faith-path.service';
 
 const ESCALATION_RECIPIENT_ROLES = ['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'];
 
@@ -87,6 +89,7 @@ export class AiAgentsService {
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationsService: PushNotificationsService,
     private readonly permissionsService: PermissionsService,
+    private readonly faithPathService: FaithPathService,
   ) {}
 
   private getClient(): Anthropic {
@@ -131,7 +134,39 @@ export class AiAgentsService {
       );
       return { reply: CRISIS_RESPONSE, escalated: true };
     }
-    return this.chat('EVANGELISATION', EVANGELISATION_SYSTEM, dto, userId);
+
+    const progress = userId
+      ? await this.faithPathService.get(userId).catch((error) => {
+          this.logger.error(`Failed to load faith path progress for user ${userId}`, error as Error);
+          return null;
+        })
+      : null;
+    const system = progress ? `${EVANGELISATION_SYSTEM}\n\n${this.faithPathContext(progress)}` : EVANGELISATION_SYSTEM;
+
+    return this.chat('EVANGELISATION', system, dto, userId);
+  }
+
+  /**
+   * docs/02_AI_AGENTS_SPECIFICATION.md §4: "parcours de découverte de la foi structuré (étapes
+   * progressives, contenu adapté au niveau de connaissance déclaré)". The steps and level are
+   * just context for the model — actual conversational content is generated live, never
+   * hardcoded, so this never invents doctrine of its own (the system prompt's own guardrail).
+   */
+  private faithPathContext(progress: FaithPathProgress): string {
+    const stepLabel = FAITH_PATH_STEP_LABELS[progress.current_step];
+    const allSteps = FAITH_PATH_STEPS.map((step) => FAITH_PATH_STEP_LABELS[step]).join(' → ');
+    const levelText =
+      progress.declared_level === 'CONNAIT_DEJA'
+        ? 'a déclaré déjà bien connaître la Bible et la foi chrétienne — tu peux aller plus en profondeur.'
+        : progress.declared_level === 'NOUVEAU'
+          ? 'a déclaré découvrir la foi chrétienne — reste simple, évite le jargon.'
+          : "n'a pas encore précisé son niveau de connaissance — reste accessible par défaut.";
+
+    return (
+      `Contexte du parcours de découverte de la foi : la personne ${levelText} ` +
+      `Elle se trouve actuellement à l'étape "${stepLabel}" de son parcours (étapes : ${allSteps}). ` +
+      "Si le dialogue s'y prête naturellement, tu peux faire avancer la conversation vers cette étape, sans jamais forcer ni la mentionner explicitement comme un mécanisme."
+    );
   }
 
   /**

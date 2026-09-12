@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, ReactNode, useState } from 'react';
 import { AiChatTurn, aiApi } from '../../lib/api';
 
 interface AiChatWidgetProps {
@@ -6,9 +6,10 @@ interface AiChatWidgetProps {
   intro: string;
   placeholder: string;
   send: (message: string, history: AiChatTurn[]) => ReturnType<typeof aiApi.chatAccueil>;
+  children?: ReactNode;
 }
 
-export function AiChatWidget({ title, intro, placeholder, send }: AiChatWidgetProps) {
+export function AiChatWidget({ title, intro, placeholder, send, children }: AiChatWidgetProps) {
   const [history, setHistory] = useState<AiChatTurn[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ export function AiChatWidget({ title, intro, placeholder, send }: AiChatWidgetPr
     <div className="ai-chat">
       <h2>{title}</h2>
       <p className="hint">{intro}</p>
+      {children}
 
       <div className="ai-chat-list">
         {history.length === 0 && <p className="ai-chat-empty">Pose ta première question ci-dessous.</p>}

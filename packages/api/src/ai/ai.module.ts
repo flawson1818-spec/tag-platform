@@ -5,11 +5,12 @@ import { CommunicationModule } from '../communication/communication.module';
 import { AiController } from './ai.controller';
 import { AiAgentsService } from './ai-agents.service';
 import { AiModerationService } from './ai-moderation.service';
+import { FaithPathService } from './faith-path.service';
 
 @Module({
   imports: [SupabaseModule, AccessModule, CommunicationModule],
   controllers: [AiController],
-  providers: [AiAgentsService, AiModerationService],
+  providers: [AiAgentsService, AiModerationService, FaithPathService],
   exports: [AiModerationService, AiAgentsService],
 })
 export class AiModule {}

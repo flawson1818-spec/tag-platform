@@ -1089,3 +1089,18 @@ create index if not exists trusted_devices_user_id_idx on trusted_devices (user_
 create unique index if not exists trusted_devices_token_hash_idx on trusted_devices (token_hash);
 
 alter table trusted_devices enable row level security;
+
+-- docs/02_AI_AGENTS_SPECIFICATION.md §4 (IA Évangélisation): "Proposer un parcours de découverte
+-- de la foi structuré (étapes progressives, contenu adapté au niveau de connaissance déclaré)."
+-- The steps themselves (FAITH_PATH_STEPS) and the declared-level enum live in application code
+-- (packages/api/src/ai/faith-path.entity.ts) — this table only persists where one logged-in user
+-- currently is in that fixed sequence. A brand-new, isolated table only touched by
+-- FaithPathService; not applicable to anonymous chat (no user_id to key on).
+create table if not exists faith_path_progress (
+  user_id uuid primary key references users (id) on delete cascade,
+  current_step text not null default 'DECOUVERTE',
+  declared_level text,
+  updated_at timestamptz not null default now()
+);
+
+alter table faith_path_progress enable row level security;

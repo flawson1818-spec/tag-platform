@@ -11,14 +11,17 @@ function buildService(overrides: Partial<Record<string, unknown>> = {}) {
   const pushNotificationsService = overrides.pushNotificationsService ?? { send: vi.fn().mockResolvedValue([]) };
   const permissionsService =
     overrides.permissionsService ?? { listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]) };
+  const faithPathService =
+    overrides.faithPathService ?? { get: vi.fn().mockResolvedValue({ current_step: 'DECOUVERTE', declared_level: null, updated_at: '2026-01-01T00:00:00.000Z' }) };
   const supabase = overrides.supabase ?? supabaseForLogging();
   const service = new AiAgentsService(
     supabase as never,
     notificationsService as never,
     pushNotificationsService as never,
     permissionsService as never,
+    faithPathService as never,
   );
-  return { service, notificationsService, pushNotificationsService, permissionsService, supabase };
+  return { service, notificationsService, pushNotificationsService, permissionsService, faithPathService, supabase };
 }
 
 describe('AiAgentsService.chatEvangelisation — crisis escalation', () => {
@@ -134,5 +137,57 @@ describe('AiAgentsService.chatAccueil — out-of-scope escalation', () => {
     expect(result.escalated).toBe(false);
     expect(result.reply).not.toContain('HORS_PERIMETRE');
     expect(notificationsService.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('AiAgentsService.chatEvangelisation — faith path context', () => {
+  beforeEach(() => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test-key');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('injects the current step and declared level into the system prompt for a logged-in user', async () => {
+    const create = vi.fn().mockResolvedValue(fakeAnthropicReply('Réponse.'));
+    const { service } = buildService({
+      faithPathService: {
+        get: vi.fn().mockResolvedValue({ current_step: 'EVANGILE', declared_level: 'CONNAIT_DEJA', updated_at: '2026-01-01T00:00:00.000Z' }),
+      },
+    });
+    (service as unknown as { client: unknown }).client = { messages: { create } };
+
+    await service.chatEvangelisation({ message: 'Que dit la Bible sur la grâce ?', history: [] } as never, 'user-1');
+
+    const systemPrompt = create.mock.calls[0][0].system as string;
+    expect(systemPrompt).toContain("L'Évangile");
+    expect(systemPrompt).toContain('déjà bien connaître');
+  });
+
+  it('does not add any faith path context for an anonymous visitor', async () => {
+    const create = vi.fn().mockResolvedValue(fakeAnthropicReply('Réponse.'));
+    const { service, faithPathService } = buildService();
+    (service as unknown as { client: unknown }).client = { messages: { create } };
+
+    await service.chatEvangelisation({ message: 'Que dit la Bible sur la grâce ?', history: [] } as never, null);
+
+    expect(faithPathService.get).not.toHaveBeenCalled();
+    const systemPrompt = create.mock.calls[0][0].system as string;
+    expect(systemPrompt).not.toContain('parcours de découverte');
+  });
+
+  it('still replies normally when the faith path lookup itself fails (fail-open)', async () => {
+    const create = vi.fn().mockResolvedValue(fakeAnthropicReply('Réponse.'));
+    const { service } = buildService({
+      faithPathService: { get: vi.fn().mockRejectedValue(new Error('table missing')) },
+    });
+    (service as unknown as { client: unknown }).client = { messages: { create } };
+
+    const result = await service.chatEvangelisation({ message: 'Que dit la Bible sur la grâce ?', history: [] } as never, 'user-1');
+
+    expect(result.reply).toBe('Réponse.');
+    const systemPrompt = create.mock.calls[0][0].system as string;
+    expect(systemPrompt).not.toContain('parcours de découverte');
   });
 });
