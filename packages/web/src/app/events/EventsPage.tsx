@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import {
   EVENT_STATUSES,
@@ -8,9 +9,20 @@ import {
   EventParticipant,
   EventPoll,
   TagEvent,
+  WS_URL,
   eventsApi,
 } from '../../lib/api';
 import { Pagination } from '../Pagination';
+
+const EVENT_CHAT_MAX_LENGTH = 500;
+const EVENT_QUICK_REACTIONS = ['🙏', '❤️', '🙌', '🔥'];
+
+interface EventChatEntry {
+  authorId: string;
+  displayName: string;
+  content: string;
+  sentAt: string;
+}
 
 function formatSchedule(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', {
@@ -42,6 +54,11 @@ export function EventsPage() {
   const [polls, setPolls] = useState<EventPoll[]>([]);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState('');
+  const [eventChatMessages, setEventChatMessages] = useState<EventChatEntry[]>([]);
+  const [eventChatInput, setEventChatInput] = useState('');
+  const [eventChatError, setEventChatError] = useState<string | null>(null);
+  const [eventReactions, setEventReactions] = useState<{ id: number; emoji: string }[]>([]);
+  const eventSocketRef = useRef<Socket | null>(null);
 
   const [type, setType] = useState<string>(EVENT_TYPES[0]);
   const [title, setTitle] = useState('');
@@ -63,6 +80,34 @@ export function EventsPage() {
   };
 
   useEffect(refresh, [typeFilter, page]);
+
+  useEffect(() => {
+    if (!liveEventId) return undefined;
+
+    const socket = io(`${WS_URL}/realtime`, {
+      transports: ['websocket'],
+      query: { token: getAccessToken() ?? '' },
+    });
+    eventSocketRef.current = socket;
+
+    socket.on('connect', () => socket.emit('event:join', { eventId: liveEventId }));
+    socket.on('event:chat:history', (payload: { messages: EventChatEntry[] }) => setEventChatMessages(payload.messages));
+    socket.on('event:chat:message', (payload: { message: EventChatEntry }) =>
+      setEventChatMessages((prev) => [...prev, payload.message]),
+    );
+    socket.on('event:chat:error', (payload: { message: string }) => setEventChatError(payload.message));
+    socket.on('event:reaction:new', (payload: { emoji: string }) => {
+      const id = Date.now() + Math.random();
+      setEventReactions((prev) => [...prev, { id, emoji: payload.emoji }]);
+      setTimeout(() => setEventReactions((prev) => prev.filter((r) => r.id !== id)), 2200);
+    });
+
+    return () => {
+      socket.emit('event:leave', { eventId: liveEventId });
+      socket.disconnect();
+      eventSocketRef.current = null;
+    };
+  }, [liveEventId]);
 
   const handleTypeFilterChange = (value: string) => {
     setTypeFilter(value);
@@ -236,6 +281,19 @@ export function EventsPage() {
       .catch((err) => setFormError((err as Error).message));
   };
 
+  const sendEventChat = (e: FormEvent) => {
+    e.preventDefault();
+    const content = eventChatInput.trim();
+    if (!content || !eventSocketRef.current || !liveEventId) return;
+    eventSocketRef.current.emit('event:chat:send', { eventId: liveEventId, content });
+    setEventChatInput('');
+  };
+
+  const sendEventReaction = (emoji: string) => {
+    if (!liveEventId) return;
+    eventSocketRef.current?.emit('event:reaction:send', { eventId: liveEventId, emoji });
+  };
+
   const handleLeaveBreakoutRoom = () => {
     const token = getAccessToken();
     if (!token || !liveEventId) return;
@@ -333,6 +391,18 @@ export function EventsPage() {
                   <button type="button" onClick={me?.hand_raised_at ? handleLowerHand : handleRaiseHand}>
                     {me?.hand_raised_at ? 'Baisser la main' : 'Lever la main 🖐'}
                   </button>
+                  {EVENT_QUICK_REACTIONS.map((emoji) => (
+                    <button key={emoji} type="button" onClick={() => sendEventReaction(emoji)}>
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+                <div className="room-reactions-overlay">
+                  {eventReactions.map((reaction) => (
+                    <span key={reaction.id} className="room-reaction-float">
+                      {reaction.emoji}
+                    </span>
+                  ))}
                 </div>
                 {!participantsLoading && participants.filter((p) => p.hand_raised_at).length === 0 && (
                   <p className="hint">Aucune main levée pour l'instant.</p>
@@ -410,6 +480,32 @@ export function EventsPage() {
                       </li>
                     ))}
                 </ul>
+
+                <div className="request-row" style={{ marginTop: '0.6rem' }}>
+                  <p><strong>Chat</strong></p>
+                  <div className="room-chat-list">
+                    {eventChatMessages.length === 0 && <p className="room-chat-empty">Aucun message pour le moment.</p>}
+                    {eventChatMessages.map((m, index) => (
+                      <div key={index} className="room-chat-message">
+                        <strong>{m.displayName}</strong>
+                        <span>{m.content}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {eventChatError && <p className="error room-chat-error">{eventChatError}</p>}
+                  <form className="room-chat-form" onSubmit={sendEventChat}>
+                    <input
+                      type="text"
+                      value={eventChatInput}
+                      onChange={(e) => setEventChatInput(e.target.value)}
+                      placeholder="Écrire un message..."
+                      maxLength={EVENT_CHAT_MAX_LENGTH}
+                    />
+                    <button type="submit" disabled={!eventChatInput.trim()}>
+                      Envoyer
+                    </button>
+                  </form>
+                </div>
 
                 <div className="request-row" style={{ marginTop: '0.6rem' }}>
                   <p><strong>Sondages</strong></p>

@@ -64,6 +64,27 @@ interface MusicPlayPayload {
   title?: string;
 }
 
+interface EventRoomPayload {
+  eventId: string;
+}
+
+interface EventChatSendPayload {
+  eventId: string;
+  content: string;
+}
+
+interface EventReactionPayload {
+  eventId: string;
+  emoji: string;
+}
+
+interface EventChatEntry {
+  authorId: string;
+  displayName: string;
+  content: string;
+  sentAt: string;
+}
+
 const CHAT_SEND_PERMISSION = 'room.chat.send';
 const CHAT_MODERATE_PERMISSION = 'room.moderate';
 const CHAT_MAX_LENGTH = 500;
@@ -75,11 +96,21 @@ const AUTO_MUTE_FLAG_THRESHOLD = 3;
 const AUTO_MUTE_DURATION_MINUTES = 15;
 const ALLOWED_REACTIONS = ['🙏', '❤️', '🙌', '✨', '🔥', '😢'];
 const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
+const EVENT_CHAT_MAX_HISTORY = 50;
 
 function extractUserId(client: Socket, tokenService: TokenService): string | null {
   const token = client.handshake.query.token;
   if (typeof token !== 'string') return null;
   return tokenService.verifyAccessToken(token)?.sub ?? null;
+}
+
+/**
+ * Namespaced distinctly from prayer room ids (which can be a raw `community_id` uuid or
+ * `"world"`) so an event's Socket.IO room can never collide with a prayer room's, even though
+ * both live in the same `/realtime` namespace.
+ */
+function eventRoomId(eventId: string): string {
+  return `event:${eventId}`;
 }
 
 /**
@@ -96,6 +127,10 @@ function extractUserId(client: Socket, tokenService: TokenService): string | nul
  * up yet (see docs/03_ARCHITECTURE_SPECIFICATION.md section 8 — WebRTC SFU is a separate piece
  * of work). A token on the handshake (`?token=<accessToken>`) is optional — anonymous read-only
  * viewing is intentional (docs/01_FUNCTIONAL_SPECIFICATION.md: Visiteur reads salles publiques).
+ * event:join/leave, event:chat:send/message/history, and event:reaction:send/new add the
+ * equivalent "Écrire (chat)"/"Réagir (emoji)" event capabilities from docs/01_FUNCTIONAL_
+ * SPECIFICATION.md §7.2 — namespaced by eventId (see eventRoomId()), never persisted (a live
+ * event's chat is ephemeral, same philosophy as reaction:send's confetti, not a durable record).
  */
 @WebSocketGateway({ namespace: '/realtime', cors: { origin: process.env.WEB_ORIGIN || 'http://localhost:4200' } })
 export class PrayerRealtimeGateway implements OnGatewayDisconnect {
@@ -108,6 +143,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   private readonly pendingSpeakers = new Map<string, Map<string, string>>();
   private readonly activeSpeakers = new Map<string, Map<string, string>>();
   private readonly nowPlaying = new Map<string, { videoId: string; title: string }>();
+  private readonly eventChatHistory = new Map<string, EventChatEntry[]>(); // eventId -> recent messages
 
   constructor(
     private readonly slotsService: PrayerSlotsService,
@@ -476,6 +512,58 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     }
     this.nowPlaying.delete(payload.roomId);
     this.server?.to(payload.roomId).emit('music:update', { roomId: payload.roomId, playing: false });
+  }
+
+  @SubscribeMessage('event:join')
+  handleEventJoin(@ConnectedSocket() client: Socket, @MessageBody() payload: EventRoomPayload): void {
+    if (!payload?.eventId) return;
+    client.join(eventRoomId(payload.eventId));
+    const history = this.eventChatHistory.get(payload.eventId) ?? [];
+    client.emit('event:chat:history', { eventId: payload.eventId, messages: history });
+  }
+
+  @SubscribeMessage('event:leave')
+  handleEventLeave(@ConnectedSocket() client: Socket, @MessageBody() payload: EventRoomPayload): void {
+    if (payload?.eventId) client.leave(eventRoomId(payload.eventId));
+  }
+
+  /** docs/01_FUNCTIONAL_SPECIFICATION.md §7.2 "Écrire (chat)" — kept in memory only, capped, never persisted. */
+  @SubscribeMessage('event:chat:send')
+  async handleEventChatSend(@ConnectedSocket() client: Socket, @MessageBody() payload: EventChatSendPayload): Promise<void> {
+    if (!payload?.eventId || !payload?.content?.trim()) return;
+
+    const userId = extractUserId(client, this.tokenService);
+    if (!userId) {
+      client.emit('event:chat:error', { message: 'Connexion requise pour écrire dans le chat.' });
+      return;
+    }
+
+    const entry: EventChatEntry = {
+      authorId: userId,
+      displayName: await this.displayNameFor(userId),
+      content: payload.content.trim().slice(0, CHAT_MAX_LENGTH),
+      sentAt: new Date().toISOString(),
+    };
+
+    const history = this.eventChatHistory.get(payload.eventId) ?? [];
+    history.push(entry);
+    if (history.length > EVENT_CHAT_MAX_HISTORY) history.shift();
+    this.eventChatHistory.set(payload.eventId, history);
+
+    this.server?.to(eventRoomId(payload.eventId)).emit('event:chat:message', { eventId: payload.eventId, message: entry });
+  }
+
+  /** docs/01_FUNCTIONAL_SPECIFICATION.md §7.2 "Réagir (emoji)" — same floating-reaction pattern as the prayer room's reaction:send, ephemeral by design. */
+  @SubscribeMessage('event:reaction:send')
+  handleEventReactionSend(@ConnectedSocket() client: Socket, @MessageBody() payload: EventReactionPayload): void {
+    if (!payload?.eventId) return;
+    const userId = extractUserId(client, this.tokenService);
+    if (!userId) {
+      client.emit('event:chat:error', { message: 'Connexion requise pour réagir.' });
+      return;
+    }
+    const emoji = ALLOWED_REACTIONS.includes(payload.emoji) ? payload.emoji : ALLOWED_REACTIONS[0];
+    this.server?.to(eventRoomId(payload.eventId)).emit('event:reaction:new', { eventId: payload.eventId, emoji });
   }
 
   handleDisconnect(client: Socket): void {

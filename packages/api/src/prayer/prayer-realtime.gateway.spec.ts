@@ -32,6 +32,9 @@ function buildGateway(overrides: Partial<Record<string, unknown>> = {}) {
   };
 
   const tokenService = overrides.tokenService ?? { verifyAccessToken: vi.fn().mockReturnValue(null) };
+  const supabase = overrides.supabase ?? {
+    client: { from: vi.fn(() => ({ select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) })) },
+  };
 
   const gateway = new PrayerRealtimeGateway(
     {} as never, // slotsService — unused by moderateChatMessage
@@ -39,7 +42,7 @@ function buildGateway(overrides: Partial<Record<string, unknown>> = {}) {
     tokenService as never,
     chatMessagesService as never,
     permissionsService as never,
-    {} as never, // supabase
+    supabase as never,
     aiModerationService as never,
     notificationsService as never,
     pushNotificationsService as never,
@@ -55,6 +58,7 @@ function buildGateway(overrides: Partial<Record<string, unknown>> = {}) {
     pushNotificationsService,
     userMutesService,
     tokenService,
+    supabase,
   };
 }
 
@@ -62,7 +66,21 @@ function fakeSocket(userId: string | null) {
   return {
     handshake: { query: { token: userId ? `token-for-${userId}` : '' } },
     emit: vi.fn(),
-  } as unknown as { handshake: { query: { token: string } }; emit: ReturnType<typeof vi.fn> };
+    join: vi.fn(),
+    leave: vi.fn(),
+  } as unknown as {
+    handshake: { query: { token: string } };
+    emit: ReturnType<typeof vi.fn>;
+    join: ReturnType<typeof vi.fn>;
+    leave: ReturnType<typeof vi.fn>;
+  };
+}
+
+/** `this.server?.to(roomId).emit(...)` — a minimal fake capturing every broadcast emit call. */
+function fakeServer() {
+  const emit = vi.fn();
+  const to = vi.fn(() => ({ emit }));
+  return { server: { to } as unknown as never, emit };
 }
 
 /** moderateChatMessage is private — same access pattern already used elsewhere in this repo's tests. */
@@ -309,5 +327,102 @@ describe('PrayerRealtimeGateway.handleChatMute / handleChatUnmute', () => {
     await gateway.handleChatUnmute(client as never, { roomId: 'world', userId: 'user-2' });
 
     expect(userMutesService.unmute).toHaveBeenCalledWith('user-2', null);
+  });
+});
+
+describe('PrayerRealtimeGateway — event chat & reactions', () => {
+  it('joins the event room and sends back an empty history the first time', () => {
+    const { gateway } = buildGateway();
+    const client = fakeSocket(null);
+
+    gateway.handleEventJoin(client as never, { eventId: 'event-1' });
+
+    expect(client.join).toHaveBeenCalledWith('event:event-1');
+    expect(client.emit).toHaveBeenCalledWith('event:chat:history', { eventId: 'event-1', messages: [] });
+  });
+
+  it('leaves the event room', () => {
+    const { gateway } = buildGateway();
+    const client = fakeSocket(null);
+
+    gateway.handleEventLeave(client as never, { eventId: 'event-1' });
+
+    expect(client.leave).toHaveBeenCalledWith('event:event-1');
+  });
+
+  it('rejects a chat message from an unauthenticated socket', async () => {
+    const { gateway } = buildGateway();
+    const client = fakeSocket(null);
+
+    await gateway.handleEventChatSend(client as never, { eventId: 'event-1', content: 'Bonjour' });
+
+    expect(client.emit).toHaveBeenCalledWith('event:chat:error', expect.objectContaining({ message: expect.any(String) }));
+  });
+
+  it('broadcasts a chat message and keeps it in the in-memory history for the next joiner', async () => {
+    const { gateway } = buildGateway({ tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'user-1' }) } });
+    (gateway as unknown as { server: unknown }).server = fakeServer().server;
+    const sender = fakeSocket('user-1');
+
+    await gateway.handleEventChatSend(sender as never, { eventId: 'event-1', content: 'Bonjour à tous' });
+
+    const joiner = fakeSocket(null);
+    gateway.handleEventJoin(joiner as never, { eventId: 'event-1' });
+
+    expect(joiner.emit).toHaveBeenCalledWith(
+      'event:chat:history',
+      expect.objectContaining({
+        eventId: 'event-1',
+        messages: [expect.objectContaining({ authorId: 'user-1', content: 'Bonjour à tous' })],
+      }),
+    );
+  });
+
+  it('caps the in-memory history at 50 messages', async () => {
+    const { gateway } = buildGateway({ tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'user-1' }) } });
+    (gateway as unknown as { server: unknown }).server = fakeServer().server;
+    const sender = fakeSocket('user-1');
+
+    for (let i = 0; i < 55; i += 1) {
+      await gateway.handleEventChatSend(sender as never, { eventId: 'event-cap', content: `message-${i}` });
+    }
+
+    const joiner = fakeSocket(null);
+    gateway.handleEventJoin(joiner as never, { eventId: 'event-cap' });
+
+    const call = joiner.emit.mock.calls.find(([event]: [string]) => event === 'event:chat:history');
+    expect(call[1].messages).toHaveLength(50);
+    expect(call[1].messages[0].content).toBe('message-5');
+  });
+
+  it('rejects a reaction from an unauthenticated socket', () => {
+    const { gateway } = buildGateway();
+    const client = fakeSocket(null);
+
+    gateway.handleEventReactionSend(client as never, { eventId: 'event-1', emoji: '🙏' });
+
+    expect(client.emit).toHaveBeenCalledWith('event:chat:error', expect.objectContaining({ message: expect.any(String) }));
+  });
+
+  it('broadcasts an allowed reaction to the event room', () => {
+    const { gateway } = buildGateway({ tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'user-1' }) } });
+    const { server, emit } = fakeServer();
+    (gateway as unknown as { server: unknown }).server = server;
+    const client = fakeSocket('user-1');
+
+    gateway.handleEventReactionSend(client as never, { eventId: 'event-1', emoji: '🙏' });
+
+    expect(emit).toHaveBeenCalledWith('event:reaction:new', { eventId: 'event-1', emoji: '🙏' });
+  });
+
+  it('falls back to the first allowed reaction for an unrecognized emoji', () => {
+    const { gateway } = buildGateway({ tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'user-1' }) } });
+    const { server, emit } = fakeServer();
+    (gateway as unknown as { server: unknown }).server = server;
+    const client = fakeSocket('user-1');
+
+    gateway.handleEventReactionSend(client as never, { eventId: 'event-1', emoji: '💩' });
+
+    expect(emit).toHaveBeenCalledWith('event:reaction:new', { eventId: 'event-1', emoji: '🙏' });
   });
 });
