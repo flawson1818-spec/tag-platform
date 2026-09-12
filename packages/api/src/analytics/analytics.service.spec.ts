@@ -29,7 +29,29 @@ describe('AnalyticsService', () => {
 
       const result = await service.getWorldMap();
 
-      expect(result).toEqual({ presence: 0, activeRooms: 0, timezones: [] });
+      expect(result).toEqual({ presence: 0, activeRooms: 0, activeEvents: 0, timezones: [] });
+    });
+
+    it('counts RUNNING events for the activeEvents KPI', async () => {
+      const { service } = buildService({
+        prayer_slots: createQueryChain({ data: [], error: null }),
+        events: createQueryChain({ data: null, error: null, count: 3 }),
+      });
+
+      const result = await service.getWorldMap();
+
+      expect(result.activeEvents).toBe(3);
+    });
+
+    it('fails open to 0 active events when the count query errors', async () => {
+      const { service } = buildService({
+        prayer_slots: createQueryChain({ data: [], error: null }),
+        events: createQueryChain({ data: null, error: { message: 'db down' } }),
+      });
+
+      const result = await service.getWorldMap();
+
+      expect(result.activeEvents).toBe(0);
     });
 
     it('counts distinct programs as activeRooms and distinct users as presence', async () => {

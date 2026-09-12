@@ -591,6 +591,7 @@ export const announcementsApi = {
 export interface WorldMapSnapshot {
   presence: number;
   activeRooms: number;
+  activeEvents: number;
   timezones: { timezone: string; count: number }[];
 }
 

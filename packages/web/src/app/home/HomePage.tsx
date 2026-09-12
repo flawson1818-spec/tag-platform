@@ -114,6 +114,12 @@ export function HomePage() {
               fuseau{snapshot.timezones.length > 1 ? 'x' : ''} horaire{snapshot.timezones.length > 1 ? 's' : ''}
             </div>
           </div>
+          <div className="worldmap-kpi">
+            <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
+            <div className="worldmap-kpi-label">
+              événement{snapshot.activeEvents > 1 ? 's' : ''} en cours
+            </div>
+          </div>
           <Link to="/world-map" className="home-kpis-link">
             Voir la carte mondiale →
           </Link>

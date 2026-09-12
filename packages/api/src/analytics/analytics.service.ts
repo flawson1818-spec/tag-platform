@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { DashboardSnapshot, WorldMapSnapshot } from './analytics.types';
 
@@ -25,6 +25,8 @@ const EXPORT_COLUMNS: Record<string, string> = {
 
 @Injectable()
 export class AnalyticsService {
+  private readonly logger = new Logger(AnalyticsService.name);
+
   constructor(private readonly supabase: SupabaseService) {}
 
   async getWorldMap(): Promise<WorldMapSnapshot> {
@@ -36,9 +38,10 @@ export class AnalyticsService {
 
     const slotIds = (runningSlots ?? []).map((s) => s.id);
     const activeRooms = new Set((runningSlots ?? []).map((s) => s.program_id)).size;
+    const activeEvents = await this.countActiveEvents();
 
     if (slotIds.length === 0) {
-      return { presence: 0, activeRooms, timezones: [] };
+      return { presence: 0, activeRooms, activeEvents, timezones: [] };
     }
 
     const { data: attendance, error: attendanceError } = await this.supabase.client
@@ -68,8 +71,29 @@ export class AnalyticsService {
     return {
       presence: byUser.size,
       activeRooms,
+      activeEvents,
       timezones: regionalTotal > 0 ? [...visible, { timezone: WORLD_MAP_REGIONAL_BUCKET, count: regionalTotal }] : visible,
     };
+  }
+
+  /**
+   * docs/01_FUNCTIONAL_SPECIFICATION.md §9 / docs/07_UX_UI_SPECIFICATION.md §12 wireframe: the
+   * world map must also show events currently in progress, alongside presence/rooms/timezones.
+   * Fail-open to 0 — a KPI tile must never take down the whole snapshot.
+   */
+  private async countActiveEvents(): Promise<number> {
+    try {
+      const { count, error } = await this.supabase.client
+        .from('events')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'RUNNING')
+        .is('deleted_at', null);
+      if (error) throw new InternalServerErrorException(error.message);
+      return count ?? 0;
+    } catch (error) {
+      this.logger.error('Failed to count active events for the world map', error as Error);
+      return 0;
+    }
   }
 
   async getDashboard(): Promise<DashboardSnapshot> {

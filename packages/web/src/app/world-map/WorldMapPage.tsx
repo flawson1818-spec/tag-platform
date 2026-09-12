@@ -83,6 +83,10 @@ export function WorldMapPage() {
           <div className="worldmap-kpi-value">{snapshot.timezones.length}</div>
           <div className="worldmap-kpi-label">Fuseau{snapshot.timezones.length > 1 ? 'x' : ''} horaire{snapshot.timezones.length > 1 ? 's' : ''}</div>
         </div>
+        <div className="worldmap-kpi">
+          <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
+          <div className="worldmap-kpi-label">Événement{snapshot.activeEvents > 1 ? 's' : ''} en cours</div>
+        </div>
       </div>
 
       <div className="worldmap-globe-wrap">
