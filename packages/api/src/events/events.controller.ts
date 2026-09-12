@@ -16,14 +16,18 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../access/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../access/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../access/optional-jwt-auth.guard';
 import { PermissionsService } from '../access/permissions.service';
 import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.interface';
 import { CreateBreakoutRoomsDto } from './dto/create-breakout-rooms.dto';
 import { CreateEventDto } from './dto/create-event.dto';
+import { CreateEventPollDto } from './dto/create-event-poll.dto';
 import { ListEventsQueryDto } from './dto/list-events.query.dto';
 import { UpdateEventStatusDto } from './dto/update-event-status.dto';
 import { UpdateParticipantRoleDto } from './dto/update-participant-role.dto';
+import { VoteEventPollDto } from './dto/vote-event-poll.dto';
 import { EventBreakoutRoomsService } from './event-breakout-rooms.service';
+import { EventPollsService } from './event-polls.service';
 import { EventStatus } from './event.entity';
 import { EventsService } from './events.service';
 
@@ -36,6 +40,7 @@ export class EventsController {
     private readonly eventsService: EventsService,
     private readonly permissionsService: PermissionsService,
     private readonly breakoutRoomsService: EventBreakoutRoomsService,
+    private readonly pollsService: EventPollsService,
   ) {}
 
   /**
@@ -182,5 +187,51 @@ export class EventsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   leaveBreakoutRoom(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.breakoutRoomsService.leave(id, currentUser.id);
+  }
+
+  /** docs/01_FUNCTIONAL_SPECIFICATION.md §7.2 "Voter (sondage)" — moderator-only creation. */
+  @Post(':id/polls')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async createPoll(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateEventPollDto,
+  ) {
+    const event = await this.eventsService.findById(id);
+    await this.assertCanManage(currentUser.id, event.community_id);
+    return this.pollsService.create(id, currentUser.id, dto);
+  }
+
+  @Get(':id/polls')
+  @UseGuards(OptionalJwtAuthGuard)
+  listPolls(@CurrentUser() currentUser: AuthenticatedUser | undefined, @Param('id', ParseUUIDPipe) id: string) {
+    return this.pollsService.list(id, currentUser?.id ?? null);
+  }
+
+  @Post(':id/polls/:pollId/vote')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  votePoll(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('pollId', ParseUUIDPipe) pollId: string,
+    @Body() dto: VoteEventPollDto,
+  ) {
+    return this.pollsService.vote(pollId, currentUser.id, dto.optionIndex);
+  }
+
+  @Post(':id/polls/:pollId/close')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async closePoll(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('pollId', ParseUUIDPipe) pollId: string,
+  ) {
+    const event = await this.eventsService.findById(id);
+    await this.assertCanManage(currentUser.id, event.community_id);
+    return this.pollsService.close(pollId, currentUser.id);
   }
 }

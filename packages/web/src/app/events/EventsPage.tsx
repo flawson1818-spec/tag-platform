@@ -6,6 +6,7 @@ import {
   EVENT_TYPE_LABELS,
   EventBreakoutRoom,
   EventParticipant,
+  EventPoll,
   TagEvent,
   eventsApi,
 } from '../../lib/api';
@@ -38,6 +39,9 @@ export function EventsPage() {
   const [myRoomId, setMyRoomId] = useState<string | null>(null);
   const [breakoutRoomCount, setBreakoutRoomCount] = useState(2);
   const [breakoutNotice, setBreakoutNotice] = useState<string | null>(null);
+  const [polls, setPolls] = useState<EventPoll[]>([]);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState('');
 
   const [type, setType] = useState<string>(EVENT_TYPES[0]);
   const [title, setTitle] = useState('');
@@ -134,6 +138,11 @@ export function EventsPage() {
     setLiveEventId(eventId);
     refreshParticipants(eventId);
     refreshBreakoutRooms(eventId);
+    refreshPolls(eventId);
+  };
+
+  const refreshPolls = (eventId: string) => {
+    eventsApi.listPolls(eventId).then(setPolls).catch(() => setPolls([]));
   };
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
@@ -187,6 +196,43 @@ export function EventsPage() {
         setBreakoutNotice(res.redirected ? 'Cette salle était pleine — tu as été redirigé vers la salle la moins chargée.' : null);
         refreshBreakoutRooms(liveEventId);
       })
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleCreatePoll = (e: FormEvent) => {
+    e.preventDefault();
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    const options = pollOptions.split(',').map((o) => o.trim()).filter(Boolean);
+    if (!pollQuestion.trim() || options.length < 2) {
+      setFormError('Un sondage a besoin d\'une question et d\'au moins deux options séparées par des virgules.');
+      return;
+    }
+    eventsApi
+      .createPoll(token, liveEventId, pollQuestion.trim(), options)
+      .then(() => {
+        setPollQuestion('');
+        setPollOptions('');
+        refreshPolls(liveEventId);
+      })
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleVotePoll = (pollId: string, optionIndex: number) => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .votePoll(token, liveEventId, pollId, optionIndex)
+      .then(() => refreshPolls(liveEventId))
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleClosePoll = (pollId: string) => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .closePoll(token, liveEventId, pollId)
+      .then(() => refreshPolls(liveEventId))
       .catch((err) => setFormError((err as Error).message));
   };
 
@@ -364,6 +410,61 @@ export function EventsPage() {
                       </li>
                     ))}
                 </ul>
+
+                <div className="request-row" style={{ marginTop: '0.6rem' }}>
+                  <p><strong>Sondages</strong></p>
+                  <form className="request-form" onSubmit={handleCreatePoll}>
+                    <input
+                      type="text"
+                      placeholder="Question"
+                      value={pollQuestion}
+                      onChange={(e) => setPollQuestion(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Options séparées par des virgules"
+                      value={pollOptions}
+                      onChange={(e) => setPollOptions(e.target.value)}
+                    />
+                    <button type="submit">Créer le sondage</button>
+                  </form>
+                  {polls.length === 0 && <p className="hint">Aucun sondage pour l'instant.</p>}
+                  <ul className="request-list">
+                    {polls.map((poll) => (
+                      <li key={poll.id} className="request-row">
+                        <p>
+                          <strong>{poll.question}</strong>
+                          {poll.closed_at && <span className="chip chip-status"> Clos</span>}
+                        </p>
+                        <ul className="request-list">
+                          {poll.options.map((option, index) => (
+                            <li key={option} className="request-row">
+                              <div className="request-meta">
+                                <span>{option}</span>
+                                <span className="chip chip-status">{poll.vote_counts[index] ?? 0} voix</span>
+                              </div>
+                              {!poll.closed_at && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleVotePoll(poll.id, index)}
+                                  disabled={poll.my_vote === index}
+                                >
+                                  {poll.my_vote === index ? 'Ton choix ✓' : 'Voter'}
+                                </button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="hint">{poll.total_votes} vote(s) au total.</p>
+                        {!poll.closed_at && (
+                          <button type="button" className="link-button" onClick={() => handleClosePoll(poll.id)}>
+                            Clore le sondage
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             )}
           </li>

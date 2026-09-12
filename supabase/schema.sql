@@ -1038,3 +1038,31 @@ create index if not exists event_breakout_assignments_room_id_idx on event_break
 
 alter table event_breakout_rooms enable row level security;
 alter table event_breakout_assignments enable row level security;
+
+-- docs/01_FUNCTIONAL_SPECIFICATION.md §7.2 "Voter (sondage)" / docs/07_UX_UI_SPECIFICATION.md §7's
+-- `Poll` component — a live-event capability never implemented. Two brand-new, isolated tables
+-- only touched by EventPollsService, same low-risk shape as the breakout-room tables above.
+create table if not exists event_polls (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  question text not null,
+  options jsonb not null,
+  created_by uuid references users (id) on delete set null,
+  closed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists event_poll_votes (
+  id uuid primary key default gen_random_uuid(),
+  poll_id uuid not null references event_polls (id) on delete cascade,
+  user_id uuid not null references users (id) on delete cascade,
+  option_index integer not null,
+  created_at timestamptz not null default now(),
+  unique (poll_id, user_id)
+);
+
+create index if not exists event_polls_event_id_idx on event_polls (event_id);
+create index if not exists event_poll_votes_poll_id_idx on event_poll_votes (poll_id);
+
+alter table event_polls enable row level security;
+alter table event_poll_votes enable row level security;

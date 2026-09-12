@@ -814,6 +814,18 @@ export interface EventBreakoutRoom {
   occupant_count: number;
 }
 
+export interface EventPoll {
+  id: string;
+  event_id: string;
+  question: string;
+  options: string[];
+  closed_at: string | null;
+  created_at: string;
+  vote_counts: number[];
+  total_votes: number;
+  my_vote: number | null;
+}
+
 export interface AiChatTurn {
   role: 'user' | 'assistant';
   content: string;
@@ -873,6 +885,21 @@ export const eventsApi = {
     }),
   leaveBreakoutRoom: (token: string, id: string) =>
     request<void>(`/events/${id}/breakout-rooms/leave`, { method: 'POST', headers: authHeaders(token) }),
+  createPoll: (token: string, id: string, question: string, options: string[]) =>
+    request<EventPoll>(`/events/${id}/polls`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ question, options }),
+    }),
+  listPolls: (id: string) => request<EventPoll[]>(`/events/${id}/polls`),
+  votePoll: (token: string, id: string, pollId: string, optionIndex: number) =>
+    request<EventPoll>(`/events/${id}/polls/${pollId}/vote`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ optionIndex }),
+    }),
+  closePoll: (token: string, id: string, pollId: string) =>
+    request<EventPoll>(`/events/${id}/polls/${pollId}/close`, { method: 'POST', headers: authHeaders(token) }),
 };
 
 export const CAMPAIGN_STATUSES = ['DRAFT', 'PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED'] as const;
