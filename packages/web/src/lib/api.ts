@@ -323,10 +323,15 @@ export const prayerRequestsApi = {
       headers: token ? authHeaders(token) : undefined,
       body: JSON.stringify(data),
     }),
-  list: (token: string, page = 1) =>
-    request<PaginatedResult<PrayerRequest>>(`/prayer-requests?page=${page}&limit=20`, {
+  /** docs/07_UX_UI_SPECIFICATION.md §5: "liste filtrable par statut/catégorie". */
+  list: (token: string, page = 1, filters: { status?: string; category?: string } = {}) => {
+    const params = new URLSearchParams({ page: String(page), limit: '20' });
+    if (filters.status) params.set('status', filters.status);
+    if (filters.category) params.set('category', filters.category);
+    return request<PaginatedResult<PrayerRequest>>(`/prayer-requests?${params.toString()}`, {
       headers: authHeaders(token),
-    }),
+    });
+  },
   /** docs/07_UX_UI_SPECIFICATION.md §8 (Profil — "Mes demandes"). */
   listMine: (token: string, page = 1) =>
     request<PaginatedResult<PrayerRequest>>(`/prayer-requests?mine=true&page=${page}&limit=20`, {
@@ -336,6 +341,20 @@ export const prayerRequestsApi = {
     request<FlaggedPrayerRequest[]>('/prayer-requests/flagged', { headers: authHeaders(token) }),
   mediaUrl: (token: string, id: string, kind: 'photo' | 'attachment') =>
     request<{ url: string }>(`/prayer-requests/${id}/media?kind=${kind}`, { headers: authHeaders(token) }),
+  /** Moderator-only: docs/07_UX_UI_SPECIFICATION.md §5 "Modérateur assigne (ASSIGNED)...". */
+  updateStatus: (token: string, id: string, status: string) =>
+    request<PrayerRequest>(`/prayer-requests/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ status }),
+    }),
+  /** Moderator-only: "...ou promeut en sujet collectif" — injects an urgent slot into the given program. */
+  promote: (token: string, id: string, programId: string) =>
+    request<PrayerRequest>(`/prayer-requests/${id}/promote`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ programId }),
+    }),
 };
 
 export interface Testimony {
