@@ -6,12 +6,14 @@ import {
   filesApi,
   gamificationApi,
   notificationsApi,
+  prayerRemindersApi,
   prayerRequestsApi,
   testimoniesApi,
   MyGamificationStats,
   CommunityGoal,
   LeaderboardEntry,
   NotificationPreference,
+  PrayerReminder,
   PrayerRequest,
   Testimony,
 } from '../../lib/api';
@@ -316,6 +318,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   TESTIMONY_PUBLISHED: 'Ton témoignage est publié',
   TESTIMONY_REJECTED: 'Ton témoignage est refusé',
   PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
+  PRAYER_REMINDER: 'Tes rappels de prière planifiés',
 };
 
 function NotificationPreferencesSection() {
@@ -359,6 +362,107 @@ function NotificationPreferencesSection() {
           {NOTIFICATION_TYPE_LABELS[pref.type] ?? pref.type}
         </label>
       ))}
+    </div>
+  );
+}
+
+const WEEKDAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+function PrayerRemindersSection() {
+  const [reminders, setReminders] = useState<PrayerReminder[]>([]);
+  const [timeOfDay, setTimeOfDay] = useState('06:30');
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const refresh = () => {
+    const token = getAccessToken();
+    if (!token) return;
+    prayerRemindersApi.list(token).then(setReminders).catch((err) => setError((err as Error).message));
+  };
+
+  useEffect(refresh, []);
+
+  const toggleDay = (day: number) => {
+    setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()));
+  };
+
+  const handleCreate = async (e: FormEvent) => {
+    e.preventDefault();
+    const token = getAccessToken();
+    if (!token || daysOfWeek.length === 0) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const created = await prayerRemindersApi.create(token, { timeOfDay, daysOfWeek, timezone });
+      setReminders((prev) => [...prev, created]);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleEnabled = (reminder: PrayerReminder) => {
+    const token = getAccessToken();
+    if (!token) return;
+    prayerRemindersApi
+      .update(token, reminder.id, { enabled: !reminder.enabled })
+      .then((updated) => setReminders((prev) => prev.map((r) => (r.id === updated.id ? updated : r))))
+      .catch((err) => setError((err as Error).message));
+  };
+
+  const handleRemove = (id: string) => {
+    const token = getAccessToken();
+    if (!token) return;
+    prayerRemindersApi
+      .remove(token, id)
+      .then(() => setReminders((prev) => prev.filter((r) => r.id !== id)))
+      .catch((err) => setError((err as Error).message));
+  };
+
+  return (
+    <div className="gamification">
+      <h3>Rappels de prière</h3>
+      <p className="hint">Planifie un rappel pour ne jamais manquer ton moment de prière.</p>
+      {error && <p className="error">{error}</p>}
+
+      {reminders.length > 0 && (
+        <ul className="request-list">
+          {reminders.map((r) => (
+            <li key={r.id} className="request-row">
+              <div className="request-meta">
+                <span className="chip">{r.time_of_day}</span>
+                <span className="hint">{r.days_of_week.map((d) => WEEKDAY_LABELS[d]).join(', ')}</span>
+              </div>
+              <div className="request-form">
+                <label className="tag-checkbox">
+                  <input type="checkbox" checked={r.enabled} onChange={() => handleToggleEnabled(r)} />
+                  Actif
+                </label>
+                <button type="button" className="link-button" onClick={() => handleRemove(r.id)}>
+                  Supprimer
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form onSubmit={handleCreate} className="request-form">
+        <input type="time" value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value)} required />
+        {WEEKDAY_LABELS.map((label, day) => (
+          <label key={day} className="tag-checkbox">
+            <input type="checkbox" checked={daysOfWeek.includes(day)} onChange={() => toggleDay(day)} />
+            {label}
+          </label>
+        ))}
+        <button type="submit" disabled={submitting || daysOfWeek.length === 0}>
+          {submitting ? 'Ajout…' : 'Ajouter un rappel'}
+        </button>
+      </form>
     </div>
   );
 }
@@ -523,6 +627,7 @@ export function ProfilePage() {
 
       <GamificationSection />
       <NotificationPreferencesSection />
+      <PrayerRemindersSection />
       <MyPrayerRequestsSection />
       <MyTestimoniesSection />
       <PrivacySection />

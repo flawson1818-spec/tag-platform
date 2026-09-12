@@ -64,6 +64,7 @@ describe('NotificationsService', () => {
         { type: 'TESTIMONY_PUBLISHED', enabled: true },
         { type: 'TESTIMONY_REJECTED', enabled: true },
         { type: 'PRAYER_REQUEST_ANSWERED', enabled: true },
+        { type: 'PRAYER_REMINDER', enabled: true },
       ]);
     });
 
@@ -97,6 +98,7 @@ describe('NotificationsService', () => {
         { type: 'TESTIMONY_PUBLISHED', enabled: false },
         { type: 'TESTIMONY_REJECTED', enabled: false },
         { type: 'PRAYER_REQUEST_ANSWERED', enabled: true },
+        { type: 'PRAYER_REMINDER', enabled: true },
       ]);
     });
 

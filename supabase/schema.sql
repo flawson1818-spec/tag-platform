@@ -1127,3 +1127,24 @@ create index if not exists community_announcements_community_id_idx on community
 create index if not exists community_announcements_pinned_at_idx on community_announcements (pinned_at);
 
 alter table community_announcements enable row level security;
+
+-- docs/01_FUNCTIONAL_SPECIFICATION.md §11 notification triggers: "Rappel de prière (planifié
+-- par l'utilisateur)". A brand-new, isolated table only touched by PrayerRemindersService and
+-- PrayerReminderSchedulerService — nothing existing reads it. days_of_week uses Date.getDay()'s
+-- convention (0 = dimanche ... 6 = samedi) so backend and frontend stay directly comparable.
+create table if not exists prayer_reminders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  time_of_day text not null,
+  days_of_week integer[] not null,
+  timezone text not null,
+  enabled boolean not null default true,
+  last_fired_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists prayer_reminders_user_id_idx on prayer_reminders (user_id);
+create index if not exists prayer_reminders_enabled_idx on prayer_reminders (enabled);
+
+alter table prayer_reminders enable row level security;

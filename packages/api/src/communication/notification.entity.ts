@@ -1,7 +1,12 @@
 export type NotificationStatus = 'CREATED' | 'QUEUED' | 'SENT' | 'DELIVERED' | 'READ' | 'ARCHIVED';
 
 /** Every trigger type NotificationsService.create() is actually called with. Keep in sync. */
-export const NOTIFICATION_TYPES = ['TESTIMONY_PUBLISHED', 'TESTIMONY_REJECTED', 'PRAYER_REQUEST_ANSWERED'] as const;
+export const NOTIFICATION_TYPES = [
+  'TESTIMONY_PUBLISHED',
+  'TESTIMONY_REJECTED',
+  'PRAYER_REQUEST_ANSWERED',
+  'PRAYER_REMINDER',
+] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

@@ -12,6 +12,9 @@ import { PrayerEngineService } from './prayer-engine.service';
 import { PrayerProgramsController } from './prayer-programs.controller';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { PrayerRealtimeGateway } from './prayer-realtime.gateway';
+import { PrayerReminderSchedulerService } from './prayer-reminder-scheduler.service';
+import { PrayerRemindersController } from './prayer-reminders.controller';
+import { PrayerRemindersService } from './prayer-reminders.service';
 import { PrayerRequestsController } from './prayer-requests.controller';
 import { PrayerRequestsService } from './prayer-requests.service';
 import { PrayerSlotsController } from './prayer-slots.controller';
@@ -27,6 +30,7 @@ import { PrayerTestimoniesService } from './prayer-testimonies.service';
     PrayerRequestsController,
     PrayerTestimoniesController,
     PrayerCampaignsController,
+    PrayerRemindersController,
   ],
   providers: [
     PrayerProgramsService,
@@ -37,6 +41,8 @@ import { PrayerTestimoniesService } from './prayer-testimonies.service';
     PrayerRealtimeGateway,
     PrayerEngineService,
     ChatMessagesService,
+    PrayerRemindersService,
+    PrayerReminderSchedulerService,
   ],
 })
 export class PrayerModule {}

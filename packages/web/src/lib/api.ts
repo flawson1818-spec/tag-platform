@@ -824,6 +824,32 @@ export const notificationsApi = {
     }),
 };
 
+export interface PrayerReminder {
+  id: string;
+  user_id: string;
+  time_of_day: string;
+  days_of_week: number[];
+  timezone: string;
+  enabled: boolean;
+  last_fired_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const prayerRemindersApi = {
+  list: (token: string) => request<PrayerReminder[]>('/prayer-reminders', { headers: authHeaders(token) }),
+  create: (token: string, data: { timeOfDay: string; daysOfWeek: number[]; timezone: string }) =>
+    request<PrayerReminder>('/prayer-reminders', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+  update: (token: string, id: string, data: Partial<{ timeOfDay: string; daysOfWeek: number[]; timezone: string; enabled: boolean }>) =>
+    request<PrayerReminder>(`/prayer-reminders/${id}`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify(data),
+    }),
+  remove: (token: string, id: string) =>
+    request<void>(`/prayer-reminders/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+};
+
 export const EVENT_TYPES = [
   'VEILLEE',
   'JEUNE',
