@@ -1104,3 +1104,26 @@ create table if not exists faith_path_progress (
 );
 
 alter table faith_path_progress enable row level security;
+
+-- docs/01_FUNCTIONAL_SPECIFICATION.md §8.2 ("Annonces", distinct from "Fil d'actualité" — see
+-- the existing `posts` table) and §1.2 (Pasteur: "Publie des communications officielles à
+-- l'échelle d'une communauté ou nation" — community_id null means nation-wide, reusing the same
+-- nullable-community convention already used by prayer_programs for the world room). A
+-- brand-new, isolated table only touched by AnnouncementsService. Also finally gives the
+-- long-seeded but never-referenced `content.publish_official` permission (added early in this
+-- project, see docs/06_RBAC_SPECIFICATION.md section 3) an actual code path.
+create table if not exists community_announcements (
+  id uuid primary key default gen_random_uuid(),
+  community_id uuid references communities (id) on delete cascade,
+  author_id uuid not null references users (id) on delete cascade,
+  content text not null,
+  pinned_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create index if not exists community_announcements_community_id_idx on community_announcements (community_id);
+create index if not exists community_announcements_pinned_at_idx on community_announcements (pinned_at);
+
+alter table community_announcements enable row level security;

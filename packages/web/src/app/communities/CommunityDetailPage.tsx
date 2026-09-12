@@ -1,7 +1,17 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
-import { COMMUNITY_TYPES, Community, CommunityMember, MembershipStatus, Post, communitiesApi, postsApi } from '../../lib/api';
+import {
+  Announcement,
+  COMMUNITY_TYPES,
+  Community,
+  CommunityMember,
+  MembershipStatus,
+  Post,
+  announcementsApi,
+  communitiesApi,
+  postsApi,
+} from '../../lib/api';
 import { PostRow } from './PostRow';
 import { Pagination } from '../Pagination';
 
@@ -46,6 +56,11 @@ export function CommunityDetailPage() {
   const [postSubmitting, setPostSubmitting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
 
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementContent, setAnnouncementContent] = useState('');
+  const [announcementSubmitting, setAnnouncementSubmitting] = useState(false);
+  const [announcementError, setAnnouncementError] = useState<string | null>(null);
+
   const [subType, setSubType] = useState<string>(COMMUNITY_TYPES[0]);
   const [subName, setSubName] = useState('');
   const [subCreating, setSubCreating] = useState(false);
@@ -60,14 +75,16 @@ export function CommunityDetailPage() {
       postsApi.listForCommunity(token, id, postsPage),
       communitiesApi.getMembership(token, id),
       communitiesApi.list(token, 1, id),
+      announcementsApi.list(id),
     ])
-      .then(([c, m, p, membership, sub]) => {
+      .then(([c, m, p, membership, sub, ann]) => {
         setCommunity(c);
         setMembers(m.data);
         setPosts(p.data);
         setPostsTotalPages(p.meta.totalPages);
         setMembershipStatus(membership.status);
         setChildren(sub.data);
+        setAnnouncements(ann.data);
         return fetchAncestors(token, c);
       })
       .then(setAncestors)
@@ -150,6 +167,47 @@ export function CommunityDetailPage() {
       setPostError((err as Error).message);
     } finally {
       setPostSubmitting(false);
+    }
+  };
+
+  const handleAnnouncement = async (e: FormEvent) => {
+    e.preventDefault();
+    const token = getAccessToken();
+    if (!token || !id) return;
+    setAnnouncementError(null);
+    setAnnouncementSubmitting(true);
+    try {
+      const created = await announcementsApi.create(token, { communityId: id, content: announcementContent });
+      setAnnouncements((prev) => [created, ...prev]);
+      setAnnouncementContent('');
+    } catch (err) {
+      setAnnouncementError((err as Error).message);
+    } finally {
+      setAnnouncementSubmitting(false);
+    }
+  };
+
+  const handleTogglePin = async (announcement: Announcement) => {
+    const token = getAccessToken();
+    if (!token) return;
+    try {
+      const updated = announcement.pinned_at
+        ? await announcementsApi.unpin(token, announcement.id)
+        : await announcementsApi.pin(token, announcement.id);
+      setAnnouncements((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    } catch (err) {
+      setAnnouncementError((err as Error).message);
+    }
+  };
+
+  const handleRemoveAnnouncement = async (announcementId: string) => {
+    const token = getAccessToken();
+    if (!token) return;
+    try {
+      await announcementsApi.remove(token, announcementId);
+      setAnnouncements((prev) => prev.filter((a) => a.id !== announcementId));
+    } catch (err) {
+      setAnnouncementError((err as Error).message);
     }
   };
 
@@ -249,6 +307,48 @@ export function CommunityDetailPage() {
           <li key={m.id} className="request-row">
             {m.users?.display_name ?? 'Utilisateur'}
             {m.internal_role ? ` — ${m.internal_role}` : ''}
+          </li>
+        ))}
+      </ul>
+
+      <h3>Annonces</h3>
+      <p className="hint">
+        Communications officielles de la communauté ou nationales, épinglées en tête de liste.
+      </p>
+      <form onSubmit={handleAnnouncement} className="request-form">
+        <textarea
+          placeholder="Publier une annonce (réservé aux Responsables+)…"
+          value={announcementContent}
+          onChange={(e) => setAnnouncementContent(e.target.value)}
+          rows={2}
+          required
+        />
+        <button type="submit" disabled={announcementSubmitting}>
+          {announcementSubmitting ? 'Publication…' : 'Publier'}
+        </button>
+      </form>
+      {announcementError && <p className="error">{announcementError}</p>}
+      {announcements.length === 0 && <p className="hint">Aucune annonce pour l'instant.</p>}
+      <ul className="request-list">
+        {announcements.map((a) => (
+          <li key={a.id} className="request-row">
+            <div className="request-meta">
+              {a.pinned_at && (
+                <span className="chip chip-status">
+                  <span role="img" aria-label="Épinglée">📌</span> Épinglée
+                </span>
+              )}
+              {a.community_id === null && <span className="chip">Nationale</span>}
+            </div>
+            <p>{a.content}</p>
+            <div className="request-form">
+              <button type="button" className="link-button" onClick={() => handleTogglePin(a)}>
+                {a.pinned_at ? 'Désépingler' : 'Épingler'}
+              </button>
+              <button type="button" className="link-button" onClick={() => handleRemoveAnnouncement(a.id)}>
+                Supprimer
+              </button>
+            </div>
           </li>
         ))}
       </ul>

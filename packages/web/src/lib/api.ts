@@ -562,6 +562,32 @@ export const postsApi = {
     }),
 };
 
+export interface Announcement {
+  id: string;
+  community_id: string | null;
+  author_id: string;
+  content: string;
+  pinned_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const announcementsApi = {
+  /** No communityId lists nation-wide broadcasts only; with one, also includes a community's own. */
+  list: (communityId?: string, page = 1) =>
+    request<PaginatedResult<Announcement>>(
+      `/announcements?page=${page}&limit=20${communityId ? `&communityId=${communityId}` : ''}`,
+    ),
+  create: (token: string, data: { communityId?: string; content: string }) =>
+    request<Announcement>('/announcements', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+  pin: (token: string, id: string) =>
+    request<Announcement>(`/announcements/${id}/pin`, { method: 'PATCH', headers: authHeaders(token) }),
+  unpin: (token: string, id: string) =>
+    request<Announcement>(`/announcements/${id}/unpin`, { method: 'PATCH', headers: authHeaders(token) }),
+  remove: (token: string, id: string) =>
+    request<void>(`/announcements/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+};
+
 export interface WorldMapSnapshot {
   presence: number;
   activeRooms: number;
