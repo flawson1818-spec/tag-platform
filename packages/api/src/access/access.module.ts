@@ -12,6 +12,7 @@ import { PermissionGuard } from './permission.guard';
 import { PermissionsService } from './permissions.service';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
+import { UserMutesService } from './user-mutes.service';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { TokenService } from './token.service';
     PermissionsService,
     PasswordService,
     TokenService,
+    UserMutesService,
   ],
   exports: [
     JwtAuthGuard,
@@ -48,6 +50,7 @@ import { TokenService } from './token.service';
     PermissionsService,
     PasswordService,
     TokenService,
+    UserMutesService,
   ],
 })
 export class AccessModule {}

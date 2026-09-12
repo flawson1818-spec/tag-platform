@@ -93,4 +93,31 @@ describe('ChatMessagesService', () => {
       expect(chain.update).toHaveBeenCalledWith({ ai_flagged: true, ai_flag_reason: 'Langage injurieux', ai_flag_confidence: 0.87 });
     });
   });
+
+  describe('countRecentFlagged', () => {
+    it('counts flagged messages by that author since the given timestamp, scoped to the room', async () => {
+      const chain = createQueryChain({ data: null, error: null, count: 3 });
+      const supabase = createSupabaseServiceMock({ chat_messages: chain });
+      const service = new ChatMessagesService(supabase as never);
+
+      const result = await service.countRecentFlagged('user-1', 'community-1', '2026-01-01T00:00:00.000Z');
+
+      expect(result).toBe(3);
+      expect(chain.eq).toHaveBeenCalledWith('author_id', 'user-1');
+      expect(chain.eq).toHaveBeenCalledWith('ai_flagged', true);
+      expect(chain.eq).toHaveBeenCalledWith('community_id', 'community-1');
+      expect(chain.gte).toHaveBeenCalledWith('created_at', '2026-01-01T00:00:00.000Z');
+    });
+
+    it('returns 0 when the count comes back null', async () => {
+      const chain = createQueryChain({ data: null, error: null, count: null });
+      const supabase = createSupabaseServiceMock({ chat_messages: chain });
+      const service = new ChatMessagesService(supabase as never);
+
+      const result = await service.countRecentFlagged('user-1', null, '2026-01-01T00:00:00.000Z');
+
+      expect(result).toBe(0);
+      expect(chain.is).toHaveBeenCalledWith('community_id', null);
+    });
+  });
 });

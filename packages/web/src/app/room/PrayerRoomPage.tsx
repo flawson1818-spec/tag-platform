@@ -38,6 +38,7 @@ export function PrayerRoomPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatError, setChatError] = useState<string | null>(null);
+  const [mutedUntil, setMutedUntil] = useState<string | null>(null);
   const [raisedHands, setRaisedHands] = useState<RoomPerson[]>([]);
   const [pendingSpeakers, setPendingSpeakers] = useState<RoomPerson[]>([]);
   const [activeSpeakers, setActiveSpeakers] = useState<RoomPerson[]>([]);
@@ -120,6 +121,16 @@ export function PrayerRoomPage() {
       setChatError(payload.message);
     });
 
+    socket.on('chat:muted', (payload: { userId: string; mutedUntil: string }) => {
+      const me = userRef.current;
+      if (me && payload.userId === me.id) setMutedUntil(payload.mutedUntil);
+    });
+
+    socket.on('chat:unmuted', (payload: { userId: string }) => {
+      const me = userRef.current;
+      if (me && payload.userId === me.id) setMutedUntil(null);
+    });
+
     socket.on('hand:update', (payload: { raised: RoomPerson[] }) => {
       setRaisedHands(payload.raised);
     });
@@ -163,6 +174,17 @@ export function PrayerRoomPage() {
   }, [chatError]);
 
   useEffect(() => {
+    if (!mutedUntil) return;
+    const remainingMs = new Date(mutedUntil).getTime() - Date.now();
+    if (remainingMs <= 0) {
+      setMutedUntil(null);
+      return;
+    }
+    const timeout = setTimeout(() => setMutedUntil(null), remainingMs);
+    return () => clearTimeout(timeout);
+  }, [mutedUntil]);
+
+  useEffect(() => {
     if (!roomError) return;
     const timeout = setTimeout(() => setRoomError(null), 4000);
     return () => clearTimeout(timeout);
@@ -186,6 +208,16 @@ export function PrayerRoomPage() {
     socketRef.current.emit('chat:send', { roomId: ROOM_ID, content });
     setChatInput('');
   }
+
+  function hideMessage(messageId: string) {
+    socketRef.current?.emit('chat:hide', { roomId: ROOM_ID, messageId });
+  }
+
+  function muteAuthor(authorId: string) {
+    socketRef.current?.emit('chat:mute', { roomId: ROOM_ID, userId: authorId, minutes: 15, reason: 'Modération manuelle' });
+  }
+
+  const isMutedNow = Boolean(mutedUntil && new Date(mutedUntil).getTime() > Date.now());
 
   function requireAuth(): boolean {
     if (status === 'authenticated') return true;
@@ -418,6 +450,16 @@ export function PrayerRoomPage() {
             <div key={message.id} className="room-chat-message">
               <strong>{message.author_display_name ?? 'Anonyme'}</strong>
               <span>{message.content}</span>
+              {status === 'authenticated' && message.author_id !== user?.id && (
+                <span className="room-chat-mod-actions">
+                  <button type="button" className="link-button" onClick={() => hideMessage(message.id)}>
+                    Masquer
+                  </button>
+                  <button type="button" className="link-button" onClick={() => muteAuthor(message.author_id)}>
+                    Sourdine 15 min
+                  </button>
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -425,18 +467,24 @@ export function PrayerRoomPage() {
         {chatError && <p className="error room-chat-error">{chatError}</p>}
 
         {status === 'authenticated' ? (
-          <form className="room-chat-form" onSubmit={sendChat}>
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(event) => setChatInput(event.target.value)}
-              placeholder="Écrire un message..."
-              maxLength={CHAT_MAX_LENGTH}
-            />
-            <button type="submit" disabled={!chatInput.trim()}>
-              Envoyer
-            </button>
-          </form>
+          isMutedNow ? (
+            <p className="hint room-chat-error">
+              Tu es en sourdine jusqu'à {new Date(mutedUntil as string).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.
+            </p>
+          ) : (
+            <form className="room-chat-form" onSubmit={sendChat}>
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(event) => setChatInput(event.target.value)}
+                placeholder="Écrire un message..."
+                maxLength={CHAT_MAX_LENGTH}
+              />
+              <button type="submit" disabled={!chatInput.trim()}>
+                Envoyer
+              </button>
+            </form>
+          )
         ) : (
           <p className="hint">Connecte-toi pour écrire dans le chat.</p>
         )}

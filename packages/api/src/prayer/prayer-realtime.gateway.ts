@@ -10,6 +10,7 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { PermissionsService } from '../access/permissions.service';
 import { TokenService } from '../access/token.service';
+import { UserMutesService } from '../access/user-mutes.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AiModerationService } from '../ai/ai-moderation.service';
 import { NotificationsService } from '../communication/notifications.service';
@@ -35,6 +36,18 @@ interface ChatHidePayload {
   messageId: string;
 }
 
+interface ChatMutePayload {
+  roomId: string;
+  userId: string;
+  minutes?: number;
+  reason?: string;
+}
+
+interface ChatUnmutePayload {
+  roomId: string;
+  userId: string;
+}
+
 interface ReactionSendPayload {
   roomId: string;
   emoji: string;
@@ -55,6 +68,11 @@ const CHAT_SEND_PERMISSION = 'room.chat.send';
 const CHAT_MODERATE_PERMISSION = 'room.moderate';
 const CHAT_MAX_LENGTH = 500;
 const CRITICAL_FLAG_RECIPIENT_ROLES = ['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'];
+const DEFAULT_MUTE_MINUTES = 15;
+const MAX_MUTE_MINUTES = 24 * 60;
+const AUTO_MUTE_WINDOW_MINUTES = 30;
+const AUTO_MUTE_FLAG_THRESHOLD = 3;
+const AUTO_MUTE_DURATION_MINUTES = 15;
 const ALLOWED_REACTIONS = ['🙏', '❤️', '🙌', '✨', '🔥', '😢'];
 const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 
@@ -67,7 +85,9 @@ function extractUserId(client: Socket, tokenService: TokenService): string | nul
 /**
  * Real-time contract from docs/05_API_SPECIFICATION.md section 11: room:join, slot:started,
  * slot:tick, slot:ended let a read-only client display the current room. chat:send/chat:message/
- * chat:history/chat:hide add room chat; hand:raise/hand:lower, reaction:send, and
+ * chat:history/chat:hide/chat:mute/chat:unmute add room chat and moderation (temporary mute, both
+ * manual and IA Modératrice's automatic repeat-offense one — docs/02_AI_AGENTS_SPECIFICATION.md
+ * §5); hand:raise/hand:lower, reaction:send, and
  * speak:request/grant/revoke add the rest of the in-room interactions from
  * docs/01_FUNCTIONAL_SPECIFICATION.md section 4 (lever la main, réagir, prendre la parole).
  * Hand-raise/speaker state is kept in memory per gateway instance — it's presence, not a
@@ -99,6 +119,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     private readonly aiModerationService: AiModerationService,
     private readonly notificationsService: NotificationsService,
     private readonly pushNotificationsService: PushNotificationsService,
+    private readonly userMutesService: UserMutesService,
   ) {}
 
   @SubscribeMessage('room:join')
@@ -162,6 +183,15 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
       return;
     }
 
+    // Fail-open: a lookup failure (e.g. the table not existing yet on an unmigrated environment)
+    // must never block the pre-existing "send a chat message" flow.
+    const mutedUntil = await this.userMutesService.activeMuteUntil(userId, communityId).catch(() => null);
+    if (mutedUntil) {
+      const until = new Date(mutedUntil).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      client.emit('chat:error', { message: `Tu es en sourdine jusqu'à ${until}.` });
+      return;
+    }
+
     const content = payload.content.trim().slice(0, CHAT_MAX_LENGTH);
     const message = await this.chatMessagesService.send(communityId, userId, content);
     this.server?.to(payload.roomId).emit('chat:message', { roomId: payload.roomId, message });
@@ -184,6 +214,68 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
       this.server?.to(roomId).emit('chat:messageHidden', { roomId, messageId: message.id });
       await this.notifyCriticalFlag(message.id, authorId);
     }
+
+    await this.maybeAutoMute(roomId, authorId);
+  }
+
+  /**
+   * docs/02_AI_AGENTS_SPECIFICATION.md §5: "détection de comportements toxiques répétés...
+   * proposition d'action (mute temporaire)... sauf seuil critique" and docs/06_RBAC_SPECIFICATION.md
+   * §5 grants IA Modératrice `user.mute_temporary` "sous seuil configuré" — so once a user crosses
+   * the repeat-flag threshold within a short window, this mutes them immediately rather than only
+   * proposing it, but "jamais sans notification humaine immédiate" (never without an immediate
+   * human notification, enforced below). Best-effort: never lets a lookup/write failure surface
+   * back into the chat flow, which has already completed by the time this runs.
+   */
+  private async maybeAutoMute(roomId: string, authorId: string): Promise<void> {
+    const communityId = fromRoomId(roomId);
+    try {
+      const alreadyMuted = await this.userMutesService.activeMuteUntil(authorId, communityId);
+      if (alreadyMuted) return;
+
+      const since = new Date(Date.now() - AUTO_MUTE_WINDOW_MINUTES * 60_000).toISOString();
+      const flagCount = await this.chatMessagesService.countRecentFlagged(authorId, communityId, since);
+      if (flagCount < AUTO_MUTE_FLAG_THRESHOLD) return;
+
+      const mutedUntil = await this.userMutesService.mute(
+        authorId,
+        communityId,
+        AUTO_MUTE_DURATION_MINUTES,
+        null,
+        'Signalements répétés par l\'IA Modératrice',
+      );
+      this.server?.to(roomId).emit('chat:muted', { roomId, userId: authorId, mutedUntil });
+      await this.notifyAutoMute(authorId, mutedUntil);
+    } catch (error) {
+      this.logger.error(`Auto-mute check failed for user ${authorId}`, error as Error);
+    }
+  }
+
+  /** Same "critical flag" notification shape, reused for an autonomous IA Modératrice mute. */
+  private async notifyAutoMute(authorId: string, mutedUntil: string): Promise<void> {
+    let recipientIds: string[];
+    try {
+      recipientIds = await this.permissionsService.listUserIdsWithAnyRole(CRITICAL_FLAG_RECIPIENT_ROLES);
+    } catch (error) {
+      this.logger.error('Failed to look up auto-mute recipients', error as Error);
+      return;
+    }
+
+    const title = 'IA Modératrice — mise en sourdine automatique';
+    const body =
+      "Un utilisateur a été mis en sourdine temporairement après plusieurs signalements répétés " +
+      "dans le chat — une revue humaine reste possible à tout moment (lever la sourdine).";
+
+    await Promise.all(
+      recipientIds.map(async (recipientId) => {
+        await this.notificationsService
+          .create(recipientId, 'AI_USER_AUTO_MUTED', { userId: authorId, mutedUntil })
+          .catch((error) => this.logger.error(`Failed to notify ${recipientId} of an auto-mute`, error));
+        await this.pushNotificationsService
+          .send(recipientId, title, body)
+          .catch((error) => this.logger.error(`Failed to push-notify ${recipientId} of an auto-mute`, error));
+      }),
+    );
   }
 
   /**
@@ -234,6 +326,45 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
 
     await this.chatMessagesService.hide(payload.messageId);
     this.server?.to(payload.roomId).emit('chat:messageHidden', { roomId: payload.roomId, messageId: payload.messageId });
+  }
+
+  /** Moderator-only manual mute — mirrors chat:hide's permission gate, same `room.moderate`. */
+  @SubscribeMessage('chat:mute')
+  async handleChatMute(@ConnectedSocket() client: Socket, @MessageBody() payload: ChatMutePayload): Promise<void> {
+    if (!payload?.roomId || !payload?.userId) return;
+
+    const moderatorId = extractUserId(client, this.tokenService);
+    if (!moderatorId) return;
+
+    const communityId = fromRoomId(payload.roomId);
+    const permissions = await this.permissionsService.getUserPermissionCodes(moderatorId, communityId ?? undefined);
+    if (!permissions.has(CHAT_MODERATE_PERMISSION)) {
+      client.emit('room:error', { message: 'Action réservée aux modérateurs.' });
+      return;
+    }
+
+    const minutes = Math.min(Math.max(Math.round(payload.minutes ?? DEFAULT_MUTE_MINUTES), 1), MAX_MUTE_MINUTES);
+    const mutedUntil = await this.userMutesService.mute(
+      payload.userId,
+      communityId,
+      minutes,
+      moderatorId,
+      payload.reason?.trim() || null,
+    );
+    this.server?.to(payload.roomId).emit('chat:muted', { roomId: payload.roomId, userId: payload.userId, mutedUntil });
+  }
+
+  @SubscribeMessage('chat:unmute')
+  async handleChatUnmute(@ConnectedSocket() client: Socket, @MessageBody() payload: ChatUnmutePayload): Promise<void> {
+    if (!payload?.roomId || !payload?.userId) return;
+    if (!(await this.isModerator(client, payload.roomId))) {
+      client.emit('room:error', { message: 'Action réservée aux modérateurs.' });
+      return;
+    }
+
+    const communityId = fromRoomId(payload.roomId);
+    await this.userMutesService.unmute(payload.userId, communityId);
+    this.server?.to(payload.roomId).emit('chat:unmuted', { roomId: payload.roomId, userId: payload.userId });
   }
 
   @SubscribeMessage('hand:raise')

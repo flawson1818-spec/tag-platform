@@ -773,6 +773,14 @@ nav button {
   margin: 0 0 0.5rem;
 }
 
+.room-chat-mod-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+  font-size: 0.76rem;
+  opacity: 0.7;
+}
+
 .room-chat-form {
   display: flex;
   gap: 0.5rem;

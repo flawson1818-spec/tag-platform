@@ -987,3 +987,24 @@ create table if not exists mfa_recovery_codes (
 create index if not exists mfa_recovery_codes_user_idx on mfa_recovery_codes (user_id);
 
 alter table mfa_recovery_codes enable row level security;
+
+-- docs/02_AI_AGENTS_SPECIFICATION.md §5 (IA Modératrice) / docs/06_RBAC_SPECIFICATION.md §5
+-- ("user.mute_temporary", "room.moderate: mute, avertissement") / docs/09_ROADMAP_AND_BACKLOG.md
+-- §4 risk mitigation ("action réversible par défaut — mute temporaire, jamais exclusion"). A
+-- brand-new, isolated table only touched by the new mute/unmute code paths in
+-- PrayerRealtimeGateway — nothing existing reads it, same shape as mfa_recovery_codes above.
+-- muted_by is null for an autonomous IA Modératrice mute (never without an immediate human
+-- notification — see notifyAutoMute in the gateway) and the moderator's user id for a manual one.
+create table if not exists user_mutes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  community_id uuid references communities (id) on delete cascade,
+  muted_until timestamptz not null,
+  muted_by uuid references users (id) on delete set null,
+  reason text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists user_mutes_user_id_idx on user_mutes (user_id, community_id);
+
+alter table user_mutes enable row level security;

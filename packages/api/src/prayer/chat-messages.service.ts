@@ -58,4 +58,18 @@ export class ChatMessagesService {
       .eq('id', id);
     if (error) throw new InternalServerErrorException(error.message);
   }
+
+  /** Repeat-offense count for the auto-mute threshold (docs/02_AI_AGENTS_SPECIFICATION.md §5). */
+  async countRecentFlagged(authorId: string, communityId: string | null, sinceIso: string): Promise<number> {
+    let query = this.db
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', authorId)
+      .eq('ai_flagged', true)
+      .gte('created_at', sinceIso);
+    query = communityId ? query.eq('community_id', communityId) : query.is('community_id', null);
+
+    const { count, error } = await query;
+    if (error) throw new InternalServerErrorException(error.message);
+    return count ?? 0;
+  }
 }
