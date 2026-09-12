@@ -5,17 +5,41 @@ interface RoleAssignmentRow {
   roles: { code: string; role_permissions: { permissions: { code: string } }[] } | null;
 }
 
+/**
+ * "Read-type" per docs/06_RBAC_SPECIFICATION.md section 6 — determined by naming convention
+ * (permissions.code has no dedicated column for this) rather than a schema change: every
+ * currently-seeded read permission ends in a `view`/`read`/`list` token (room.view,
+ * audit_log.view, analytics.view_dashboard), while every write/manage one doesn't.
+ */
+const READ_PERMISSION_PATTERN = /(^|[._])(view|read|list)([._]|$)/;
+
+function isReadPermission(code: string): boolean {
+  return READ_PERMISSION_PATTERN.test(code);
+}
+
+/** Hard cap on hierarchy depth — community trees are documented as shallow (cellule → église →
+ *  pays); this only guards against a parent_id cycle bug, never a real-world tree. */
+const MAX_HIERARCHY_DEPTH = 10;
+
 @Injectable()
 export class PermissionsService {
   constructor(private readonly supabase: SupabaseService) {}
 
   /**
-   * Global assignments (community_id IS NULL) always contribute their permissions.
-   * A community-scoped assignment only contributes within that exact community —
-   * hierarchy walk-up for read permissions (docs/06_RBAC_SPECIFICATION.md section 6)
-   * is deferred until a permission is flagged as read-type in the schema.
+   * Global assignments (community_id IS NULL) always contribute their permissions. A
+   * community-scoped assignment contributes within that exact community; additionally,
+   * docs/06_RBAC_SPECIFICATION.md section 6: "remonte la hiérarchie de la communauté (parent_id)
+   * ... si aucune attribution directe n'existe et que la permission est de type lecture" — a
+   * Responsable of a cellule can read (never write) information belonging to its parent église,
+   * pays, etc., without needing a separate assignment at every ancestor level.
    */
   async getUserPermissionCodes(userId: string, communityId?: string): Promise<Set<string>> {
+    const codes = await this.fetchDirectPermissionCodes(userId, communityId);
+    if (communityId) await this.mergeInheritedReadPermissions(userId, communityId, codes);
+    return codes;
+  }
+
+  private async fetchDirectPermissionCodes(userId: string, communityId?: string): Promise<Set<string>> {
     let query = this.supabase.client
       .from('role_assignments')
       .select('roles(code, role_permissions(permissions(code)))')
@@ -34,6 +58,33 @@ export class PermissionsService {
       }
     }
     return codes;
+  }
+
+  private async mergeInheritedReadPermissions(userId: string, communityId: string, codes: Set<string>): Promise<void> {
+    let currentId = communityId;
+    const visited = new Set<string>([communityId]);
+
+    for (let depth = 0; depth < MAX_HIERARCHY_DEPTH; depth += 1) {
+      const parentId = await this.getParentCommunityId(currentId);
+      if (!parentId || visited.has(parentId)) return;
+      visited.add(parentId);
+
+      const ancestorCodes = await this.fetchDirectPermissionCodes(userId, parentId);
+      for (const code of ancestorCodes) {
+        if (isReadPermission(code)) codes.add(code);
+      }
+      currentId = parentId;
+    }
+  }
+
+  private async getParentCommunityId(communityId: string): Promise<string | null> {
+    const { data, error } = await this.supabase.client
+      .from('communities')
+      .select('parent_id')
+      .eq('id', communityId)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    return (data as { parent_id: string | null } | null)?.parent_id ?? null;
   }
 
   /** Every distinct user holding at least one of the given role codes, anywhere (global or scoped). */

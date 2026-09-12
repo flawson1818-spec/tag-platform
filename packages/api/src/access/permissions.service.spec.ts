@@ -48,7 +48,10 @@ describe('PermissionsService', () => {
 
     it('includes both global and community-scoped assignments when a communityId is given', async () => {
       const chain = createQueryChain({ data: [], error: null });
-      const supabase = createSupabaseServiceMock({ role_assignments: chain });
+      const supabase = createSupabaseServiceMock({
+        role_assignments: chain,
+        communities: createQueryChain({ data: { parent_id: null }, error: null }),
+      });
       const service = new PermissionsService(supabase as never);
 
       await service.getUserPermissionCodes('user-1', 'community-42');
@@ -88,6 +91,79 @@ describe('PermissionsService', () => {
       const service = new PermissionsService(supabase as never);
 
       await expect(service.getUserPermissionCodes('user-1')).rejects.toThrow('db down');
+    });
+
+    it('does not query communities at all when no communityId is given', async () => {
+      const roleAssignments = createQueryChain({ data: [], error: null });
+      const supabase = createSupabaseServiceMock({ role_assignments: roleAssignments });
+      const service = new PermissionsService(supabase as never);
+
+      await expect(service.getUserPermissionCodes('user-1')).resolves.toEqual(new Set());
+    });
+
+    it('walks up the community hierarchy, merging only read-type permissions from ancestors', async () => {
+      const roleAssignmentsByLevel = [
+        createQueryChain({
+          data: [{ roles: { code: 'RESPONSABLE_EQUIPE', role_permissions: [{ permissions: { code: 'community.manage' } }] } }],
+          error: null,
+        }), // direct: cellule (community-1)
+        createQueryChain({
+          data: [
+            {
+              roles: {
+                code: 'RESPONSABLE_EQUIPE',
+                role_permissions: [
+                  { permissions: { code: 'room.view' } },
+                  { permissions: { code: 'event.manage' } },
+                ],
+              },
+            },
+          ],
+          error: null,
+        }), // ancestor: église (church-1)
+        createQueryChain({
+          data: [{ roles: { code: 'PASTEUR', role_permissions: [{ permissions: { code: 'audit_log.view' } }] } }],
+          error: null,
+        }), // ancestor: pays (country-1)
+      ];
+      const communitiesByLevel = [
+        createQueryChain({ data: { parent_id: 'church-1' }, error: null }), // parent of community-1
+        createQueryChain({ data: { parent_id: 'country-1' }, error: null }), // parent of church-1
+        createQueryChain({ data: { parent_id: null }, error: null }), // parent of country-1 (root)
+      ];
+      const supabase = createSupabaseServiceMock({
+        role_assignments: roleAssignmentsByLevel,
+        communities: communitiesByLevel,
+      });
+      const service = new PermissionsService(supabase as never);
+
+      const codes = await service.getUserPermissionCodes('user-1', 'community-1');
+
+      expect(codes).toEqual(new Set(['community.manage', 'room.view', 'audit_log.view']));
+      expect(codes.has('event.manage')).toBe(false); // write-type — never inherited
+    });
+
+    it('stops immediately when the community has no parent', async () => {
+      const roleAssignments = createQueryChain({ data: [], error: null });
+      const communities = createQueryChain({ data: { parent_id: null }, error: null });
+      const supabase = createSupabaseServiceMock({ role_assignments: roleAssignments, communities });
+      const service = new PermissionsService(supabase as never);
+
+      await service.getUserPermissionCodes('user-1', 'community-1');
+
+      expect(communities.eq).toHaveBeenCalledTimes(1);
+    });
+
+    it('never loops forever if parent_id forms a cycle', async () => {
+      const roleAssignments = createQueryChain({ data: [], error: null });
+      const communitiesByLevel = [
+        createQueryChain({ data: { parent_id: 'community-2' }, error: null }),
+        createQueryChain({ data: { parent_id: 'community-1' }, error: null }), // cycles back
+      ];
+      const supabase = createSupabaseServiceMock({ role_assignments: roleAssignments, communities: communitiesByLevel });
+      const service = new PermissionsService(supabase as never);
+
+      await expect(service.getUserPermissionCodes('user-1', 'community-1')).resolves.toBeInstanceOf(Set);
     });
   });
 
