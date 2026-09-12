@@ -805,6 +805,15 @@ export interface EventParticipant {
   created_at: string;
 }
 
+export interface EventBreakoutRoom {
+  id: string;
+  event_id: string;
+  label: string;
+  capacity: number | null;
+  created_at: string;
+  occupant_count: number;
+}
+
 export interface AiChatTurn {
   role: 'user' | 'assistant';
   content: string;
@@ -848,6 +857,22 @@ export const eventsApi = {
       headers: authHeaders(token),
       body: JSON.stringify({ role }),
     }),
+  createBreakoutRooms: (token: string, id: string, roomCount: number) =>
+    request<EventBreakoutRoom[]>(`/events/${id}/breakout-rooms`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ roomCount }),
+    }),
+  listBreakoutRooms: (id: string) => request<EventBreakoutRoom[]>(`/events/${id}/breakout-rooms`),
+  myBreakoutRoom: (token: string, id: string) =>
+    request<string | null>(`/events/${id}/breakout-rooms/me`, { headers: authHeaders(token) }),
+  joinBreakoutRoom: (token: string, id: string, roomId: string) =>
+    request<{ roomId: string; redirected: boolean }>(`/events/${id}/breakout-rooms/${roomId}/join`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    }),
+  leaveBreakoutRoom: (token: string, id: string) =>
+    request<void>(`/events/${id}/breakout-rooms/leave`, { method: 'POST', headers: authHeaders(token) }),
 };
 
 export const CAMPAIGN_STATUSES = ['DRAFT', 'PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'ARCHIVED'] as const;

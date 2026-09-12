@@ -18,10 +18,12 @@ import { CurrentUser } from '../access/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../access/jwt-auth.guard';
 import { PermissionsService } from '../access/permissions.service';
 import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.interface';
+import { CreateBreakoutRoomsDto } from './dto/create-breakout-rooms.dto';
 import { CreateEventDto } from './dto/create-event.dto';
 import { ListEventsQueryDto } from './dto/list-events.query.dto';
 import { UpdateEventStatusDto } from './dto/update-event-status.dto';
 import { UpdateParticipantRoleDto } from './dto/update-participant-role.dto';
+import { EventBreakoutRoomsService } from './event-breakout-rooms.service';
 import { EventStatus } from './event.entity';
 import { EventsService } from './events.service';
 
@@ -33,6 +35,7 @@ export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly permissionsService: PermissionsService,
+    private readonly breakoutRoomsService: EventBreakoutRoomsService,
   ) {}
 
   /**
@@ -131,5 +134,53 @@ export class EventsController {
     const event = await this.eventsService.findById(id);
     await this.assertCanManage(currentUser.id, event.community_id);
     return this.eventsService.setParticipantRole(id, userId, dto.role);
+  }
+
+  /** docs/05_API_SPECIFICATION.md section 5: "POST /events/:id/breakout-rooms (Modérateur+ — répartition)". */
+  @Post(':id/breakout-rooms')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async createBreakoutRooms(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateBreakoutRoomsDto,
+  ) {
+    const event = await this.eventsService.findById(id);
+    await this.assertCanManage(currentUser.id, event.community_id);
+    return this.breakoutRoomsService.create(id, dto);
+  }
+
+  @Get(':id/breakout-rooms')
+  listBreakoutRooms(@Param('id', ParseUUIDPipe) id: string) {
+    return this.breakoutRoomsService.listRooms(id);
+  }
+
+  @Get(':id/breakout-rooms/me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  myBreakoutRoom(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.breakoutRoomsService.myAssignment(id, currentUser.id);
+  }
+
+  /** docs/07_UX_UI_SPECIFICATION.md §7 error case: never blocks — redirects to the least-loaded room if full. */
+  @Post(':id/breakout-rooms/:roomId/join')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  joinBreakoutRoom(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('roomId', ParseUUIDPipe) roomId: string,
+  ) {
+    return this.breakoutRoomsService.join(id, currentUser.id, roomId);
+  }
+
+  /** "Retour salle principale" (docs/07_UX_UI_SPECIFICATION.md §7 parcours utilisateur). */
+  @Post(':id/breakout-rooms/leave')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  leaveBreakoutRoom(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.breakoutRoomsService.leave(id, currentUser.id);
   }
 }

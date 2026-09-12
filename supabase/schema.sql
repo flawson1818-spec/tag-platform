@@ -1008,3 +1008,33 @@ create table if not exists user_mutes (
 create index if not exists user_mutes_user_id_idx on user_mutes (user_id, community_id);
 
 alter table user_mutes enable row level security;
+
+-- docs/01_FUNCTIONAL_SPECIFICATION.md §7.2 "Répartition en salles de prière (breakout rooms)" /
+-- docs/05_API_SPECIFICATION.md section 5 (POST /events/:id/breakout-rooms — Modérateur+ —
+-- répartition). Two brand-new, isolated tables only touched by EventBreakoutRoomsService —
+-- nothing existing reads them, same low-risk shape as user_mutes/mfa_recovery_codes above.
+-- A single (event_id, user_id) unique constraint models "at most one active breakout room per
+-- participant per event" — joining a new room just moves the existing row (upsert), and
+-- deleting it is "retour salle principale" (docs/07_UX_UI_SPECIFICATION.md §7 parcours).
+create table if not exists event_breakout_rooms (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  label text not null,
+  capacity integer,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists event_breakout_assignments (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  room_id uuid not null references event_breakout_rooms (id) on delete cascade,
+  user_id uuid not null references users (id) on delete cascade,
+  assigned_at timestamptz not null default now(),
+  unique (event_id, user_id)
+);
+
+create index if not exists event_breakout_rooms_event_id_idx on event_breakout_rooms (event_id);
+create index if not exists event_breakout_assignments_room_id_idx on event_breakout_assignments (room_id);
+
+alter table event_breakout_rooms enable row level security;
+alter table event_breakout_assignments enable row level security;

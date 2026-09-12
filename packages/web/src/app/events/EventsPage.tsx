@@ -1,6 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
-import { EVENT_STATUSES, EVENT_TYPES, EVENT_TYPE_LABELS, EventParticipant, TagEvent, eventsApi } from '../../lib/api';
+import {
+  EVENT_STATUSES,
+  EVENT_TYPES,
+  EVENT_TYPE_LABELS,
+  EventBreakoutRoom,
+  EventParticipant,
+  TagEvent,
+  eventsApi,
+} from '../../lib/api';
 import { Pagination } from '../Pagination';
 
 function formatSchedule(iso: string): string {
@@ -26,6 +34,10 @@ export function EventsPage() {
   const [liveEventId, setLiveEventId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<EventParticipant[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [breakoutRooms, setBreakoutRooms] = useState<EventBreakoutRoom[]>([]);
+  const [myRoomId, setMyRoomId] = useState<string | null>(null);
+  const [breakoutRoomCount, setBreakoutRoomCount] = useState(2);
+  const [breakoutNotice, setBreakoutNotice] = useState<string | null>(null);
 
   const [type, setType] = useState<string>(EVENT_TYPES[0]);
   const [title, setTitle] = useState('');
@@ -108,6 +120,12 @@ export function EventsPage() {
       .finally(() => setParticipantsLoading(false));
   };
 
+  const refreshBreakoutRooms = (eventId: string) => {
+    eventsApi.listBreakoutRooms(eventId).then(setBreakoutRooms).catch(() => setBreakoutRooms([]));
+    const token = getAccessToken();
+    if (token) eventsApi.myBreakoutRoom(token, eventId).then(setMyRoomId).catch(() => setMyRoomId(null));
+  };
+
   const toggleLive = (eventId: string) => {
     if (liveEventId === eventId) {
       setLiveEventId(null);
@@ -115,6 +133,7 @@ export function EventsPage() {
     }
     setLiveEventId(eventId);
     refreshParticipants(eventId);
+    refreshBreakoutRooms(eventId);
   };
 
   const me = participants.find((p) => p.user_id === user?.id) ?? null;
@@ -146,6 +165,41 @@ export function EventsPage() {
     eventsApi
       .setParticipantRole(token, liveEventId, participantUserId, role)
       .then(() => refreshParticipants(liveEventId))
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleCreateBreakoutRooms = () => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .createBreakoutRooms(token, liveEventId, breakoutRoomCount)
+      .then(() => refreshBreakoutRooms(liveEventId))
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleJoinBreakoutRoom = (roomId: string) => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .joinBreakoutRoom(token, liveEventId, roomId)
+      .then((res) => {
+        setMyRoomId(res.roomId);
+        setBreakoutNotice(res.redirected ? 'Cette salle était pleine — tu as été redirigé vers la salle la moins chargée.' : null);
+        refreshBreakoutRooms(liveEventId);
+      })
+      .catch((err) => setFormError((err as Error).message));
+  };
+
+  const handleLeaveBreakoutRoom = () => {
+    const token = getAccessToken();
+    if (!token || !liveEventId) return;
+    eventsApi
+      .leaveBreakoutRoom(token, liveEventId)
+      .then(() => {
+        setMyRoomId(null);
+        setBreakoutNotice(null);
+        refreshBreakoutRooms(liveEventId);
+      })
       .catch((err) => setFormError((err as Error).message));
   };
 
@@ -237,6 +291,56 @@ export function EventsPage() {
                 {!participantsLoading && participants.filter((p) => p.hand_raised_at).length === 0 && (
                   <p className="hint">Aucune main levée pour l'instant.</p>
                 )}
+
+                <div className="request-row" style={{ marginTop: '0.6rem' }}>
+                  <p><strong>Salles ▾</strong></p>
+                  <p className="hint">
+                    Répartition en petites salles de prière — capacité atteinte : redirection automatique
+                    vers la salle la moins chargée, jamais de blocage.
+                  </p>
+                  <div className="request-form">
+                    <input
+                      type="number"
+                      min={2}
+                      max={20}
+                      value={breakoutRoomCount}
+                      onChange={(e) => setBreakoutRoomCount(Number(e.target.value) || 2)}
+                      style={{ width: '4rem' }}
+                    />
+                    <button type="button" onClick={handleCreateBreakoutRooms}>
+                      Créer / répartir
+                    </button>
+                    {myRoomId && (
+                      <button type="button" onClick={handleLeaveBreakoutRoom}>
+                        Retour salle principale
+                      </button>
+                    )}
+                  </div>
+                  {breakoutNotice && <p className="hint">{breakoutNotice}</p>}
+                  {breakoutRooms.length > 0 && (
+                    <ul className="request-list">
+                      {breakoutRooms.map((room) => (
+                        <li key={room.id} className="request-row">
+                          <div className="request-meta">
+                            <span>{room.label}</span>
+                            <span className="chip chip-status">
+                              {room.occupant_count}{room.capacity ? `/${room.capacity}` : ''}
+                            </span>
+                          </div>
+                          <div className="request-form">
+                            <button
+                              type="button"
+                              onClick={() => handleJoinBreakoutRoom(room.id)}
+                              disabled={myRoomId === room.id}
+                            >
+                              {myRoomId === room.id ? 'Dans cette salle ✓' : 'Rejoindre'}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <ul className="request-list">
                   {participants
                     .filter((p) => p.hand_raised_at)
