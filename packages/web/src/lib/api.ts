@@ -851,6 +851,28 @@ export const prayerRemindersApi = {
     request<void>(`/prayer-reminders/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
 };
 
+export interface PrayerCategoryFollow {
+  id: string;
+  user_id: string;
+  category: string;
+  created_at: string;
+}
+
+export const prayerCategoryFollowsApi = {
+  list: (token: string) => request<PrayerCategoryFollow[]>('/prayer-category-follows', { headers: authHeaders(token) }),
+  follow: (token: string, category: string) =>
+    request<PrayerCategoryFollow>('/prayer-category-follows', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ category }),
+    }),
+  unfollow: (token: string, category: string) =>
+    request<void>(`/prayer-category-follows/${encodeURIComponent(category)}`, {
+      method: 'DELETE',
+      headers: authHeaders(token),
+    }),
+};
+
 export const EVENT_TYPES = [
   'VEILLEE',
   'JEUNE',

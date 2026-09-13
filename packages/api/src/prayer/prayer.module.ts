@@ -8,6 +8,8 @@ import { SupabaseModule } from '../supabase/supabase.module';
 import { ChatMessagesService } from './chat-messages.service';
 import { PrayerCampaignsController } from './prayer-campaigns.controller';
 import { PrayerCampaignsService } from './prayer-campaigns.service';
+import { PrayerCategoryFollowsController } from './prayer-category-follows.controller';
+import { PrayerCategoryFollowsService } from './prayer-category-follows.service';
 import { PrayerEngineService } from './prayer-engine.service';
 import { PrayerProgramsController } from './prayer-programs.controller';
 import { PrayerProgramsService } from './prayer-programs.service';
@@ -17,6 +19,7 @@ import { PrayerRemindersController } from './prayer-reminders.controller';
 import { PrayerRemindersService } from './prayer-reminders.service';
 import { PrayerRequestsController } from './prayer-requests.controller';
 import { PrayerRequestsService } from './prayer-requests.service';
+import { PrayerTopicNotificationSchedulerService } from './prayer-topic-notification-scheduler.service';
 import { PrayerSlotsController } from './prayer-slots.controller';
 import { PrayerSlotsService } from './prayer-slots.service';
 import { PrayerTestimoniesController } from './prayer-testimonies.controller';
@@ -31,6 +34,7 @@ import { PrayerTestimoniesService } from './prayer-testimonies.service';
     PrayerTestimoniesController,
     PrayerCampaignsController,
     PrayerRemindersController,
+    PrayerCategoryFollowsController,
   ],
   providers: [
     PrayerProgramsService,
@@ -43,6 +47,8 @@ import { PrayerTestimoniesService } from './prayer-testimonies.service';
     ChatMessagesService,
     PrayerRemindersService,
     PrayerReminderSchedulerService,
+    PrayerCategoryFollowsService,
+    PrayerTopicNotificationSchedulerService,
   ],
 })
 export class PrayerModule {}

@@ -1164,3 +1164,19 @@ from permissions p
 join roles r on r.code = any(array['VISITEUR', 'NOUVEAU_CONVERTI', 'INTERCESSEUR', 'MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'])
 where p.code = 'room.chat.send'
 on conflict (role_id, permission_id) do nothing;
+
+-- docs/01_FUNCTIONAL_SPECIFICATION.md §11 notification triggers: "Début d'un sujet suivi/favori".
+-- A brand-new, isolated table only touched by PrayerCategoryFollowsService and
+-- PrayerTopicNotificationSchedulerService. Follows a category (not an individual slot, which is
+-- one-off/ephemeral) — one row per (user, category).
+create table if not exists prayer_category_follows (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  category text not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, category)
+);
+
+create index if not exists prayer_category_follows_category_idx on prayer_category_follows (category);
+
+alter table prayer_category_follows enable row level security;

@@ -103,6 +103,7 @@ const TYPE_LABELS: Record<string, string> = {
   PRAYER_REMINDER: "C'est l'heure de ton rappel de prière",
   EVENT_CREATED: "Un nouvel événement a été créé dans une communauté dont tu es membre",
   EVENT_REMINDER: "Un événement auquel tu es inscrit commence bientôt",
+  PRAYER_TOPIC_STARTED: "Un sujet de prière que tu suis vient de commencer",
 };
 
 function describe(notification: AppNotification): string {
@@ -130,6 +131,8 @@ function resourceLink(notification: AppNotification): string | null {
     case 'EVENT_CREATED':
     case 'EVENT_REMINDER':
       return '/events';
+    case 'PRAYER_TOPIC_STARTED':
+      return '/room';
     default:
       return null;
   }

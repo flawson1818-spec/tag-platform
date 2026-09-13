@@ -6,6 +6,7 @@ import {
   filesApi,
   gamificationApi,
   notificationsApi,
+  prayerCategoryFollowsApi,
   prayerRemindersApi,
   prayerRequestsApi,
   testimoniesApi,
@@ -13,6 +14,8 @@ import {
   CommunityGoal,
   LeaderboardEntry,
   NotificationPreference,
+  PRAYER_CATEGORIES,
+  PrayerCategoryFollow,
   PrayerReminder,
   PrayerRequest,
   Testimony,
@@ -321,6 +324,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   PRAYER_REMINDER: 'Tes rappels de prière planifiés',
   EVENT_CREATED: 'Un nouvel événement dans une de tes communautés',
   EVENT_REMINDER: 'Rappel avant un événement auquel tu es inscrit',
+  PRAYER_TOPIC_STARTED: 'Un sujet de prière que tu suis vient de commencer',
 };
 
 function NotificationPreferencesSection() {
@@ -465,6 +469,57 @@ function PrayerRemindersSection() {
           {submitting ? 'Ajout…' : 'Ajouter un rappel'}
         </button>
       </form>
+    </div>
+  );
+}
+
+function PrayerTopicFollowsSection() {
+  const [follows, setFollows] = useState<PrayerCategoryFollow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [busyCategory, setBusyCategory] = useState<string | null>(null);
+
+  const refresh = () => {
+    const token = getAccessToken();
+    if (!token) return;
+    prayerCategoryFollowsApi.list(token).then(setFollows).catch((err) => setError((err as Error).message));
+  };
+
+  useEffect(refresh, []);
+
+  const followedCategories = new Set(follows.map((f) => f.category));
+
+  const toggleCategory = (category: string) => {
+    const token = getAccessToken();
+    if (!token) return;
+    setError(null);
+    setBusyCategory(category);
+    const action = followedCategories.has(category)
+      ? prayerCategoryFollowsApi.unfollow(token, category)
+      : prayerCategoryFollowsApi.follow(token, category);
+    action
+      .then(refresh)
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setBusyCategory(null));
+  };
+
+  return (
+    <div className="gamification">
+      <h3>Sujets de prière favoris</h3>
+      <p className="hint">Sois prévenu dès qu'un sujet de la catégorie choisie démarre dans la salle.</p>
+      {error && <p className="error">{error}</p>}
+      <div className="request-form">
+        {PRAYER_CATEGORIES.map((category) => (
+          <label key={category} className="tag-checkbox">
+            <input
+              type="checkbox"
+              checked={followedCategories.has(category)}
+              disabled={busyCategory === category}
+              onChange={() => toggleCategory(category)}
+            />
+            {category}
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
@@ -630,6 +685,7 @@ export function ProfilePage() {
       <GamificationSection />
       <NotificationPreferencesSection />
       <PrayerRemindersSection />
+      <PrayerTopicFollowsSection />
       <MyPrayerRequestsSection />
       <MyTestimoniesSection />
       <PrivacySection />
