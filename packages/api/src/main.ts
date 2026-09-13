@@ -6,10 +6,27 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // docs/12_SECURITY_SPECIFICATION.md API SECURITY: "Helmet" / "Content Security Policy". A
+  // relaxed script/style-src is needed only because Swagger UI (served at GET /api/docs below)
+  // renders actual HTML with inline script/style — every other endpoint here returns pure JSON
+  // or upgrades to a WebSocket, so this is as strict as this app's one HTML page allows.
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:'],
+        },
+      },
+    }),
+  );
   app.enableCors({ origin: process.env.WEB_ORIGIN || 'http://localhost:4200' });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
