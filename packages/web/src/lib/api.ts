@@ -560,6 +560,18 @@ export const postsApi = {
       headers: authHeaders(token),
       body: JSON.stringify({ content }),
     }),
+  update: (token: string, id: string, content: string) =>
+    request<Post>(`/posts/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ content }) }),
+  archive: (token: string, id: string) =>
+    request<void>(`/posts/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+  updateComment: (token: string, postId: string, commentId: string, content: string) =>
+    request<Comment>(`/posts/${postId}/comments/${commentId}`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ content }),
+    }),
+  deleteComment: (token: string, postId: string, commentId: string) =>
+    request<void>(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE', headers: authHeaders(token) }),
 };
 
 export interface Announcement {

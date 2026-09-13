@@ -115,4 +115,78 @@ export class PostsService {
 
     return { data: data as unknown as Comment[], meta: buildPaginationMeta(page, limit, count ?? 0) };
   }
+
+  /** docs/06_RBAC_SPECIFICATION.md §4: "L'auteur ou un Responsable+ de la communauté peut éditer/archiver" un Post. */
+  async updatePost(postId: string, actorId: string, content: string, canManageCommunity: boolean): Promise<Post> {
+    const post = await this.findPostById(postId);
+    if (post.author_id !== actorId && !canManageCommunity) {
+      throw new ForbiddenException('Only the author or a Responsable+ can edit this post');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('posts')
+      .update({ content, status: 'EDITED', updated_by: actorId })
+      .eq('id', postId)
+      .select(POST_COLUMNS)
+      .single();
+    if (error) throw new InternalServerErrorException(error.message);
+    return data as unknown as Post;
+  }
+
+  /** Never a hard delete — "archiver", per docs/06_RBAC_SPECIFICATION.md §4, matching the POST state machine's ARCHIVED state. */
+  async archivePost(postId: string, actorId: string, canManageCommunity: boolean): Promise<void> {
+    const post = await this.findPostById(postId);
+    if (post.author_id !== actorId && !canManageCommunity) {
+      throw new ForbiddenException('Only the author or a Responsable+ can archive this post');
+    }
+
+    const { error } = await this.supabase.client
+      .from('posts')
+      .update({ status: 'ARCHIVED', deleted_at: new Date().toISOString(), updated_by: actorId })
+      .eq('id', postId);
+    if (error) throw new InternalServerErrorException(error.message);
+  }
+
+  async findCommentById(id: string): Promise<Comment> {
+    const { data, error } = await this.supabase.client
+      .from('comments')
+      .select(COMMENT_COLUMNS)
+      .eq('id', id)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    if (!data) throw new NotFoundException(`Comment ${id} not found`);
+    return data as unknown as Comment;
+  }
+
+  /** docs/06_RBAC_SPECIFICATION.md §4: "L'auteur peut éditer... son propre commentaire à tout moment" — author-only, no moderator edit. */
+  async updateComment(commentId: string, actorId: string, content: string): Promise<Comment> {
+    const comment = await this.findCommentById(commentId);
+    if (comment.author_id !== actorId) {
+      throw new ForbiddenException('Only the author can edit this comment');
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('comments')
+      .update({ content, status: 'EDITED', updated_by: actorId })
+      .eq('id', commentId)
+      .select(COMMENT_COLUMNS)
+      .single();
+    if (error) throw new InternalServerErrorException(error.message);
+    return data as unknown as Comment;
+  }
+
+  /** docs/06_RBAC_SPECIFICATION.md §4: author always, or "un Modérateur+ peut supprimer n'importe quel commentaire de sa communauté". Soft delete. */
+  async deleteComment(commentId: string, actorId: string, canModerate: boolean): Promise<void> {
+    const comment = await this.findCommentById(commentId);
+    if (comment.author_id !== actorId && !canModerate) {
+      throw new ForbiddenException('Only the author or a Modérateur+ can delete this comment');
+    }
+
+    const { error } = await this.supabase.client
+      .from('comments')
+      .update({ status: 'DELETED', deleted_at: new Date().toISOString(), updated_by: actorId })
+      .eq('id', commentId);
+    if (error) throw new InternalServerErrorException(error.message);
+  }
 }

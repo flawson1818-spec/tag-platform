@@ -1199,3 +1199,17 @@ create table if not exists mfa_otp_challenges (
 create index if not exists mfa_otp_challenges_user_id_idx on mfa_otp_challenges (user_id);
 
 alter table mfa_otp_challenges enable row level security;
+
+-- docs/06_RBAC_SPECIFICATION.md §4 ownership rule: "Un Modérateur+ peut supprimer n'importe
+-- quel commentaire de sa communauté." No existing permission code matched this specific
+-- threshold (room.moderate is scoped to the prayer room's own chat) — grown here following the
+-- same "grow the permissions table" allowance already used throughout this file.
+insert into permissions (code) values ('post.moderate')
+on conflict (code) do nothing;
+
+insert into role_permissions (role_id, permission_id)
+select r.id, p.id
+from permissions p
+join roles r on r.code = any(array['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'])
+where p.code = 'post.moderate'
+on conflict (role_id, permission_id) do nothing;
