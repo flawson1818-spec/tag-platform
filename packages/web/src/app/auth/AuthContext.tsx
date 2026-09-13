@@ -16,6 +16,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaToken: string, code: string, trustDevice?: boolean) => Promise<void>;
   completeMfaRecovery: (mfaToken: string, recoveryCode: string, trustDevice?: boolean) => Promise<void>;
+  requestMfaOtp: (mfaToken: string, channel: 'EMAIL' | 'WHATSAPP') => Promise<void>;
+  completeMfaOtp: (mfaToken: string, code: string, trustDevice?: boolean) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -103,6 +105,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persistSession],
   );
 
+  const requestMfaOtp = useCallback(async (mfaToken: string, channel: 'EMAIL' | 'WHATSAPP') => {
+    await authApi.requestMfaOtp(mfaToken, channel);
+  }, []);
+
+  const completeMfaOtp = useCallback(
+    async (mfaToken: string, code: string, trustDevice = false) => {
+      const res = await authApi.mfaOtpVerify(mfaToken, code, trustDevice);
+      if (res.device_token) localStorage.setItem(DEVICE_TOKEN_KEY, res.device_token);
+      persistSession(res.access_token, res.refresh_token, res.user);
+    },
+    [persistSession],
+  );
+
   const register = useCallback(
     async (email: string, password: string, displayName: string) => {
       const res = await authApi.register({ email, password, displayName });
@@ -125,6 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     completeMfaChallenge,
     completeMfaRecovery,
+    requestMfaOtp,
+    completeMfaOtp,
     register,
     logout,
   };

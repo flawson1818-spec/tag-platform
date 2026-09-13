@@ -646,6 +646,14 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ mfaToken, recoveryCode, trustDevice }),
     }),
+  /** Sends a fresh 6-digit code by email or WhatsApp for the pending MFA challenge. */
+  requestMfaOtp: (mfaToken: string, channel: 'EMAIL' | 'WHATSAPP') =>
+    request<void>('/auth/mfa/otp/request', { method: 'POST', body: JSON.stringify({ mfaToken, channel }) }),
+  mfaOtpVerify: (mfaToken: string, code: string, trustDevice = false) =>
+    request<AuthResponse>('/auth/mfa/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ mfaToken, code, trustDevice }),
+    }),
   listTrustedDevices: (token: string) =>
     request<TrustedDevice[]>('/auth/mfa/trusted-devices', { headers: authHeaders(token) }),
   revokeTrustedDevice: (token: string, id: string) =>

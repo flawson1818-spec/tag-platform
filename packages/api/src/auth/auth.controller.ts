@@ -8,8 +8,10 @@ import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { MfaChallengeDto } from './dto/mfa-challenge.dto';
+import { MfaOtpChallengeDto } from './dto/mfa-otp-challenge.dto';
 import { MfaRecoveryChallengeDto } from './dto/mfa-recovery-challenge.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RequestMfaOtpDto } from './dto/request-mfa-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
@@ -91,6 +93,21 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: seconds(60) } })
   mfaRecoveryChallenge(@Body() dto: MfaRecoveryChallengeDto) {
     return this.authService.mfaRecoveryChallenge(dto.mfaToken, dto.recoveryCode, dto.trustDevice);
+  }
+
+  /** Public: sends a fresh code by email or WhatsApp for the pending MFA challenge. */
+  @Post('mfa/otp/request')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: seconds(60) } })
+  requestMfaOtp(@Body() dto: RequestMfaOtpDto) {
+    return this.authService.requestMfaOtp(dto.mfaToken, dto.channel);
+  }
+
+  @Post('mfa/otp/verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: seconds(60) } })
+  mfaOtpVerify(@Body() dto: MfaOtpChallengeDto) {
+    return this.authService.mfaOtpChallenge(dto.mfaToken, dto.code, dto.trustDevice);
   }
 
   @Post('mfa/setup')

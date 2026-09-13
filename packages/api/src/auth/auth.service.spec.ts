@@ -61,6 +61,10 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     revoke: vi.fn().mockResolvedValue(undefined),
     revokeAll: vi.fn().mockResolvedValue(undefined),
   };
+  const mfaOtpService = {
+    request: vi.fn().mockResolvedValue(undefined),
+    verify: vi.fn().mockResolvedValue(true),
+  };
   const supabase = createSupabaseServiceMock({
     refresh_tokens: createQueryChain({ data: null, error: null }),
     password_reset_tokens: createQueryChain({ data: null, error: null }),
@@ -77,6 +81,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     mfaService,
     mfaRecoveryCodesService,
     trustedDevicesService,
+    mfaOtpService,
     supabase,
     ...overrides,
   };
@@ -89,6 +94,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     deps.mfaService as never,
     deps.mfaRecoveryCodesService as never,
     deps.trustedDevicesService as never,
+    deps.mfaOtpService as never,
     deps.supabase as never,
   );
   return { service, ...deps };
@@ -402,6 +408,56 @@ describe('AuthService', () => {
 
       expect(trustedDevicesService.trust).toHaveBeenCalledWith('user-1');
       expect(result.device_token).toBe('device-token-raw');
+    });
+  });
+
+  describe('requestMfaOtp', () => {
+    it('rejects an invalid or expired mfaToken', async () => {
+      const { service, tokenService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue(null);
+
+      await expect(service.requestMfaOtp('bad-token', 'EMAIL')).rejects.toThrow('Invalid or expired MFA challenge');
+    });
+
+    it('delegates to MfaOtpService.request with the full user record', async () => {
+      const { service, tokenService, usersService, mfaOtpService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      const user = buildUser({ mfa_enabled: true });
+      usersService.findById.mockResolvedValue(user);
+
+      await service.requestMfaOtp('mfa-pending-token', 'EMAIL');
+
+      expect(mfaOtpService.request).toHaveBeenCalledWith(user, 'EMAIL');
+    });
+  });
+
+  describe('mfaOtpChallenge', () => {
+    it('rejects an invalid or expired mfaToken', async () => {
+      const { service, tokenService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue(null);
+
+      await expect(service.mfaOtpChallenge('bad-token', '123456')).rejects.toThrow('Invalid or expired MFA challenge');
+    });
+
+    it('rejects an invalid or expired code without issuing tokens', async () => {
+      const { service, tokenService, usersService, mfaOtpService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      mfaOtpService.verify.mockResolvedValue(false);
+
+      await expect(service.mfaOtpChallenge('mfa-pending-token', '000000')).rejects.toThrow('Invalid or expired code');
+    });
+
+    it('issues real tokens once the code checks out', async () => {
+      const { service, tokenService, usersService, mfaOtpService } = buildDeps();
+      tokenService.verifyMfaPendingToken.mockReturnValue('user-1');
+      usersService.findById.mockResolvedValue(buildUser({ mfa_enabled: true }));
+      mfaOtpService.verify.mockResolvedValue(true);
+
+      const result = await service.mfaOtpChallenge('mfa-pending-token', '123456');
+
+      expect(mfaOtpService.verify).toHaveBeenCalledWith('user-1', '123456');
+      expect(result.access_token).toBe('access-token');
     });
   });
 

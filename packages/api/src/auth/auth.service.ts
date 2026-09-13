@@ -25,6 +25,7 @@ import { MfaRequiredResponseDto } from './dto/mfa-required-response.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MfaOtpChannel, MfaOtpService } from './mfa-otp.service';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
@@ -42,6 +43,7 @@ export class AuthService {
     private readonly mfaService: MfaService,
     private readonly mfaRecoveryCodesService: MfaRecoveryCodesService,
     private readonly trustedDevicesService: TrustedDevicesService,
+    private readonly mfaOtpService: MfaOtpService,
     private readonly supabase: SupabaseService,
   ) {}
 
@@ -171,6 +173,34 @@ export class AuthService {
 
     const consumed = await this.mfaRecoveryCodesService.consume(userId, recoveryCode);
     if (!consumed) throw new UnauthorizedException('Invalid or already-used recovery code');
+
+    return this.issueTokens(user, trustDevice);
+  }
+
+  /**
+   * docs/12_SECURITY_SPECIFICATION.md MFA section — "Email OTP" / "WhatsApp OTP": an alternative
+   * second factor to TOTP, requested explicitly during the pending-token window rather than
+   * always-on like a TOTP app. Same pending-token flow as mfaChallenge().
+   */
+  async requestMfaOtp(mfaToken: string, channel: MfaOtpChannel): Promise<void> {
+    const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
+    if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    const user = await this.usersService.findById(userId).catch(() => null);
+    if (!user || user.status !== 'ACTIVE') throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    await this.mfaOtpService.request(user, channel);
+  }
+
+  async mfaOtpChallenge(mfaToken: string, code: string, trustDevice = false): Promise<AuthResponseDto> {
+    const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
+    if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    const user = await this.usersService.findById(userId).catch(() => null);
+    if (!user || user.status !== 'ACTIVE') throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    const verified = await this.mfaOtpService.verify(userId, code);
+    if (!verified) throw new UnauthorizedException('Invalid or expired code');
 
     return this.issueTokens(user, trustDevice);
   }

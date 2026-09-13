@@ -1180,3 +1180,22 @@ create table if not exists prayer_category_follows (
 create index if not exists prayer_category_follows_category_idx on prayer_category_follows (category);
 
 alter table prayer_category_follows enable row level security;
+
+-- docs/12_SECURITY_SPECIFICATION.md MFA section: "Email OTP" / "WhatsApp OTP" — the two
+-- remaining channels with an existing (log-only) delivery service to build on; SMS OTP is
+-- deliberately deferred since no SMS service/provider exists anywhere in this codebase yet.
+-- A brand-new, isolated table only touched by MfaOtpService. Short-lived (10 minutes) since a
+-- 6-digit code is far lower entropy than a recovery code or a trusted-device token.
+create table if not exists mfa_otp_challenges (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  channel text not null,
+  code_hash text not null,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists mfa_otp_challenges_user_id_idx on mfa_otp_challenges (user_id);
+
+alter table mfa_otp_challenges enable row level security;
