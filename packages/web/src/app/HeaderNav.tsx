@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
+import { ThemeToggle } from './ThemeToggle';
 
 function navClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'active' : '';
@@ -29,6 +30,7 @@ export function HeaderNav() {
         <NavLink to="/world-map" className={navClass}>Carte mondiale</NavLink>
       </div>
       <div className="nav-account">
+        <ThemeToggle />
         {status === 'authenticated' ? (
           <>
             <NavLink to="/notifications" className={navClass}>Notifications</NavLink>
