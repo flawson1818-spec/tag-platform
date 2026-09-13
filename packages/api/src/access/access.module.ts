@@ -10,6 +10,7 @@ import { MfaService } from './mfa.service';
 import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 import { PermissionGuard } from './permission.guard';
 import { PermissionsService } from './permissions.service';
+import { PasswordHistoryService } from './password-history.service';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
 import { TrustedDevicesService } from './trusted-devices.service';
@@ -39,6 +40,7 @@ import { UserMutesService } from './user-mutes.service';
     PermissionGuard,
     PermissionsService,
     PasswordService,
+    PasswordHistoryService,
     TokenService,
     TrustedDevicesService,
     UserMutesService,
@@ -51,6 +53,7 @@ import { UserMutesService } from './user-mutes.service';
     PermissionGuard,
     PermissionsService,
     PasswordService,
+    PasswordHistoryService,
     TokenService,
     TrustedDevicesService,
     UserMutesService,

@@ -65,6 +65,10 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     request: vi.fn().mockResolvedValue(undefined),
     verify: vi.fn().mockResolvedValue(true),
   };
+  const passwordHistoryService = {
+    wasRecentlyUsed: vi.fn().mockResolvedValue(false),
+    record: vi.fn().mockResolvedValue(undefined),
+  };
   const supabase = createSupabaseServiceMock({
     refresh_tokens: createQueryChain({ data: null, error: null }),
     password_reset_tokens: createQueryChain({ data: null, error: null }),
@@ -82,6 +86,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     mfaRecoveryCodesService,
     trustedDevicesService,
     mfaOtpService,
+    passwordHistoryService,
     supabase,
     ...overrides,
   };
@@ -95,6 +100,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     deps.mfaRecoveryCodesService as never,
     deps.trustedDevicesService as never,
     deps.mfaOtpService as never,
+    deps.passwordHistoryService as never,
     deps.supabase as never,
   );
   return { service, ...deps };
@@ -131,6 +137,16 @@ describe('AuthService', () => {
       expect(result.access_token).toBe('access-token');
       expect(result.refresh_token).toBe('raw-refresh-token');
       expect(result.user.email).toBe('believer@example.com');
+    });
+
+    it('rejects a blacklisted password before ever hashing it', async () => {
+      const { service, usersService, passwordService } = buildDeps();
+      usersService.findByEmail.mockResolvedValue(null);
+
+      await expect(
+        service.register({ email: 'believer@example.com', password: 'Password123!', displayName: 'Believer' } as never),
+      ).rejects.toThrow('too common');
+      expect(passwordService.hash).not.toHaveBeenCalled();
     });
   });
 
@@ -640,14 +656,69 @@ describe('AuthService', () => {
         ],
         refresh_tokens: revokeChain,
       });
-      const { service, usersService, passwordService } = buildDeps({ supabase });
+      const { service, usersService, passwordService, passwordHistoryService } = buildDeps({ supabase });
       passwordService.hash.mockResolvedValue('new-hash');
+      usersService.findById.mockResolvedValue(buildUser({ password_hash: 'old-hash' }));
 
       await service.resetPassword({ token: 'valid', newPassword: 'new-plain' } as never);
 
       expect(usersService.updatePasswordHash).toHaveBeenCalledWith('user-1', 'new-hash');
       expect(markUsedChain.update).toHaveBeenCalledWith(expect.objectContaining({ used_at: expect.any(String) }));
       expect(revokeChain.update).toHaveBeenCalledWith(expect.objectContaining({ revoked_at: expect.any(String) }));
+      expect(passwordHistoryService.record).toHaveBeenCalledWith('user-1', 'old-hash');
+    });
+
+    it('rejects a blacklisted new password', async () => {
+      const supabase = createSupabaseServiceMock({
+        password_reset_tokens: createQueryChain({
+          data: { id: 'prt-1', user_id: 'user-1', expires_at: '2099-01-01T00:00:00.000Z', used_at: null },
+          error: null,
+        }),
+      });
+      const { service, usersService } = buildDeps({ supabase });
+
+      await expect(service.resetPassword({ token: 'valid', newPassword: 'Password123!' } as never)).rejects.toThrow(
+        'too common',
+      );
+      expect(usersService.updatePasswordHash).not.toHaveBeenCalled();
+    });
+
+    it('rejects a recently-used password', async () => {
+      const supabase = createSupabaseServiceMock({
+        password_reset_tokens: createQueryChain({
+          data: { id: 'prt-1', user_id: 'user-1', expires_at: '2099-01-01T00:00:00.000Z', used_at: null },
+          error: null,
+        }),
+      });
+      const { service, usersService, passwordHistoryService } = buildDeps({ supabase });
+      usersService.findById.mockResolvedValue(buildUser());
+      passwordHistoryService.wasRecentlyUsed.mockResolvedValue(true);
+
+      await expect(service.resetPassword({ token: 'valid', newPassword: 'new-plain' } as never)).rejects.toThrow(
+        'already used this password recently',
+      );
+      expect(usersService.updatePasswordHash).not.toHaveBeenCalled();
+    });
+
+    it('still succeeds when the password-history check itself fails (fail-open)', async () => {
+      const markUsedChain = createQueryChain({ data: null, error: null });
+      const revokeChain = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({
+        password_reset_tokens: [
+          createQueryChain({
+            data: { id: 'prt-1', user_id: 'user-1', expires_at: '2099-01-01T00:00:00.000Z', used_at: null },
+            error: null,
+          }),
+          markUsedChain,
+        ],
+        refresh_tokens: revokeChain,
+      });
+      const { service, usersService, passwordHistoryService } = buildDeps({ supabase });
+      usersService.findById.mockResolvedValue(buildUser());
+      passwordHistoryService.wasRecentlyUsed.mockRejectedValue(new Error('table missing'));
+
+      await expect(service.resetPassword({ token: 'valid', newPassword: 'new-plain' } as never)).resolves.toBeUndefined();
+      expect(usersService.updatePasswordHash).toHaveBeenCalled();
     });
   });
 });

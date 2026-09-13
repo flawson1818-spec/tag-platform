@@ -1213,3 +1213,18 @@ from permissions p
 join roles r on r.code = any(array['MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'])
 where p.code = 'post.moderate'
 on conflict (role_id, permission_id) do nothing;
+
+-- docs/12_SECURITY_SPECIFICATION.md PASSWORD POLICY "Historique" — prevents reusing one of the
+-- last 5 passwords (PasswordHistoryService.HISTORY_SIZE). A brand-new, isolated table only
+-- touched by that service; AuthService.resetPassword() fails open around every read/write
+-- against it so an unmigrated environment never breaks the pre-existing reset flow.
+create table if not exists password_history (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users (id) on delete cascade,
+  password_hash text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists password_history_user_id_idx on password_history (user_id);
+
+alter table password_history enable row level security;

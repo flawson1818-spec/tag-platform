@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { MfaRecoveryCodesService } from '../access/mfa-recovery-codes.service';
 import { MfaService } from '../access/mfa.service';
+import { PasswordHistoryService } from '../access/password-history.service';
 import { PasswordService } from '../access/password.service';
 import { TokenService } from '../access/token.service';
 import { TrustedDevice } from '../access/trusted-device.entity';
@@ -26,6 +27,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MfaOtpChannel, MfaOtpService } from './mfa-otp.service';
+import { isBlacklistedPassword } from './password-blacklist';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
@@ -44,12 +46,16 @@ export class AuthService {
     private readonly mfaRecoveryCodesService: MfaRecoveryCodesService,
     private readonly trustedDevicesService: TrustedDevicesService,
     private readonly mfaOtpService: MfaOtpService,
+    private readonly passwordHistoryService: PasswordHistoryService,
     private readonly supabase: SupabaseService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already registered');
+    if (isBlacklistedPassword(dto.password)) {
+      throw new BadRequestException('This password is too common — choose a less predictable one');
+    }
 
     const passwordHash = await this.passwordService.hash(dto.password);
     const user = await this.usersService.create({
@@ -344,9 +350,28 @@ export class AuthService {
     if (!row || row.used_at || new Date(row.expires_at) < new Date()) {
       throw new BadRequestException('Invalid or expired token');
     }
+    if (isBlacklistedPassword(dto.newPassword)) {
+      throw new BadRequestException('This password is too common — choose a less predictable one');
+    }
+
+    // Fail-open: a password_history lookup failure (e.g. the table not migrated yet on this
+    // environment) must never break the pre-existing "reset my password" flow.
+    const user = await this.usersService.findById(row.user_id);
+    const wasReused = await this.passwordHistoryService
+      .wasRecentlyUsed(user.id, user.password_hash, dto.newPassword)
+      .catch((error) => {
+        this.logger.error(`Failed to check password history for user ${user.id}`, error as Error);
+        return false;
+      });
+    if (wasReused) {
+      throw new BadRequestException('You already used this password recently — choose a different one');
+    }
 
     const passwordHash = await this.passwordService.hash(dto.newPassword);
     await this.usersService.updatePasswordHash(row.user_id, passwordHash);
+    await this.passwordHistoryService
+      .record(user.id, user.password_hash)
+      .catch((error) => this.logger.error(`Failed to record password history for user ${user.id}`, error as Error));
 
     const { error: markUsedError } = await this.supabase.client
       .from('password_reset_tokens')
