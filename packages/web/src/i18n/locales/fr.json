@@ -676,5 +676,31 @@
   },
   "backupStatuses": {
     "COMPLETED": "Terminée"
+  },
+  "socialPublications": {
+    "title": "Brouillons de publication",
+    "intro": "Générés automatiquement par l'IA Communication à chaque témoignage approuvé — un brouillon par réseau, toujours soumis à validation humaine avant envoi, sauf canal en mode auto-publish ci-dessous.",
+    "needLogin": "Connecte-toi pour voir les brouillons de publication.",
+    "loading": "Chargement…",
+    "autoPublishTitle": "Auto-publish par canal",
+    "autoPublishIntro": "Réservé au Super Administrateur. Un canal activé ici publie ses brouillons directement, sans passer par cette file d'attente.",
+    "autoPublishEnabled": "Auto-publish activé",
+    "autoPublishDisabled": "Auto-publish désactivé",
+    "noDrafts": "Aucun brouillon en attente.",
+    "approve": "Approuver",
+    "reject": "Rejeter"
+  },
+  "moderatorRoom": {
+    "title": "Gestion des intercesseurs — programme en cours",
+    "intro": "Assigne un intercesseur à chaque section. Sans assignation, l'IA Intercession anime automatiquement.",
+    "needLogin": "Tu dois être connecté pour gérer les créneaux.",
+    "loading": "Chargement…",
+    "tableTime": "Heure",
+    "tableSection": "Section",
+    "tableCategory": "Catégorie",
+    "tableLeader": "Animateur",
+    "liveBadge": "En direct",
+    "leaderAi": "IA Intercession",
+    "saving": "Enregistrement…"
   }
 }

@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { LeaderCandidate, PrayerSlot, prayerApi } from '../../lib/api';
+import i18n from '../../i18n/config';
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
 }
 
 export function ModeratorRoomPage() {
+  const { t } = useTranslation();
   const [slots, setSlots] = useState<PrayerSlot[]>([]);
   const [candidates, setCandidates] = useState<LeaderCandidate[]>([]);
   const [error, setError] = useState<string | null>(() =>
-    getAccessToken() ? null : 'Tu dois être connecté pour gérer les créneaux.',
+    getAccessToken() ? null : i18n.t('moderatorRoom.needLogin'),
   );
   const [loading, setLoading] = useState(() => Boolean(getAccessToken()));
   const [savingSlotId, setSavingSlotId] = useState<string | null>(null);
@@ -47,24 +50,22 @@ export function ModeratorRoomPage() {
     }
   };
 
-  if (loading) return <p>Chargement…</p>;
+  if (loading) return <p>{t('moderatorRoom.loading')}</p>;
 
   return (
     <div className="moderator-page">
-      <h2>Gestion des intercesseurs — programme en cours</h2>
-      <p className="hint">
-        Assigne un intercesseur à chaque section. Sans assignation, l'IA Intercession anime automatiquement.
-      </p>
+      <h2>{t('moderatorRoom.title')}</h2>
+      <p className="hint">{t('moderatorRoom.intro')}</p>
       {error && <p className="error">{error}</p>}
 
       {slots.length > 0 && (
         <table className="slot-table">
           <thead>
             <tr>
-              <th>Heure</th>
-              <th>Section</th>
-              <th>Catégorie</th>
-              <th>Animateur</th>
+              <th>{t('moderatorRoom.tableTime')}</th>
+              <th>{t('moderatorRoom.tableSection')}</th>
+              <th>{t('moderatorRoom.tableCategory')}</th>
+              <th>{t('moderatorRoom.tableLeader')}</th>
               <th></th>
             </tr>
           </thead>
@@ -73,17 +74,17 @@ export function ModeratorRoomPage() {
               <tr key={slot.id} className={slot.status === 'RUNNING' ? 'slot-row-live' : ''}>
                 <td>
                   {formatTime(slot.start_at)}–{formatTime(slot.end_at)}
-                  {slot.status === 'RUNNING' && <span className="live-badge"> En direct</span>}
+                  {slot.status === 'RUNNING' && <span className="live-badge"> {t('moderatorRoom.liveBadge')}</span>}
                 </td>
                 <td>{slot.title}</td>
-                <td>{slot.category}</td>
+                <td>{t(`prayerTopicCategories.${slot.category}`, slot.category)}</td>
                 <td>
                   <select
                     value={slot.leader_user_id ?? ''}
                     disabled={savingSlotId === slot.id}
                     onChange={(e) => handleAssign(slot.id, e.target.value)}
                   >
-                    <option value="">IA Intercession</option>
+                    <option value="">{t('moderatorRoom.leaderAi')}</option>
                     {candidates.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.display_name}
@@ -91,7 +92,7 @@ export function ModeratorRoomPage() {
                     ))}
                   </select>
                 </td>
-                <td>{savingSlotId === slot.id ? 'Enregistrement…' : ''}</td>
+                <td>{savingSlotId === slot.id ? t('moderatorRoom.saving') : ''}</td>
               </tr>
             ))}
           </tbody>

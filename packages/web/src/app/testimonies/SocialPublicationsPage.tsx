@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { SocialPublication, SocialPublicationChannelSetting, socialPublicationsApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 
 export function SocialPublicationsPage() {
+  const { t } = useTranslation();
   const token = getAccessToken();
   const [drafts, setDrafts] = useState<SocialPublication[]>([]);
   const [loading, setLoading] = useState(() => Boolean(token));
@@ -67,25 +69,19 @@ export function SocialPublicationsPage() {
     }
   };
 
-  if (!token) return <p className="hint">Connecte-toi pour voir les brouillons de publication.</p>;
-  if (loading) return <p>Chargement…</p>;
+  if (!token) return <p className="hint">{t('socialPublications.needLogin')}</p>;
+  if (loading) return <p>{t('socialPublications.loading')}</p>;
 
   return (
     <div className="testimonies-page">
-      <h2>Brouillons de publication</h2>
-      <p className="hint">
-        Générés automatiquement par l'IA Communication à chaque témoignage approuvé — un brouillon par
-        réseau, toujours soumis à validation humaine avant envoi, sauf canal en mode auto-publish ci-dessous.
-      </p>
+      <h2>{t('socialPublications.title')}</h2>
+      <p className="hint">{t('socialPublications.intro')}</p>
       {error && <p className="error">{error}</p>}
 
       {channelSettings && (
         <div className="panel-section">
-          <h3>Auto-publish par canal</h3>
-          <p className="hint">
-            Réservé au Super Administrateur. Un canal activé ici publie ses brouillons directement,
-            sans passer par cette file d'attente.
-          </p>
+          <h3>{t('socialPublications.autoPublishTitle')}</h3>
+          <p className="hint">{t('socialPublications.autoPublishIntro')}</p>
           <ul className="channel-settings-list">
             {channelSettings.map((s) => (
               <li key={s.channel} className="channel-settings-row">
@@ -96,7 +92,7 @@ export function SocialPublicationsPage() {
                   disabled={togglingChannel === s.channel}
                   onClick={() => toggleAutoPublish(s.channel, !s.auto_publish)}
                 >
-                  {s.auto_publish ? 'Auto-publish activé' : 'Auto-publish désactivé'}
+                  {s.auto_publish ? t('socialPublications.autoPublishEnabled') : t('socialPublications.autoPublishDisabled')}
                 </button>
               </li>
             ))}
@@ -104,7 +100,7 @@ export function SocialPublicationsPage() {
         </div>
       )}
 
-      {drafts.length === 0 && <p className="hint">Aucun brouillon en attente.</p>}
+      {drafts.length === 0 && <p className="hint">{t('socialPublications.noDrafts')}</p>}
       <ul className="request-list">
         {drafts.map((d) => (
           <li key={d.id} className="request-row">
@@ -114,10 +110,10 @@ export function SocialPublicationsPage() {
             <p>{d.draft_content}</p>
             <div className="reject-row">
               <button disabled={actingId === d.id} onClick={() => act(d.id, 'approve')}>
-                Approuver
+                {t('socialPublications.approve')}
               </button>
               <button type="button" disabled={actingId === d.id} onClick={() => act(d.id, 'reject')}>
-                Rejeter
+                {t('socialPublications.reject')}
               </button>
             </div>
           </li>

@@ -676,5 +676,31 @@
   },
   "backupStatuses": {
     "COMPLETED": "Completada"
+  },
+  "socialPublications": {
+    "title": "Borradores de redes sociales",
+    "intro": "Generados automáticamente por la IA de Comunicación para cada testimonio aprobado — un borrador por red, siempre sujeto a validación humana antes del envío, salvo canal en modo auto-publicación abajo.",
+    "needLogin": "Inicia sesión para ver los borradores de publicación.",
+    "loading": "Cargando…",
+    "autoPublishTitle": "Auto-publicación por canal",
+    "autoPublishIntro": "Reservado al Super Administrador. Un canal activado aquí publica sus borradores directamente, sin pasar por esta cola de revisión.",
+    "autoPublishEnabled": "Auto-publicación activada",
+    "autoPublishDisabled": "Auto-publicación desactivada",
+    "noDrafts": "Ningún borrador pendiente.",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
+  },
+  "moderatorRoom": {
+    "title": "Gestionar intercesores — programa en curso",
+    "intro": "Asigna un intercesor a cada sección. Sin asignación, la IA Intercesora dirige automáticamente.",
+    "needLogin": "Debes iniciar sesión para gestionar los turnos.",
+    "loading": "Cargando…",
+    "tableTime": "Hora",
+    "tableSection": "Sección",
+    "tableCategory": "Categoría",
+    "tableLeader": "Guía",
+    "liveBadge": "En vivo",
+    "leaderAi": "IA Intercesora",
+    "saving": "Guardando…"
   }
 }

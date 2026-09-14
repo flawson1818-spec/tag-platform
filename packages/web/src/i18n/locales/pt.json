@@ -676,5 +676,31 @@
   },
   "backupStatuses": {
     "COMPLETED": "Concluído"
+  },
+  "socialPublications": {
+    "title": "Rascunhos de redes sociais",
+    "intro": "Gerados automaticamente pela IA de Comunicação a cada testemunho aprovado — um rascunho por rede, sempre sujeito à validação humana antes do envio, exceto canal em modo de publicação automática abaixo.",
+    "needLogin": "Entre para ver os rascunhos de publicação.",
+    "loading": "Carregando…",
+    "autoPublishTitle": "Publicação automática por canal",
+    "autoPublishIntro": "Reservado ao Super Administrador. Um canal ativado aqui publica seus rascunhos diretamente, sem passar por esta fila de revisão.",
+    "autoPublishEnabled": "Publicação automática ativada",
+    "autoPublishDisabled": "Publicação automática desativada",
+    "noDrafts": "Nenhum rascunho pendente.",
+    "approve": "Aprovar",
+    "reject": "Rejeitar"
+  },
+  "moderatorRoom": {
+    "title": "Gerenciar intercessores — programa atual",
+    "intro": "Atribua um intercessor a cada seção. Sem atribuição, a IA Intercessora conduz automaticamente.",
+    "needLogin": "Você precisa estar conectado para gerenciar os turnos.",
+    "loading": "Carregando…",
+    "tableTime": "Horário",
+    "tableSection": "Seção",
+    "tableCategory": "Categoria",
+    "tableLeader": "Condutor",
+    "liveBadge": "Ao vivo",
+    "leaderAi": "IA Intercessora",
+    "saving": "Salvando…"
   }
 }
