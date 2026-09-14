@@ -1,4 +1,5 @@
 import { FormEvent, ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AiChatTurn, aiApi } from '../../lib/api';
 
 interface AiChatWidgetProps {
@@ -10,6 +11,7 @@ interface AiChatWidgetProps {
 }
 
 export function AiChatWidget({ title, intro, placeholder, send, children }: AiChatWidgetProps) {
+  const { t } = useTranslation();
   const [history, setHistory] = useState<AiChatTurn[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,14 +45,14 @@ export function AiChatWidget({ title, intro, placeholder, send, children }: AiCh
       {children}
 
       <div className="ai-chat-list">
-        {history.length === 0 && <p className="ai-chat-empty">Pose ta première question ci-dessous.</p>}
+        {history.length === 0 && <p className="ai-chat-empty">{t('aiChat.emptyHint')}</p>}
         {history.map((turn, index) => (
           <div key={index} className={turn.role === 'user' ? 'ai-chat-message ai-chat-user' : 'ai-chat-message ai-chat-assistant'}>
-            <strong>{turn.role === 'user' ? 'Toi' : 'IA'}</strong>
+            <strong>{turn.role === 'user' ? t('aiChat.you') : t('aiChat.ai')}</strong>
             <span>{turn.content}</span>
           </div>
         ))}
-        {loading && <div className="ai-chat-message ai-chat-assistant ai-chat-typing">L'assistant réfléchit…</div>}
+        {loading && <div className="ai-chat-message ai-chat-assistant ai-chat-typing">{t('aiChat.thinking')}</div>}
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -64,7 +66,7 @@ export function AiChatWidget({ title, intro, placeholder, send, children }: AiCh
           disabled={loading}
         />
         <button type="submit" disabled={loading || !input.trim()}>
-          Envoyer
+          {t('aiChat.send')}
         </button>
       </form>
     </div>

@@ -1,12 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from './AuthContext';
 import { Community, communitiesApi, authApi, aiApi } from '../../lib/api';
 import { AiChatWidget } from '../ai/AiChatWidget';
 
-const STEPS = ['Vérification', 'Découverte', 'Communauté'] as const;
+const STEP_KEYS = ['verification', 'discovery', 'community'] as const;
 
 function VerificationStep({ onNext }: { onNext: () => void }) {
+  const { t } = useTranslation();
   const [token, setToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,57 +43,59 @@ function VerificationStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div className="auth-page">
-      <h2>Vérifie ton adresse e-mail</h2>
+      <h2>{t('onboarding.verifyTitle')}</h2>
       {verified ? (
-        <p className="confirmation">Adresse vérifiée — merci !</p>
+        <p className="confirmation">{t('onboarding.verified')}</p>
       ) : (
         <>
-          <p className="hint">Un code de vérification vient de t'être envoyé par e-mail.</p>
+          <p className="hint">{t('onboarding.codeSentHint')}</p>
           <form onSubmit={handleVerify} className="auth-form">
             <input
               type="text"
-              placeholder="Code reçu par e-mail"
+              placeholder={t('onboarding.codePlaceholder')}
               value={token}
               onChange={(e) => setToken(e.target.value)}
               required
             />
             <button type="submit" disabled={submitting}>
-              {submitting ? 'Vérification…' : 'Vérifier'}
+              {submitting ? t('onboarding.verifying') : t('onboarding.verify')}
             </button>
           </form>
           {error && <p className="error">{error}</p>}
           <p>
             <button type="button" className="link-button" onClick={handleResend}>
-              Renvoyer le code
+              {t('onboarding.resendCode')}
             </button>
-            {resent && <span className="hint"> — code renvoyé.</span>}
+            {resent && <span className="hint"> {t('onboarding.codeResent')}</span>}
           </p>
         </>
       )}
       <button type="button" onClick={onNext}>
-        {verified ? 'Continuer' : 'Passer pour l\'instant'}
+        {verified ? t('onboarding.continue') : t('onboarding.skipForNow')}
       </button>
     </div>
   );
 }
 
 function DiscoveryStep({ onNext }: { onNext: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="onboarding-step">
       <AiChatWidget
-        title="Fais connaissance avec l'IA Accueil"
-        intro="Pose-lui une question sur le fonctionnement de TAG — comment rejoindre la salle de prière, déposer une demande, partager un témoignage…"
-        placeholder="Comment ça marche ?"
+        title={t('onboarding.discoveryTitle')}
+        intro={t('onboarding.discoveryIntro')}
+        placeholder={t('onboarding.discoveryPlaceholder')}
         send={aiApi.chatAccueil}
       />
       <button type="button" onClick={onNext}>
-        Continuer
+        {t('onboarding.continue')}
       </button>
     </div>
   );
 }
 
 function CommunityStep({ onDone }: { onDone: () => void }) {
+  const { t } = useTranslation();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -119,38 +123,43 @@ function CommunityStep({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="auth-page">
-      <h2>Rejoins une communauté</h2>
-      <p className="hint">Optionnel — tu pourras toujours le faire plus tard depuis "Communautés".</p>
+      <h2>{t('onboarding.communityTitle')}</h2>
+      <p className="hint">{t('onboarding.communityIntro')}</p>
       {error && <p className="error">{error}</p>}
       <ul className="request-list">
         {communities.map((c) => (
           <li key={c.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{c.type}</span>
+              <span className="chip">{t(`communityTypes.${c.type}`, c.type)}</span>
             </div>
             <p>{c.name}</p>
             <button onClick={() => handleJoin(c.id)} disabled={joinedIds.has(c.id)}>
-              {joinedIds.has(c.id) ? 'Rejoint ✓' : 'Rejoindre'}
+              {joinedIds.has(c.id) ? t('onboarding.joined') : t('onboarding.join')}
             </button>
           </li>
         ))}
       </ul>
-      {communities.length === 0 && !error && <p className="hint">Aucune communauté à proposer pour l'instant.</p>}
+      {communities.length === 0 && !error && <p className="hint">{t('onboarding.noCommunities')}</p>}
       <button type="button" onClick={onDone}>
-        Terminer
+        {t('onboarding.finish')}
       </button>
     </div>
   );
 }
 
 export function OnboardingPage() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
 
   return (
     <div>
       <p className="hint">
-        Étape {step + 1} / {STEPS.length} — {STEPS[step]}
+        {t('onboarding.stepLabel', {
+          current: step + 1,
+          total: STEP_KEYS.length,
+          name: t(`onboarding.steps.${STEP_KEYS[step]}`),
+        })}
       </p>
       {step === 0 && <VerificationStep onNext={() => setStep(1)} />}
       {step === 1 && <DiscoveryStep onNext={() => setStep(2)} />}

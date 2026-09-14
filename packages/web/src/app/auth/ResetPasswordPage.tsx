@@ -1,8 +1,10 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../lib/api';
 
 export function ResetPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -27,12 +29,10 @@ export function ResetPasswordPage() {
   if (done) {
     return (
       <div className="auth-page">
-        <h2>Mot de passe réinitialisé</h2>
-        <p className="confirmation">
-          Ton mot de passe a été mis à jour. Toutes tes sessions précédentes ont été déconnectées.
-        </p>
+        <h2>{t('resetPassword.doneTitle')}</h2>
+        <p className="confirmation">{t('resetPassword.doneMessage')}</p>
         <button type="button" onClick={() => navigate('/login')}>
-          Se connecter
+          {t('resetPassword.login')}
         </button>
       </div>
     );
@@ -40,30 +40,30 @@ export function ResetPasswordPage() {
 
   return (
     <div className="auth-page">
-      <h2>Réinitialiser le mot de passe</h2>
+      <h2>{t('resetPassword.title')}</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <input
           type="text"
-          placeholder="Code reçu par e-mail"
+          placeholder={t('resetPassword.codePlaceholder')}
           value={token}
           onChange={(e) => setToken(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Nouveau mot de passe"
+          placeholder={t('resetPassword.newPasswordPlaceholder')}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
         />
-        <p className="hint">Minimum 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial.</p>
+        <p className="hint">{t('resetPassword.passwordHint')}</p>
         <button type="submit" disabled={submitting}>
-          {submitting ? 'Réinitialisation…' : 'Réinitialiser'}
+          {submitting ? t('resetPassword.resetting') : t('resetPassword.reset')}
         </button>
       </form>
       {error && <p className="error">{error}</p>}
       <p>
-        <Link to="/forgot-password">Redemander un code</Link>
+        <Link to="/forgot-password">{t('resetPassword.requestNewCode')}</Link>
       </p>
     </div>
   );

@@ -1,8 +1,10 @@
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../lib/api';
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,28 +26,27 @@ export function ForgotPasswordPage() {
 
   return (
     <div className="auth-page">
-      <h2>Mot de passe oublié</h2>
+      <h2>{t('forgotPassword.title')}</h2>
       {sent ? (
-        <p className="confirmation">
-          Si un compte existe avec cette adresse, un code de réinitialisation vient d'être envoyé.
-        </p>
+        <p className="confirmation">{t('forgotPassword.sentMessage')}</p>
       ) : (
         <form onSubmit={handleSubmit} className="auth-form">
           <input
             type="email"
-            placeholder="Adresse e-mail"
+            placeholder={t('forgotPassword.emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           <button type="submit" disabled={submitting}>
-            {submitting ? 'Envoi…' : 'Envoyer le code'}
+            {submitting ? t('forgotPassword.sending') : t('forgotPassword.send')}
           </button>
         </form>
       )}
       {error && <p className="error">{error}</p>}
       <p>
-        <Link to="/reset-password">J'ai déjà un code</Link> — <Link to="/login">Retour à la connexion</Link>
+        <Link to="/reset-password">{t('forgotPassword.haveCode')}</Link> —{' '}
+        <Link to="/login">{t('forgotPassword.backToLogin')}</Link>
       </p>
     </div>
   );

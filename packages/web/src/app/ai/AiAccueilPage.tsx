@@ -1,12 +1,14 @@
+import { useTranslation } from 'react-i18next';
 import { aiApi } from '../../lib/api';
 import { AiChatWidget } from './AiChatWidget';
 
 export function AiAccueilPage() {
+  const { t } = useTranslation();
   return (
     <AiChatWidget
-      title="🙏 IA Accueil"
-      intro="Pose tes questions sur le fonctionnement de TAG — comment rejoindre une salle, soumettre une demande de prière, publier un témoignage…"
-      placeholder="Comment rejoindre la salle de prière ?"
+      title={t('aiWelcome.title')}
+      intro={t('aiWelcome.intro')}
+      placeholder={t('aiWelcome.placeholder')}
       send={aiApi.chatAccueil}
     />
   );

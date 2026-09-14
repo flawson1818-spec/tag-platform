@@ -731,5 +731,107 @@
     "testimonies": "Testimonios",
     "users": "Usuarios",
     "communities": "Comunidades"
+  },
+  "aiChat": {
+    "emptyHint": "Haz tu primera pregunta abajo.",
+    "you": "Tú",
+    "ai": "IA",
+    "thinking": "El asistente está pensando…",
+    "send": "Enviar"
+  },
+  "aiWelcome": {
+    "title": "🙏 IA Bienvenida",
+    "intro": "Haz tus preguntas sobre el funcionamiento de TAG — cómo unirte a una sala, enviar una petición de oración, publicar un testimonio…",
+    "placeholder": "¿Cómo me uno a la sala de oración?"
+  },
+  "aiEvangelism": {
+    "title": "✝️ IA Evangelización",
+    "intro": "Conversa sobre cuestiones de fe, haz preguntas bíblicas, o pide descubrir el Evangelio.",
+    "placeholder": "¿Quién era Jesús?",
+    "needLogin": "Inicia sesión para seguir tu camino de descubrimiento de la fe, paso a paso.",
+    "pathIntro": "Tu camino de descubrimiento de la fe:",
+    "levelQuestion": "¿Tu nivel?",
+    "levelNew": "Estoy descubriendo",
+    "levelKnown": "Ya sé un poco",
+    "nextStep": "Siguiente paso →"
+  },
+  "faithPathSteps": {
+    "Découverte": "Descubrimiento",
+    "Qui est Jésus ?": "¿Quién es Jesús?",
+    "L'Évangile": "El Evangelio",
+    "Réponse personnelle": "Respuesta personal",
+    "Communauté": "Comunidad"
+  },
+  "forgotPassword": {
+    "title": "Olvidé mi contraseña",
+    "sentMessage": "Si existe una cuenta con esta dirección, se acaba de enviar un código de restablecimiento.",
+    "emailPlaceholder": "Correo electrónico",
+    "sending": "Enviando…",
+    "send": "Enviar el código",
+    "haveCode": "Ya tengo un código",
+    "backToLogin": "Volver a iniciar sesión"
+  },
+  "resetPassword": {
+    "doneTitle": "Contraseña restablecida",
+    "doneMessage": "Tu contraseña ha sido actualizada. Todas tus sesiones anteriores han sido cerradas.",
+    "login": "Iniciar sesión",
+    "title": "Restablecer la contraseña",
+    "codePlaceholder": "Código recibido por correo electrónico",
+    "newPasswordPlaceholder": "Nueva contraseña",
+    "passwordHint": "Mínimo 12 caracteres, con mayúscula, minúscula, número y carácter especial.",
+    "resetting": "Restableciendo…",
+    "reset": "Restablecer",
+    "requestNewCode": "Solicitar un nuevo código"
+  },
+  "onboarding": {
+    "stepLabel": "Paso {{current}} / {{total}} — {{name}}",
+    "steps": {
+      "verification": "Verificación",
+      "discovery": "Descubrimiento",
+      "community": "Comunidad"
+    },
+    "verifyTitle": "Verifica tu correo electrónico",
+    "verified": "Dirección verificada — ¡gracias!",
+    "codeSentHint": "Se te acaba de enviar un código de verificación por correo electrónico.",
+    "codePlaceholder": "Código recibido por correo electrónico",
+    "verifying": "Verificando…",
+    "verify": "Verificar",
+    "resendCode": "Reenviar el código",
+    "codeResent": "— código reenviado.",
+    "continue": "Continuar",
+    "skipForNow": "Omitir por ahora",
+    "discoveryTitle": "Conoce a la IA Bienvenida",
+    "discoveryIntro": "Hazle una pregunta sobre cómo funciona TAG — cómo unirte a la sala de oración, enviar una petición, compartir un testimonio…",
+    "discoveryPlaceholder": "¿Cómo funciona?",
+    "communityTitle": "Únete a una comunidad",
+    "communityIntro": "Opcional — siempre podrás hacerlo más tarde desde \"Comunidades\".",
+    "joined": "Unido ✓",
+    "join": "Unirse",
+    "noCommunities": "Ninguna comunidad para sugerir por el momento.",
+    "finish": "Finalizar"
+  },
+  "mfaSettings": {
+    "title": "Verificación en dos pasos",
+    "intro": "Protege tu cuenta con un código de un solo uso generado por una aplicación como Google Authenticator o Authy, además de tu contraseña.",
+    "preparing": "Preparando…",
+    "enable": "Activar la verificación en dos pasos",
+    "setupHint": "Añade esta clave a tu aplicación de autenticación, luego introduce el código generado para confirmar.",
+    "openInApp": "Abrir directamente en la aplicación (móvil)",
+    "sixDigitPlaceholder": "Código de 6 dígitos",
+    "verifying": "Verificando…",
+    "confirm": "Confirmar",
+    "enabledHint": "La verificación en dos pasos está activada en esta cuenta.",
+    "recoveryCodesWarning": "Anota estos códigos de recuperación en un lugar seguro.",
+    "recoveryCodesDetail": "Cada uno solo se puede usar una vez, si pierdes el acceso a tu aplicación de autenticación. Nunca volverán a mostrarse.",
+    "recoveryCodesNoted": "He anotado mis códigos",
+    "disableCodePlaceholder": "Código de 6 dígitos para desactivar",
+    "disabling": "Desactivando…",
+    "disable": "Desactivar",
+    "trustedDevicesTitle": "Dispositivos de confianza",
+    "trustedDevicesIntro": "Un dispositivo en el que marcaste «Recordar este dispositivo» no volverá a pedir un código de verificación durante 30 días.",
+    "noTrustedDevices": "Ningún dispositivo de confianza registrado.",
+    "unnamedDevice": "Dispositivo sin nombre",
+    "expiresOn": "Expira el {{date}}",
+    "revoke": "Revocar"
   }
 }

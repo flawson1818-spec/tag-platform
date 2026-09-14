@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaithPathLevel, FaithPathProgress, aiApi } from '../../lib/api';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { AiChatWidget } from './AiChatWidget';
 
 function FaithPathPanel() {
+  const { t } = useTranslation();
   const { status } = useAuth();
   const [progress, setProgress] = useState<FaithPathProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,11 +33,7 @@ function FaithPathPanel() {
   };
 
   if (status !== 'authenticated') {
-    return (
-      <p className="hint">
-        Connecte-toi pour suivre ton parcours de découverte de la foi, étape par étape.
-      </p>
-    );
+    return <p className="hint">{t('aiEvangelism.needLogin')}</p>;
   }
 
   if (!progress) return null;
@@ -45,30 +43,30 @@ function FaithPathPanel() {
 
   return (
     <div className="request-row" style={{ marginBottom: '0.8rem' }}>
-      <p className="hint">Ton parcours de découverte de la foi :</p>
+      <p className="hint">{t('aiEvangelism.pathIntro')}</p>
       <div className="request-form">
         {progress.steps.map((s, index) => (
           <span key={s.step} className={index === currentIndex ? 'chip chip-status' : 'chip'}>
-            {s.label}
+            {t(`faithPathSteps.${s.label}`, s.label)}
           </span>
         ))}
       </div>
 
       {!progress.declared_level && (
         <div className="request-form">
-          <span className="hint">Ton niveau ?</span>
+          <span className="hint">{t('aiEvangelism.levelQuestion')}</span>
           <button type="button" onClick={() => setLevel('NOUVEAU')}>
-            Je découvre
+            {t('aiEvangelism.levelNew')}
           </button>
           <button type="button" onClick={() => setLevel('CONNAIT_DEJA')}>
-            Je connais déjà un peu
+            {t('aiEvangelism.levelKnown')}
           </button>
         </div>
       )}
 
       {progress.declared_level && !isLastStep && (
         <button type="button" className="link-button" onClick={advance}>
-          Étape suivante →
+          {t('aiEvangelism.nextStep')}
         </button>
       )}
       {error && <p className="error">{error}</p>}
@@ -77,11 +75,12 @@ function FaithPathPanel() {
 }
 
 export function AiEvangelisationPage() {
+  const { t } = useTranslation();
   return (
     <AiChatWidget
-      title="✝️ IA Évangélisation"
-      intro="Discute de questions de foi, pose des questions bibliques, ou demande à découvrir l'Évangile."
-      placeholder="Qui était Jésus ?"
+      title={t('aiEvangelism.title')}
+      intro={t('aiEvangelism.intro')}
+      placeholder={t('aiEvangelism.placeholder')}
       send={aiApi.chatEvangelisation}
     >
       <FaithPathPanel />

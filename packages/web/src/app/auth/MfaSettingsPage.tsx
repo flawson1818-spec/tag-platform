@@ -1,14 +1,17 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TrustedDevice, authApi } from '../../lib/api';
 import { getAccessToken, useAuth } from './AuthContext';
+import i18n from '../../i18n/config';
 
 type Step = 'idle' | 'awaiting-code' | 'enabled';
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function MfaSettingsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [step, setStep] = useState<Step>(user?.mfa_enabled ? 'enabled' : 'idle');
   const [secret, setSecret] = useState<string | null>(null);
@@ -92,36 +95,30 @@ export function MfaSettingsPage() {
 
   return (
     <div className="auth-page">
-      <h2>Vérification en deux étapes</h2>
-      <p className="hint">
-        Protège ton compte avec un code à usage unique généré par une application comme Google
-        Authenticator ou Authy, en plus de ton mot de passe.
-      </p>
+      <h2>{t('mfaSettings.title')}</h2>
+      <p className="hint">{t('mfaSettings.intro')}</p>
 
       {step === 'idle' && (
         <button onClick={startSetup} disabled={submitting}>
-          {submitting ? 'Préparation…' : 'Activer la vérification en deux étapes'}
+          {submitting ? t('mfaSettings.preparing') : t('mfaSettings.enable')}
         </button>
       )}
 
       {step === 'awaiting-code' && secret && (
         <form onSubmit={handleEnable} className="auth-form">
-          <p className="hint">
-            Ajoute cette clé dans ton application d'authentification, puis entre le code généré
-            pour confirmer.
-          </p>
+          <p className="hint">{t('mfaSettings.setupHint')}</p>
           <p>
             <code>{secret}</code>
           </p>
           {otpauthUrl && (
             <p className="hint">
-              <a href={otpauthUrl}>Ouvrir directement dans l'application (mobile)</a>
+              <a href={otpauthUrl}>{t('mfaSettings.openInApp')}</a>
             </p>
           )}
           <input
             type="text"
             inputMode="numeric"
-            placeholder="Code à 6 chiffres"
+            placeholder={t('mfaSettings.sixDigitPlaceholder')}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             maxLength={6}
@@ -129,21 +126,19 @@ export function MfaSettingsPage() {
             autoFocus
           />
           <button type="submit" disabled={submitting || code.length !== 6}>
-            {submitting ? 'Vérification…' : 'Confirmer'}
+            {submitting ? t('mfaSettings.verifying') : t('mfaSettings.confirm')}
           </button>
         </form>
       )}
 
       {step === 'enabled' && (
         <>
-          <p className="hint">La vérification en deux étapes est activée sur ce compte.</p>
+          <p className="hint">{t('mfaSettings.enabledHint')}</p>
 
           {recoveryCodes && (
             <div className="confirmation">
               <p>
-                <strong>Note ces codes de récupération dans un endroit sûr.</strong> Chacun ne peut
-                être utilisé qu'une seule fois, si tu perds l'accès à ton application
-                d'authentification. Ils ne seront plus jamais affichés.
+                <strong>{t('mfaSettings.recoveryCodesWarning')}</strong> {t('mfaSettings.recoveryCodesDetail')}
               </p>
               <ul>
                 {recoveryCodes.map((c) => (
@@ -153,7 +148,7 @@ export function MfaSettingsPage() {
                 ))}
               </ul>
               <button type="button" onClick={() => setRecoveryCodes(null)}>
-                J'ai bien noté mes codes
+                {t('mfaSettings.recoveryCodesNoted')}
               </button>
             </div>
           )}
@@ -162,33 +157,30 @@ export function MfaSettingsPage() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder="Code à 6 chiffres pour désactiver"
+              placeholder={t('mfaSettings.disableCodePlaceholder')}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               maxLength={6}
               required
             />
             <button type="submit" disabled={submitting || code.length !== 6}>
-              {submitting ? 'Désactivation…' : 'Désactiver'}
+              {submitting ? t('mfaSettings.disabling') : t('mfaSettings.disable')}
             </button>
           </form>
 
           <div className="request-row" style={{ marginTop: '1rem' }}>
-            <h3>Appareils de confiance</h3>
-            <p className="hint">
-              Un appareil sur lequel tu as coché « Se souvenir de cet appareil » ne redemande pas
-              de code de vérification pendant 30 jours.
-            </p>
-            {trustedDevices.length === 0 && <p className="hint">Aucun appareil de confiance enregistré.</p>}
+            <h3>{t('mfaSettings.trustedDevicesTitle')}</h3>
+            <p className="hint">{t('mfaSettings.trustedDevicesIntro')}</p>
+            {trustedDevices.length === 0 && <p className="hint">{t('mfaSettings.noTrustedDevices')}</p>}
             <ul className="request-list">
               {trustedDevices.map((device) => (
                 <li key={device.id} className="request-row">
                   <div className="request-meta">
-                    <span>{device.label ?? 'Appareil sans nom'}</span>
-                    <span className="hint">Expire le {formatDate(device.expires_at)}</span>
+                    <span>{device.label ?? t('mfaSettings.unnamedDevice')}</span>
+                    <span className="hint">{t('mfaSettings.expiresOn', { date: formatDate(device.expires_at) })}</span>
                   </div>
                   <button type="button" className="link-button" onClick={() => handleRevokeDevice(device.id)}>
-                    Révoquer
+                    {t('mfaSettings.revoke')}
                   </button>
                 </li>
               ))}
