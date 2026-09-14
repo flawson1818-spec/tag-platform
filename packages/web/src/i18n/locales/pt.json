@@ -615,5 +615,66 @@
     "Normal": "Normal",
     "Important": "Importante",
     "Urgent": "Urgente"
+  },
+  "adminUsers": {
+    "title": "Gestão de usuários",
+    "introPrefix": "Reservado às contas com a permissão",
+    "introMiddle": "(lista, status) e",
+    "introSuffix": "(funções, até Pastor incluído).",
+    "userIdPlaceholder": "ID do usuário (uuid)",
+    "assign": "Atribuir",
+    "revoke": "Revogar",
+    "loading": "Carregando…",
+    "noUsers": "Nenhum usuário.",
+    "activate": "Ativar",
+    "lock": "Bloquear",
+    "suspend": "Suspender",
+    "needLogin": "Entre para gerenciar usuários."
+  },
+  "roles": {
+    "VISITEUR": "Visitante",
+    "NOUVEAU_CONVERTI": "Novo convertido",
+    "INTERCESSEUR": "Intercessor",
+    "MODERATEUR": "Moderador",
+    "RESPONSABLE_EQUIPE": "Líder de equipe",
+    "PASTEUR": "Pastor",
+    "ADMINISTRATEUR": "Administrador",
+    "SUPER_ADMINISTRATEUR": "Super administrador"
+  },
+  "userStatuses": {
+    "ACTIVE": "Ativo",
+    "LOCKED": "Bloqueado",
+    "SUSPENDED": "Suspenso",
+    "DELETED": "Excluído"
+  },
+  "adminSystem": {
+    "title": "Administração — Sistema",
+    "introPrefix": "Reservado às contas com as permissões",
+    "introMiddle": "e",
+    "introSuffix": ".",
+    "needLogin": "Entre com uma conta de administrador.",
+    "healthTitle": "Saúde do sistema",
+    "checking": "Verificando…",
+    "recheck": "Verificar novamente",
+    "checkedAt": "Verificado às {{time}}",
+    "dbConnected": "conectado",
+    "dbDisconnected": "desconectado",
+    "dbStatusLine": "Banco de dados: {{status}} ({{latency}} ms) — tempo ativo {{uptime}} min",
+    "backupsTitle": "Backups",
+    "backupsIntro": "O banco de dados depende da Point-in-Time Recovery gerenciada pelo Supabase; \"Iniciar um backup\" apenas registra a solicitação.",
+    "launching": "Iniciando…",
+    "runBackup": "Iniciar um backup",
+    "noBackups": "Nenhum backup registrado.",
+    "auditTitle": "Registros de auditoria",
+    "filterByEntity": "Filtrar por tipo de entidade",
+    "entityPlaceholder": "ex.: user, testimony…",
+    "noLogs": "Nenhum registro para este filtro."
+  },
+  "systemHealthStatuses": {
+    "OK": "OK",
+    "DEGRADED": "Degradado"
+  },
+  "backupStatuses": {
+    "COMPLETED": "Concluído"
   }
 }

@@ -615,5 +615,66 @@
     "Normal": "Normal",
     "Important": "Important",
     "Urgent": "Urgent"
+  },
+  "adminUsers": {
+    "title": "User management",
+    "introPrefix": "Reserved for accounts with the",
+    "introMiddle": "permission (list, status) and",
+    "introSuffix": "(roles, up to and including Pastor).",
+    "userIdPlaceholder": "User ID (uuid)",
+    "assign": "Assign",
+    "revoke": "Revoke",
+    "loading": "Loading…",
+    "noUsers": "No users.",
+    "activate": "Activate",
+    "lock": "Lock",
+    "suspend": "Suspend",
+    "needLogin": "Log in to manage users."
+  },
+  "roles": {
+    "VISITEUR": "Visitor",
+    "NOUVEAU_CONVERTI": "New convert",
+    "INTERCESSEUR": "Intercessor",
+    "MODERATEUR": "Moderator",
+    "RESPONSABLE_EQUIPE": "Team leader",
+    "PASTEUR": "Pastor",
+    "ADMINISTRATEUR": "Administrator",
+    "SUPER_ADMINISTRATEUR": "Super administrator"
+  },
+  "userStatuses": {
+    "ACTIVE": "Active",
+    "LOCKED": "Locked",
+    "SUSPENDED": "Suspended",
+    "DELETED": "Deleted"
+  },
+  "adminSystem": {
+    "title": "Administration — System",
+    "introPrefix": "Reserved for accounts with the",
+    "introMiddle": "and",
+    "introSuffix": "permissions.",
+    "needLogin": "Log in with an administrator account.",
+    "healthTitle": "System health",
+    "checking": "Checking…",
+    "recheck": "Recheck",
+    "checkedAt": "Checked at {{time}}",
+    "dbConnected": "connected",
+    "dbDisconnected": "disconnected",
+    "dbStatusLine": "Database: {{status}} ({{latency}} ms) — uptime {{uptime}} min",
+    "backupsTitle": "Backups",
+    "backupsIntro": "The database relies on Supabase-managed Point-in-Time Recovery; \"Run a backup\" simply logs the request.",
+    "launching": "Launching…",
+    "runBackup": "Run a backup",
+    "noBackups": "No backups recorded.",
+    "auditTitle": "Audit logs",
+    "filterByEntity": "Filter by entity type",
+    "entityPlaceholder": "e.g. user, testimony…",
+    "noLogs": "No logs for this filter."
+  },
+  "systemHealthStatuses": {
+    "OK": "OK",
+    "DEGRADED": "Degraded"
+  },
+  "backupStatuses": {
+    "COMPLETED": "Completed"
   }
 }

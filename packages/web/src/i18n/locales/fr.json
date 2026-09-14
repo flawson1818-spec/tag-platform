@@ -615,5 +615,66 @@
     "Normal": "Normal",
     "Important": "Important",
     "Urgent": "Urgent"
+  },
+  "adminUsers": {
+    "title": "Gestion des utilisateurs",
+    "introPrefix": "Réservé aux comptes disposant de la permission",
+    "introMiddle": "(liste, statut) et",
+    "introSuffix": "(rôles, jusqu'à Pasteur inclus).",
+    "userIdPlaceholder": "ID de l'utilisateur (uuid)",
+    "assign": "Attribuer",
+    "revoke": "Révoquer",
+    "loading": "Chargement…",
+    "noUsers": "Aucun utilisateur.",
+    "activate": "Activer",
+    "lock": "Verrouiller",
+    "suspend": "Suspendre",
+    "needLogin": "Connecte-toi pour gérer les utilisateurs."
+  },
+  "roles": {
+    "VISITEUR": "Visiteur",
+    "NOUVEAU_CONVERTI": "Nouveau converti",
+    "INTERCESSEUR": "Intercesseur",
+    "MODERATEUR": "Modérateur",
+    "RESPONSABLE_EQUIPE": "Responsable d'équipe",
+    "PASTEUR": "Pasteur",
+    "ADMINISTRATEUR": "Administrateur",
+    "SUPER_ADMINISTRATEUR": "Super administrateur"
+  },
+  "userStatuses": {
+    "ACTIVE": "Actif",
+    "LOCKED": "Verrouillé",
+    "SUSPENDED": "Suspendu",
+    "DELETED": "Supprimé"
+  },
+  "adminSystem": {
+    "title": "Administration — Système",
+    "introPrefix": "Réservé aux comptes disposant des permissions",
+    "introMiddle": "et",
+    "introSuffix": ".",
+    "needLogin": "Connecte-toi avec un compte administrateur.",
+    "healthTitle": "Santé système",
+    "checking": "Vérification…",
+    "recheck": "Revérifier",
+    "checkedAt": "Vérifié à {{time}}",
+    "dbConnected": "connectée",
+    "dbDisconnected": "déconnectée",
+    "dbStatusLine": "Base de données : {{status}} ({{latency}} ms) — uptime {{uptime}} min",
+    "backupsTitle": "Sauvegardes",
+    "backupsIntro": "La base repose sur la Point-in-Time Recovery gérée par Supabase ; \"Lancer une sauvegarde\" trace simplement la demande.",
+    "launching": "Lancement…",
+    "runBackup": "Lancer une sauvegarde",
+    "noBackups": "Aucune sauvegarde enregistrée.",
+    "auditTitle": "Journaux d'audit",
+    "filterByEntity": "Filtrer par type d'entité",
+    "entityPlaceholder": "ex : user, testimony…",
+    "noLogs": "Aucun journal pour ce filtre."
+  },
+  "systemHealthStatuses": {
+    "OK": "OK",
+    "DEGRADED": "Dégradé"
+  },
+  "backupStatuses": {
+    "COMPLETED": "Terminée"
   }
 }

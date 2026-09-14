@@ -43,7 +43,7 @@ export function DashboardPage() {
         <dt>{t('dashboard.emailLabel')}</dt>
         <dd>{user.email}</dd>
         <dt>{t('dashboard.statusLabel')}</dt>
-        <dd>{user.status}</dd>
+        <dd>{t(`userStatuses.${user.status}`, user.status)}</dd>
         <dt>{t('dashboard.languageLabel')}</dt>
         <dd>{user.locale}</dd>
         <dt>{t('dashboard.timezoneLabel')}</dt>

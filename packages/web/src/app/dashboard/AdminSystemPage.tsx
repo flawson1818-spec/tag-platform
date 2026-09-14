@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { AuditLog, Backup, SystemHealth, adminApi } from '../../lib/api';
+import i18n from '../../i18n/config';
 
 function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString(i18n.language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 export function AdminSystemPage() {
+  const { t } = useTranslation();
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [checkingHealth, setCheckingHealth] = useState(false);
@@ -68,65 +71,65 @@ export function AdminSystemPage() {
       .finally(() => setRunningBackup(false));
   };
 
-  if (!getAccessToken()) return <p className="hint">Connecte-toi avec un compte administrateur.</p>;
+  if (!getAccessToken()) return <p className="hint">{t('adminSystem.needLogin')}</p>;
 
   return (
     <div className="communities-page">
-      <h2>Administration — Système</h2>
+      <h2>{t('adminSystem.title')}</h2>
       <p className="hint">
-        Réservé aux comptes disposant des permissions <code>system.operate</code> et{' '}
-        <code>audit_log.view</code>.
+        {t('adminSystem.introPrefix')} <code>system.operate</code> {t('adminSystem.introMiddle')}{' '}
+        <code>audit_log.view</code> {t('adminSystem.introSuffix')}
       </p>
 
-      <h3>Santé système</h3>
+      <h3>{t('adminSystem.healthTitle')}</h3>
       <button type="button" onClick={refreshHealth} disabled={checkingHealth}>
-        {checkingHealth ? 'Vérification…' : 'Revérifier'}
+        {checkingHealth ? t('adminSystem.checking') : t('adminSystem.recheck')}
       </button>
       {healthError && <p className="error">{healthError}</p>}
       {health && (
         <ul className="request-list">
           <li className="request-row">
             <div className="request-meta">
-              <span className="chip chip-status">{health.status}</span>
-              <span className="hint">Vérifié à {formatDateTime(health.checkedAt)}</span>
+              <span className="chip chip-status">{t(`systemHealthStatuses.${health.status}`, health.status)}</span>
+              <span className="hint">{t('adminSystem.checkedAt', { time: formatDateTime(health.checkedAt) })}</span>
             </div>
             <p>
-              Base de données : {health.database.connected ? 'connectée' : 'déconnectée'} (
-              {health.database.latencyMs} ms) — uptime {Math.round(health.uptimeSeconds / 60)} min
+              {t('adminSystem.dbStatusLine', {
+                status: health.database.connected ? t('adminSystem.dbConnected') : t('adminSystem.dbDisconnected'),
+                latency: health.database.latencyMs,
+                uptime: Math.round(health.uptimeSeconds / 60),
+              })}
             </p>
           </li>
         </ul>
       )}
 
-      <h3>Sauvegardes</h3>
-      <p className="hint">
-        La base repose sur la Point-in-Time Recovery gérée par Supabase ; "Lancer une sauvegarde" trace
-        simplement la demande.
-      </p>
+      <h3>{t('adminSystem.backupsTitle')}</h3>
+      <p className="hint">{t('adminSystem.backupsIntro')}</p>
       <button type="button" onClick={handleRunBackup} disabled={runningBackup}>
-        {runningBackup ? 'Lancement…' : 'Lancer une sauvegarde'}
+        {runningBackup ? t('adminSystem.launching') : t('adminSystem.runBackup')}
       </button>
       {backupsError && <p className="error">{backupsError}</p>}
       <ul className="request-list">
         {backups.map((b) => (
           <li key={b.id} className="request-row">
             <div className="request-meta">
-              <span className="chip chip-status">{b.status}</span>
+              <span className="chip chip-status">{t(`backupStatuses.${b.status}`, b.status)}</span>
               <span className="hint">{formatDateTime(b.created_at)}</span>
             </div>
             {b.note && <p className="hint">{b.note}</p>}
           </li>
         ))}
       </ul>
-      {backups.length === 0 && !backupsError && <p className="hint">Aucune sauvegarde enregistrée.</p>}
+      {backups.length === 0 && !backupsError && <p className="hint">{t('adminSystem.noBackups')}</p>}
 
-      <h3>Journaux d'audit</h3>
+      <h3>{t('adminSystem.auditTitle')}</h3>
       <div className="inline-form">
-        <label htmlFor="audit-entity-filter">Filtrer par type d'entité</label>
+        <label htmlFor="audit-entity-filter">{t('adminSystem.filterByEntity')}</label>
         <input
           id="audit-entity-filter"
           type="text"
-          placeholder="ex : user, testimony…"
+          placeholder={t('adminSystem.entityPlaceholder')}
           value={entityTypeFilter}
           onChange={(e) => setEntityTypeFilter(e.target.value)}
         />
@@ -146,7 +149,7 @@ export function AdminSystemPage() {
           </li>
         ))}
       </ul>
-      {auditLogs.length === 0 && !auditError && <p className="hint">Aucun journal pour ce filtre.</p>}
+      {auditLogs.length === 0 && !auditError && <p className="hint">{t('adminSystem.noLogs')}</p>}
     </div>
   );
 }

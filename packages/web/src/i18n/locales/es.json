@@ -615,5 +615,66 @@
     "Normal": "Normal",
     "Important": "Importante",
     "Urgent": "Urgente"
+  },
+  "adminUsers": {
+    "title": "Gestión de usuarios",
+    "introPrefix": "Reservado a las cuentas con el permiso",
+    "introMiddle": "(lista, estado) y",
+    "introSuffix": "(roles, hasta Pastor incluido).",
+    "userIdPlaceholder": "ID del usuario (uuid)",
+    "assign": "Asignar",
+    "revoke": "Revocar",
+    "loading": "Cargando…",
+    "noUsers": "Ningún usuario.",
+    "activate": "Activar",
+    "lock": "Bloquear",
+    "suspend": "Suspender",
+    "needLogin": "Inicia sesión para gestionar usuarios."
+  },
+  "roles": {
+    "VISITEUR": "Visitante",
+    "NOUVEAU_CONVERTI": "Nuevo convertido",
+    "INTERCESSEUR": "Intercesor",
+    "MODERATEUR": "Moderador",
+    "RESPONSABLE_EQUIPE": "Líder de equipo",
+    "PASTEUR": "Pastor",
+    "ADMINISTRATEUR": "Administrador",
+    "SUPER_ADMINISTRATEUR": "Super administrador"
+  },
+  "userStatuses": {
+    "ACTIVE": "Activo",
+    "LOCKED": "Bloqueado",
+    "SUSPENDED": "Suspendido",
+    "DELETED": "Eliminado"
+  },
+  "adminSystem": {
+    "title": "Administración — Sistema",
+    "introPrefix": "Reservado a las cuentas con los permisos",
+    "introMiddle": "y",
+    "introSuffix": ".",
+    "needLogin": "Inicia sesión con una cuenta de administrador.",
+    "healthTitle": "Salud del sistema",
+    "checking": "Verificando…",
+    "recheck": "Volver a verificar",
+    "checkedAt": "Verificado a las {{time}}",
+    "dbConnected": "conectada",
+    "dbDisconnected": "desconectada",
+    "dbStatusLine": "Base de datos: {{status}} ({{latency}} ms) — tiempo activo {{uptime}} min",
+    "backupsTitle": "Copias de seguridad",
+    "backupsIntro": "La base de datos se apoya en la Point-in-Time Recovery gestionada por Supabase; \"Iniciar una copia de seguridad\" solo registra la solicitud.",
+    "launching": "Iniciando…",
+    "runBackup": "Iniciar una copia de seguridad",
+    "noBackups": "Ninguna copia de seguridad registrada.",
+    "auditTitle": "Registros de auditoría",
+    "filterByEntity": "Filtrar por tipo de entidad",
+    "entityPlaceholder": "ej.: user, testimony…",
+    "noLogs": "Ningún registro para este filtro."
+  },
+  "systemHealthStatuses": {
+    "OK": "OK",
+    "DEGRADED": "Degradado"
+  },
+  "backupStatuses": {
+    "COMPLETED": "Completada"
   }
 }

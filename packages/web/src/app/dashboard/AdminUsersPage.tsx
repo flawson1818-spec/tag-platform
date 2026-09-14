@@ -1,13 +1,16 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { AuthUser, ROLE_HIERARCHY, rolesApi, usersApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
+import i18n from '../../i18n/config';
 
 export function AdminUsersPage() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [loading, setLoading] = useState(() => Boolean(getAccessToken()));
   const [error, setError] = useState<string | null>(() =>
-    getAccessToken() ? null : 'Connecte-toi pour gérer les utilisateurs.',
+    getAccessToken() ? null : i18n.t('adminUsers.needLogin'),
   );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -64,16 +67,16 @@ export function AdminUsersPage() {
 
   return (
     <div className="communities-page">
-      <h2>Gestion des utilisateurs</h2>
+      <h2>{t('adminUsers.title')}</h2>
       <p className="hint">
-        Réservé aux comptes disposant de la permission <code>user.manage</code> (liste, statut) et{' '}
-        <code>role.assign</code> (rôles, jusqu'à Pasteur inclus).
+        {t('adminUsers.introPrefix')} <code>user.manage</code> {t('adminUsers.introMiddle')}{' '}
+        <code>role.assign</code> {t('adminUsers.introSuffix')}
       </p>
 
       <form onSubmit={handleAssignRole} className="request-form">
         <input
           type="text"
-          placeholder="ID de l'utilisateur (uuid)"
+          placeholder={t('adminUsers.userIdPlaceholder')}
           value={targetUserId}
           onChange={(e) => setTargetUserId(e.target.value)}
           required
@@ -81,25 +84,25 @@ export function AdminUsersPage() {
         <select value={roleCode} onChange={(e) => setRoleCode(e.target.value)}>
           {ROLE_HIERARCHY.map((r) => (
             <option key={r} value={r}>
-              {r}
+              {t(`roles.${r}`, r)}
             </option>
           ))}
         </select>
-        <button type="submit">Attribuer</button>
+        <button type="submit">{t('adminUsers.assign')}</button>
         <button type="button" onClick={handleRevokeRole}>
-          Révoquer
+          {t('adminUsers.revoke')}
         </button>
       </form>
       {actionError && <p className="error">{actionError}</p>}
 
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('adminUsers.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
       <ul className="request-list">
         {users.map((u) => (
           <li key={u.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{u.status}</span>
+              <span className="chip">{t(`userStatuses.${u.status}`, u.status)}</span>
               <span className="hint">{u.id}</span>
             </div>
             <p>
@@ -107,19 +110,19 @@ export function AdminUsersPage() {
             </p>
             <div className="request-form">
               <button onClick={() => handleStatusChange(u.id, 'ACTIVE')} disabled={u.status === 'ACTIVE'}>
-                Activer
+                {t('adminUsers.activate')}
               </button>
               <button onClick={() => handleStatusChange(u.id, 'LOCKED')} disabled={u.status === 'LOCKED'}>
-                Verrouiller
+                {t('adminUsers.lock')}
               </button>
               <button onClick={() => handleStatusChange(u.id, 'SUSPENDED')} disabled={u.status === 'SUSPENDED'}>
-                Suspendre
+                {t('adminUsers.suspend')}
               </button>
             </div>
           </li>
         ))}
       </ul>
-      {!loading && users.length === 0 && !error && <p className="hint">Aucun utilisateur.</p>}
+      {!loading && users.length === 0 && !error && <p className="hint">{t('adminUsers.noUsers')}</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );
