@@ -467,5 +467,104 @@
     "DELIVERED": "Não lida",
     "READ": "Lida",
     "ARCHIVED": "Arquivada"
+  },
+  "profile": {
+    "main": {
+      "title": "Meu perfil",
+      "displayNamePlaceholder": "Nome de exibição",
+      "phonePlaceholder": "Telefone (opcional)",
+      "timezonePlaceholder": "Fuso horário (ex.: Africa/Abidjan)",
+      "save": "Salvar",
+      "saving": "Salvando…",
+      "saved": "Perfil atualizado.",
+      "changeAvatar": "Alterar avatar",
+      "avatarAlt": "Avatar",
+      "avatarUploading": "Enviando…",
+      "avatarInvalidType": "Escolha uma imagem (JPG, PNG…).",
+      "avatarTooLarge": "Imagem muito pesada (5 MB no máximo)."
+    },
+    "myRequests": {
+      "title": "Meus pedidos de oração",
+      "none": "Nenhum pedido (pedidos anônimos não aparecem aqui)."
+    },
+    "myTestimonies": {
+      "title": "Meus testemunhos",
+      "none": "Nenhum testemunho compartilhado ainda.",
+      "mediaFallback": "Testemunho de {{type}}",
+      "rejectionReason": "Motivo da rejeição:",
+      "editAndResubmit": "Editar e reenviar",
+      "resubmitting": "Enviando…",
+      "resubmit": "Reenviar",
+      "cancel": "Cancelar"
+    },
+    "gamification": {
+      "title": "Minha oração",
+      "hoursPrayed": "horas orando",
+      "streakDays": "dias seguidos",
+      "goal": "Meta comunitária de {{month}}: {{achieved}} / {{target}} h",
+      "optInLabel": "Aparecer no ranking público"
+    },
+    "notificationPrefs": {
+      "title": "Notificações",
+      "intro": "Escolha as notificações que deseja receber."
+    },
+    "notificationPrefTypes": {
+      "TESTIMONY_PUBLISHED": "Seu testemunho está publicado",
+      "TESTIMONY_REJECTED": "Seu testemunho foi rejeitado",
+      "PRAYER_REQUEST_ANSWERED": "Seu pedido de oração tem uma resposta",
+      "PRAYER_REMINDER": "Seus lembretes de oração agendados",
+      "EVENT_CREATED": "Um novo evento em uma de suas comunidades",
+      "EVENT_REMINDER": "Lembrete antes de um evento em que você está inscrito",
+      "PRAYER_TOPIC_STARTED": "Um tema de oração que você segue acabou de começar"
+    },
+    "reminders": {
+      "title": "Lembretes de oração",
+      "intro": "Agende um lembrete para nunca perder seu momento de oração.",
+      "active": "Ativo",
+      "remove": "Remover",
+      "adding": "Adicionando…",
+      "add": "Adicionar um lembrete",
+      "weekdays": {
+        "0": "Dom",
+        "1": "Seg",
+        "2": "Ter",
+        "3": "Qua",
+        "4": "Qui",
+        "5": "Sex",
+        "6": "Sáb"
+      }
+    },
+    "topicFollows": {
+      "title": "Temas de oração favoritos",
+      "intro": "Seja avisado assim que um tema da categoria escolhida começar na sala."
+    },
+    "privacy": {
+      "title": "Meus dados",
+      "intro": "Direito de acesso, exportação e exclusão de seus dados pessoais.",
+      "export": "Exportar meus dados (JSON)",
+      "exporting": "Exportando…",
+      "clearAiHistory": "Limpar meu histórico de IA",
+      "clearingAiHistory": "Limpando…",
+      "aiHistoryCleared": "Histórico de IA limpo.",
+      "deleteWarning": "Esta ação é irreversível: sua conta será anonimizada e você será desconectado em todos os lugares.",
+      "confirmDelete": "Confirmar a exclusão definitiva",
+      "deleting": "Excluindo…",
+      "cancel": "Cancelar",
+      "deleteAccount": "Excluir minha conta"
+    }
+  },
+  "prayerTopicCategories": {
+    "Famille": "Família",
+    "Finances": "Finanças",
+    "Santé": "Saúde",
+    "Guérison": "Cura",
+    "Évangélisation": "Evangelismo",
+    "Nation": "Nação",
+    "Jeunesse": "Juventude",
+    "Mariage": "Casamento",
+    "Église": "Igreja",
+    "Mission": "Missão",
+    "Urgence": "Urgência",
+    "Autre": "Outro"
   }
 }

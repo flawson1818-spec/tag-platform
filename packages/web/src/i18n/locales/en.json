@@ -467,5 +467,104 @@
     "DELIVERED": "Unread",
     "READ": "Read",
     "ARCHIVED": "Archived"
+  },
+  "profile": {
+    "main": {
+      "title": "My profile",
+      "displayNamePlaceholder": "Display name",
+      "phonePlaceholder": "Phone (optional)",
+      "timezonePlaceholder": "Time zone (e.g. Africa/Abidjan)",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Profile updated.",
+      "changeAvatar": "Change avatar",
+      "avatarAlt": "Avatar",
+      "avatarUploading": "Uploading…",
+      "avatarInvalidType": "Choose an image (JPG, PNG…).",
+      "avatarTooLarge": "Image too large (5 MB maximum)."
+    },
+    "myRequests": {
+      "title": "My prayer requests",
+      "none": "No requests (anonymous requests don't appear here)."
+    },
+    "myTestimonies": {
+      "title": "My testimonies",
+      "none": "No testimony shared yet.",
+      "mediaFallback": "{{type}} testimony",
+      "rejectionReason": "Rejection reason:",
+      "editAndResubmit": "Edit and resubmit",
+      "resubmitting": "Sending…",
+      "resubmit": "Resubmit",
+      "cancel": "Cancel"
+    },
+    "gamification": {
+      "title": "My prayer",
+      "hoursPrayed": "hours prayed",
+      "streakDays": "day streak",
+      "goal": "Community goal for {{month}}: {{achieved}} / {{target}} h",
+      "optInLabel": "Appear on the public leaderboard"
+    },
+    "notificationPrefs": {
+      "title": "Notifications",
+      "intro": "Choose which notifications you want to receive."
+    },
+    "notificationPrefTypes": {
+      "TESTIMONY_PUBLISHED": "Your testimony is published",
+      "TESTIMONY_REJECTED": "Your testimony is rejected",
+      "PRAYER_REQUEST_ANSWERED": "Your prayer request has an answer",
+      "PRAYER_REMINDER": "Your scheduled prayer reminders",
+      "EVENT_CREATED": "A new event in one of your communities",
+      "EVENT_REMINDER": "Reminder before an event you're registered for",
+      "PRAYER_TOPIC_STARTED": "A prayer topic you follow has just started"
+    },
+    "reminders": {
+      "title": "Prayer reminders",
+      "intro": "Schedule a reminder so you never miss your prayer time.",
+      "active": "Active",
+      "remove": "Remove",
+      "adding": "Adding…",
+      "add": "Add a reminder",
+      "weekdays": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      }
+    },
+    "topicFollows": {
+      "title": "Favorite prayer topics",
+      "intro": "Get notified as soon as a topic from your chosen category starts in the room."
+    },
+    "privacy": {
+      "title": "My data",
+      "intro": "Right to access, export, and delete your personal data.",
+      "export": "Export my data (JSON)",
+      "exporting": "Exporting…",
+      "clearAiHistory": "Clear my AI history",
+      "clearingAiHistory": "Clearing…",
+      "aiHistoryCleared": "AI history cleared.",
+      "deleteWarning": "This action is irreversible: your account will be anonymized and you'll be logged out everywhere.",
+      "confirmDelete": "Confirm permanent deletion",
+      "deleting": "Deleting…",
+      "cancel": "Cancel",
+      "deleteAccount": "Delete my account"
+    }
+  },
+  "prayerTopicCategories": {
+    "Famille": "Family",
+    "Finances": "Finances",
+    "Santé": "Health",
+    "Guérison": "Healing",
+    "Évangélisation": "Evangelism",
+    "Nation": "Nation",
+    "Jeunesse": "Youth",
+    "Mariage": "Marriage",
+    "Église": "Church",
+    "Mission": "Mission",
+    "Urgence": "Urgent",
+    "Autre": "Other"
   }
 }

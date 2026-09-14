@@ -1,5 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { changeLocale, LOCALE_LABELS, SUPPORTED_LOCALES, SupportedLocale } from '../../i18n/config';
 import {
@@ -24,6 +25,7 @@ import {
 import { Pagination } from '../Pagination';
 
 function MyPrayerRequestsSection() {
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -43,15 +45,15 @@ function MyPrayerRequestsSection() {
 
   return (
     <div className="gamification">
-      <h3>Mes demandes de prière</h3>
+      <h3>{t('profile.myRequests.title')}</h3>
       {error && <p className="error">{error}</p>}
-      {requests.length === 0 && !error && <p className="hint">Aucune demande (les demandes anonymes n'apparaissent pas ici).</p>}
+      {requests.length === 0 && !error && <p className="hint">{t('profile.myRequests.none')}</p>}
       <ul className="request-list">
         {requests.map((r) => (
           <li key={r.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{r.category}</span>
-              <span className="chip chip-status">{r.status}</span>
+              <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
+              <span className="chip chip-status">{t(`requestStatuses.${r.status}`, r.status)}</span>
             </div>
             <p>{r.description}</p>
           </li>
@@ -63,6 +65,7 @@ function MyPrayerRequestsSection() {
 }
 
 function MyTestimoniesSection() {
+  const { t } = useTranslation();
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -85,9 +88,9 @@ function MyTestimoniesSection() {
 
   useEffect(refresh, [page]);
 
-  const startEdit = (t: Testimony) => {
-    setEditingId(t.id);
-    setEditContent(t.content ?? '');
+  const startEdit = (testimony: Testimony) => {
+    setEditingId(testimony.id);
+    setEditContent(testimony.content ?? '');
   };
 
   const resubmit = async (id: string) => {
@@ -108,23 +111,32 @@ function MyTestimoniesSection() {
 
   return (
     <div className="gamification">
-      <h3>Mes témoignages</h3>
+      <h3>{t('profile.myTestimonies.title')}</h3>
       {error && <p className="error">{error}</p>}
-      {testimonies.length === 0 && !error && <p className="hint">Aucun témoignage partagé pour l'instant.</p>}
+      {testimonies.length === 0 && !error && <p className="hint">{t('profile.myTestimonies.none')}</p>}
       <ul className="request-list">
-        {testimonies.map((t) => (
-          <li key={t.id} className="request-row">
+        {testimonies.map((item) => (
+          <li key={item.id} className="request-row">
             <div className="request-meta">
-              <span className="chip chip-status">{t.status}</span>
+              <span className="chip chip-status">{t(`testimonyStatuses.${item.status}`, item.status)}</span>
             </div>
-            <p>{t.content ?? `Témoignage ${t.media_type.toLowerCase()}`}</p>
-            {t.moderation_reason && <p className="hint">Motif du refus : {t.moderation_reason}</p>}
-            {t.status === 'DRAFT' && t.moderation_reason && editingId !== t.id && (
-              <button type="button" onClick={() => startEdit(t)}>
-                Modifier et resoumettre
+            <p>
+              {item.content ??
+                t('profile.myTestimonies.mediaFallback', {
+                  type: t(`home.mediaType.${item.media_type}`, item.media_type),
+                })}
+            </p>
+            {item.moderation_reason && (
+              <p className="hint">
+                {t('profile.myTestimonies.rejectionReason')} {item.moderation_reason}
+              </p>
+            )}
+            {item.status === 'DRAFT' && item.moderation_reason && editingId !== item.id && (
+              <button type="button" onClick={() => startEdit(item)}>
+                {t('profile.myTestimonies.editAndResubmit')}
               </button>
             )}
-            {editingId === t.id && (
+            {editingId === item.id && (
               <div className="reject-row">
                 <textarea
                   value={editContent}
@@ -132,11 +144,11 @@ function MyTestimoniesSection() {
                   rows={3}
                   style={{ width: '100%' }}
                 />
-                <button type="button" disabled={resubmitting} onClick={() => resubmit(t.id)}>
-                  {resubmitting ? 'Envoi…' : 'Resoumettre'}
+                <button type="button" disabled={resubmitting} onClick={() => resubmit(item.id)}>
+                  {resubmitting ? t('profile.myTestimonies.resubmitting') : t('profile.myTestimonies.resubmit')}
                 </button>
                 <button type="button" onClick={() => setEditingId(null)}>
-                  Annuler
+                  {t('profile.myTestimonies.cancel')}
                 </button>
               </div>
             )}
@@ -151,6 +163,7 @@ function MyTestimoniesSection() {
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
 function AvatarUpload({ avatarFileId }: { avatarFileId: string | null }) {
+  const { t } = useTranslation();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,11 +187,11 @@ function AvatarUpload({ avatarFileId }: { avatarFileId: string | null }) {
     if (!token) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Choisis une image (JPG, PNG…).');
+      setError(t('profile.main.avatarInvalidType'));
       return;
     }
     if (file.size > MAX_AVATAR_SIZE_BYTES) {
-      setError('Image trop lourde (5 Mo maximum).');
+      setError(t('profile.main.avatarTooLarge'));
       return;
     }
 
@@ -203,12 +216,12 @@ function AvatarUpload({ avatarFileId }: { avatarFileId: string | null }) {
   return (
     <div className="avatar-upload">
       {previewUrl ? (
-        <img src={previewUrl} alt="Avatar" className="avatar-preview" />
+        <img src={previewUrl} alt={t('profile.main.avatarAlt')} className="avatar-preview" />
       ) : (
         <div className="avatar-preview avatar-preview-empty" />
       )}
       <label className="link-button">
-        {uploading ? 'Envoi…' : "Changer l'avatar"}
+        {uploading ? t('profile.main.avatarUploading') : t('profile.main.changeAvatar')}
         <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} hidden />
       </label>
       {error && <p className="error">{error}</p>}
@@ -217,6 +230,7 @@ function AvatarUpload({ avatarFileId }: { avatarFileId: string | null }) {
 }
 
 function GamificationSection() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<MyGamificationStats | null>(null);
   const [goal, setGoal] = useState<CommunityGoal | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -256,17 +270,17 @@ function GamificationSection() {
 
   return (
     <div className="gamification">
-      <h3>Ma prière</h3>
+      <h3>{t('profile.gamification.title')}</h3>
       {error && <p className="error">{error}</p>}
       {stats && (
         <div className="gamification-stats">
           <div className="gamification-stat">
             <span className="gamification-stat-value">{stats.totalHours}</span>
-            <span className="gamification-stat-label">heures priées</span>
+            <span className="gamification-stat-label">{t('profile.gamification.hoursPrayed')}</span>
           </div>
           <div className="gamification-stat">
             <span className="gamification-stat-value">{stats.currentStreakDays}</span>
-            <span className="gamification-stat-label">jours de suite</span>
+            <span className="gamification-stat-label">{t('profile.gamification.streakDays')}</span>
           </div>
         </div>
       )}
@@ -283,7 +297,11 @@ function GamificationSection() {
       {goal && (
         <div className="gamification-goal">
           <p className="hint">
-            Objectif communautaire de {goal.month} : {goal.achievedHours} / {goal.targetHours} h
+            {t('profile.gamification.goal', {
+              month: goal.month,
+              achieved: goal.achievedHours,
+              target: goal.targetHours,
+            })}
           </p>
           <div className="room-progress">
             <div
@@ -301,7 +319,7 @@ function GamificationSection() {
           disabled={optInSaving}
           onChange={(e) => handleOptInChange(e.target.checked)}
         />
-        Apparaître dans le classement public
+        {t('profile.gamification.optInLabel')}
       </label>
 
       {leaderboard.length > 0 && (
@@ -318,17 +336,8 @@ function GamificationSection() {
   );
 }
 
-const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
-  TESTIMONY_PUBLISHED: 'Ton témoignage est publié',
-  TESTIMONY_REJECTED: 'Ton témoignage est refusé',
-  PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
-  PRAYER_REMINDER: 'Tes rappels de prière planifiés',
-  EVENT_CREATED: 'Un nouvel événement dans une de tes communautés',
-  EVENT_REMINDER: 'Rappel avant un événement auquel tu es inscrit',
-  PRAYER_TOPIC_STARTED: 'Un sujet de prière que tu suis vient de commencer',
-};
-
 function NotificationPreferencesSection() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useState<NotificationPreference[]>([]);
   const [savingType, setSavingType] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -355,8 +364,8 @@ function NotificationPreferencesSection() {
 
   return (
     <div className="gamification">
-      <h3>Notifications</h3>
-      <p className="hint">Choisis les notifications que tu veux recevoir.</p>
+      <h3>{t('profile.notificationPrefs.title')}</h3>
+      <p className="hint">{t('profile.notificationPrefs.intro')}</p>
       {error && <p className="error">{error}</p>}
       {prefs.map((pref) => (
         <label key={pref.type} className="tag-checkbox">
@@ -366,16 +375,17 @@ function NotificationPreferencesSection() {
             disabled={savingType === pref.type}
             onChange={(e) => handleToggle(pref.type, e.target.checked)}
           />
-          {NOTIFICATION_TYPE_LABELS[pref.type] ?? pref.type}
+          {t(`profile.notificationPrefTypes.${pref.type}`, pref.type)}
         </label>
       ))}
     </div>
   );
 }
 
-const WEEKDAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const WEEKDAY_COUNT = 7;
 
 function PrayerRemindersSection() {
+  const { t } = useTranslation();
   const [reminders, setReminders] = useState<PrayerReminder[]>([]);
   const [timeOfDay, setTimeOfDay] = useState('06:30');
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -432,8 +442,8 @@ function PrayerRemindersSection() {
 
   return (
     <div className="gamification">
-      <h3>Rappels de prière</h3>
-      <p className="hint">Planifie un rappel pour ne jamais manquer ton moment de prière.</p>
+      <h3>{t('profile.reminders.title')}</h3>
+      <p className="hint">{t('profile.reminders.intro')}</p>
       {error && <p className="error">{error}</p>}
 
       {reminders.length > 0 && (
@@ -442,15 +452,17 @@ function PrayerRemindersSection() {
             <li key={r.id} className="request-row">
               <div className="request-meta">
                 <span className="chip">{r.time_of_day}</span>
-                <span className="hint">{r.days_of_week.map((d) => WEEKDAY_LABELS[d]).join(', ')}</span>
+                <span className="hint">
+                  {r.days_of_week.map((d) => t(`profile.reminders.weekdays.${d}`)).join(', ')}
+                </span>
               </div>
               <div className="request-form">
                 <label className="tag-checkbox">
                   <input type="checkbox" checked={r.enabled} onChange={() => handleToggleEnabled(r)} />
-                  Actif
+                  {t('profile.reminders.active')}
                 </label>
                 <button type="button" className="link-button" onClick={() => handleRemove(r.id)}>
-                  Supprimer
+                  {t('profile.reminders.remove')}
                 </button>
               </div>
             </li>
@@ -460,14 +472,14 @@ function PrayerRemindersSection() {
 
       <form onSubmit={handleCreate} className="request-form">
         <input type="time" value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value)} required />
-        {WEEKDAY_LABELS.map((label, day) => (
+        {Array.from({ length: WEEKDAY_COUNT }, (_, day) => (
           <label key={day} className="tag-checkbox">
             <input type="checkbox" checked={daysOfWeek.includes(day)} onChange={() => toggleDay(day)} />
-            {label}
+            {t(`profile.reminders.weekdays.${day}`)}
           </label>
         ))}
         <button type="submit" disabled={submitting || daysOfWeek.length === 0}>
-          {submitting ? 'Ajout…' : 'Ajouter un rappel'}
+          {submitting ? t('profile.reminders.adding') : t('profile.reminders.add')}
         </button>
       </form>
     </div>
@@ -475,6 +487,7 @@ function PrayerRemindersSection() {
 }
 
 function PrayerTopicFollowsSection() {
+  const { t } = useTranslation();
   const [follows, setFollows] = useState<PrayerCategoryFollow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busyCategory, setBusyCategory] = useState<string | null>(null);
@@ -505,8 +518,8 @@ function PrayerTopicFollowsSection() {
 
   return (
     <div className="gamification">
-      <h3>Sujets de prière favoris</h3>
-      <p className="hint">Sois prévenu dès qu'un sujet de la catégorie choisie démarre dans la salle.</p>
+      <h3>{t('profile.topicFollows.title')}</h3>
+      <p className="hint">{t('profile.topicFollows.intro')}</p>
       {error && <p className="error">{error}</p>}
       <div className="request-form">
         {PRAYER_CATEGORIES.map((category) => (
@@ -517,7 +530,7 @@ function PrayerTopicFollowsSection() {
               disabled={busyCategory === category}
               onChange={() => toggleCategory(category)}
             />
-            {category}
+            {t(`prayerTopicCategories.${category}`, category)}
           </label>
         ))}
       </div>
@@ -526,6 +539,7 @@ function PrayerTopicFollowsSection() {
 }
 
 function PrivacySection() {
+  const { t } = useTranslation();
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
@@ -588,31 +602,29 @@ function PrivacySection() {
 
   return (
     <div className="gamification">
-      <h3>Mes données</h3>
-      <p className="hint">Droit d'accès, d'export et de suppression de tes données personnelles.</p>
+      <h3>{t('profile.privacy.title')}</h3>
+      <p className="hint">{t('profile.privacy.intro')}</p>
       <button type="button" onClick={handleExport} disabled={exporting}>
-        {exporting ? 'Export…' : 'Exporter mes données (JSON)'}
+        {exporting ? t('profile.privacy.exporting') : t('profile.privacy.export')}
       </button>{' '}
       <button type="button" onClick={handleClearAiHistory} disabled={clearingAiHistory}>
-        {clearingAiHistory ? 'Suppression…' : 'Effacer mon historique IA'}
+        {clearingAiHistory ? t('profile.privacy.clearingAiHistory') : t('profile.privacy.clearAiHistory')}
       </button>
-      {aiHistoryCleared && <p className="hint">Historique IA effacé.</p>}
+      {aiHistoryCleared && <p className="hint">{t('profile.privacy.aiHistoryCleared')}</p>}
 
       {confirmingDelete ? (
         <div className="reject-row">
-          <p className="error">
-            Cette action est irréversible : ton compte sera anonymisé et tu seras déconnecté partout.
-          </p>
+          <p className="error">{t('profile.privacy.deleteWarning')}</p>
           <button type="button" onClick={handleDelete} disabled={deleting}>
-            {deleting ? 'Suppression…' : 'Confirmer la suppression définitive'}
+            {deleting ? t('profile.privacy.deleting') : t('profile.privacy.confirmDelete')}
           </button>
           <button type="button" onClick={() => setConfirmingDelete(false)}>
-            Annuler
+            {t('profile.privacy.cancel')}
           </button>
         </div>
       ) : (
         <button type="button" onClick={() => setConfirmingDelete(true)}>
-          Supprimer mon compte
+          {t('profile.privacy.deleteAccount')}
         </button>
       )}
       {error && <p className="error">{error}</p>}
@@ -621,6 +633,7 @@ function PrivacySection() {
 }
 
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -651,19 +664,19 @@ export function ProfilePage() {
 
   return (
     <div className="auth-page">
-      <h2>Mon profil</h2>
+      <h2>{t('profile.main.title')}</h2>
       <AvatarUpload avatarFileId={user.avatar_file_id} />
       <form onSubmit={handleSubmit} className="auth-form">
         <input
           type="text"
-          placeholder="Nom affiché"
+          placeholder={t('profile.main.displayNamePlaceholder')}
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           required
         />
         <input
           type="tel"
-          placeholder="Téléphone (optionnel)"
+          placeholder={t('profile.main.phonePlaceholder')}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
@@ -676,15 +689,15 @@ export function ProfilePage() {
         </select>
         <input
           type="text"
-          placeholder="Fuseau horaire (ex : Africa/Abidjan)"
+          placeholder={t('profile.main.timezonePlaceholder')}
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
         />
         <button type="submit" disabled={saving}>
-          {saving ? 'Enregistrement…' : 'Enregistrer'}
+          {saving ? t('profile.main.saving') : t('profile.main.save')}
         </button>
       </form>
-      {saved && <p className="hint">Profil mis à jour.</p>}
+      {saved && <p className="hint">{t('profile.main.saved')}</p>}
       {error && <p className="error">{error}</p>}
 
       <GamificationSection />
