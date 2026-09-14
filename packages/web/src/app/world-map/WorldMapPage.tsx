@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { WorldMapSnapshot, analyticsApi } from '../../lib/api';
 import { approxCoordsForTimezone, projectCoords } from '../../lib/timezone-coordinates';
 
@@ -22,6 +23,7 @@ const CONTINENTS = [
 ];
 
 export function WorldMapPage() {
+  const { t } = useTranslation();
   const [snapshot, setSnapshot] = useState<WorldMapSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,7 @@ export function WorldMapPage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) return <p>Chargement…</p>;
+  if (loading) return <p>{t('events.loading')}</p>;
   if (error) return <p className="error">{error}</p>;
   if (!snapshot) return null;
 
@@ -57,19 +59,15 @@ export function WorldMapPage() {
 
   return (
     <div className="worldmap-page">
-      <h2>Carte mondiale</h2>
-      <p className="hint">
-        Une première esquisse du monde où la prière s'élève — chaque lueur représente un fuseau
-        horaire, jamais une position individuelle (les données par pays demanderont un champ
-        supplémentaire, pas encore présent dans les profils).
-      </p>
+      <h2>{t('worldMap.title')}</h2>
+      <p className="hint">{t('worldMap.description')}</p>
 
       <div className="worldmap-halo-wrap">
         <div className="worldmap-halo" />
         <div className="worldmap-presence">
           <div className="worldmap-presence-value">{snapshot.presence}</div>
           <div className="worldmap-presence-label">
-            {snapshot.presence > 0 ? 'personnes en prière en ce moment' : "la salle s'apprête à s'ouvrir"}
+            {snapshot.presence > 0 ? t('worldMap.presenceActive') : t('worldMap.presenceEmpty')}
           </div>
         </div>
       </div>
@@ -77,15 +75,15 @@ export function WorldMapPage() {
       <div className="worldmap-kpis">
         <div className="worldmap-kpi">
           <div className="worldmap-kpi-value">{snapshot.activeRooms}</div>
-          <div className="worldmap-kpi-label">Salle{snapshot.activeRooms > 1 ? 's' : ''} active{snapshot.activeRooms > 1 ? 's' : ''}</div>
+          <div className="worldmap-kpi-label">{t('home.activeRooms', { count: snapshot.activeRooms })}</div>
         </div>
         <div className="worldmap-kpi">
           <div className="worldmap-kpi-value">{snapshot.timezones.length}</div>
-          <div className="worldmap-kpi-label">Fuseau{snapshot.timezones.length > 1 ? 'x' : ''} horaire{snapshot.timezones.length > 1 ? 's' : ''}</div>
+          <div className="worldmap-kpi-label">{t('home.timezones', { count: snapshot.timezones.length })}</div>
         </div>
         <div className="worldmap-kpi">
           <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
-          <div className="worldmap-kpi-label">Événement{snapshot.activeEvents > 1 ? 's' : ''} en cours</div>
+          <div className="worldmap-kpi-label">{t('home.eventsInProgress', { count: snapshot.activeEvents })}</div>
         </div>
       </div>
 
@@ -94,7 +92,7 @@ export function WorldMapPage() {
           className="worldmap-globe"
           viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
           role="img"
-          aria-label="Carte du monde présentant, par lueurs douces, les fuseaux horaires où des personnes prient"
+          aria-label={t('worldMap.mapAriaLabel')}
         >
           <defs>
             <radialGradient id="worldmap-point-glow" cx="50%" cy="50%" r="50%">
@@ -110,7 +108,7 @@ export function WorldMapPage() {
 
           {points.length === 0 && (
             <text x={MAP_WIDTH / 2} y={MAP_HEIGHT / 2} textAnchor="middle" className="worldmap-empty-text">
-              La salle s'apprête à s'ouvrir…
+              {t('worldMap.roomOpening')}
             </text>
           )}
 
@@ -122,7 +120,7 @@ export function WorldMapPage() {
             >
               <circle cx={p.x} cy={p.y} r={p.radius} fill="url(#worldmap-point-glow)" className="worldmap-point-glow" />
               <circle cx={p.x} cy={p.y} r={3} className="worldmap-point-core" />
-              <title>{`${p.timezone} — ${p.count} personne${p.count > 1 ? 's' : ''}`}</title>
+              <title>{t('worldMap.pointTooltip', { timezone: p.timezone, count: p.count })}</title>
             </g>
           ))}
         </svg>

@@ -158,5 +158,15 @@
     "RUNNING": "En curso",
     "FINISHED": "Finalizado",
     "ARCHIVED": "Archivado"
+  },
+  "worldMap": {
+    "title": "Mapa mundial",
+    "description": "Un primer boceto del mundo donde la oración se eleva — cada resplandor representa un huso horario, nunca una ubicación individual (los datos por país necesitarían un nuevo campo, aún no presente en los perfiles).",
+    "presenceActive": "personas orando en este momento",
+    "presenceEmpty": "la sala está por abrir",
+    "mapAriaLabel": "Mapa del mundo que muestra, con suaves resplandores, los husos horarios donde las personas están orando",
+    "roomOpening": "La sala está por abrir…",
+    "pointTooltip_one": "{{timezone}} — {{count}} persona",
+    "pointTooltip_other": "{{timezone}} — {{count}} personas"
   }
 }

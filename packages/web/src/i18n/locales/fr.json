@@ -158,5 +158,15 @@
     "RUNNING": "En cours",
     "FINISHED": "Terminé",
     "ARCHIVED": "Archivé"
+  },
+  "worldMap": {
+    "title": "Carte mondiale",
+    "description": "Une première esquisse du monde où la prière s'élève — chaque lueur représente un fuseau horaire, jamais une position individuelle (les données par pays demanderont un champ supplémentaire, pas encore présent dans les profils).",
+    "presenceActive": "personnes en prière en ce moment",
+    "presenceEmpty": "la salle s'apprête à s'ouvrir",
+    "mapAriaLabel": "Carte du monde présentant, par lueurs douces, les fuseaux horaires où des personnes prient",
+    "roomOpening": "La salle s'apprête à s'ouvrir…",
+    "pointTooltip_one": "{{timezone}} — {{count}} personne",
+    "pointTooltip_other": "{{timezone}} — {{count}} personnes"
   }
 }

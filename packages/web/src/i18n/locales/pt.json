@@ -158,5 +158,15 @@
     "RUNNING": "Em andamento",
     "FINISHED": "Finalizado",
     "ARCHIVED": "Arquivado"
+  },
+  "worldMap": {
+    "title": "Mapa mundial",
+    "description": "Um primeiro esboço do mundo onde a oração se eleva — cada brilho representa um fuso horário, nunca uma localização individual (dados por país exigiriam um novo campo, ainda não presente nos perfis).",
+    "presenceActive": "pessoas orando neste momento",
+    "presenceEmpty": "a sala está prestes a abrir",
+    "mapAriaLabel": "Mapa mundial mostrando, em brilhos suaves, os fusos horários onde pessoas estão orando",
+    "roomOpening": "A sala está prestes a abrir…",
+    "pointTooltip_one": "{{timezone}} — {{count}} pessoa",
+    "pointTooltip_other": "{{timezone}} — {{count}} pessoas"
   }
 }

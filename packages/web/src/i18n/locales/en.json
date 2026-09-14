@@ -158,5 +158,15 @@
     "RUNNING": "Running",
     "FINISHED": "Finished",
     "ARCHIVED": "Archived"
+  },
+  "worldMap": {
+    "title": "World map",
+    "description": "A first sketch of the world where prayer rises — each glow represents a time zone, never an individual location (per-country data would need a new field, not yet present on profiles).",
+    "presenceActive": "people praying right now",
+    "presenceEmpty": "the room is about to open",
+    "mapAriaLabel": "World map showing, as soft glows, the time zones where people are praying",
+    "roomOpening": "The room is about to open…",
+    "pointTooltip_one": "{{timezone}} — {{count}} person",
+    "pointTooltip_other": "{{timezone}} — {{count}} people"
   }
 }
