@@ -60,5 +60,35 @@
       "alreadyRegistered": "Already registered?",
       "login": "Log in"
     }
+  },
+  "home": {
+    "live": "● LIVE",
+    "paused": "The room is about to open",
+    "title": "Global 24/7 prayer relay",
+    "currentSubject": "Current subject:",
+    "noSlot": "No slot is currently running — join the room to be ready as soon as it starts.",
+    "joinCta": "Join the prayer →",
+    "noSignup": "No sign-up required to listen.",
+    "presenceLabel": "praying right now",
+    "activeRooms_one": "active room",
+    "activeRooms_other": "active rooms",
+    "timezones_one": "time zone",
+    "timezones_other": "time zones",
+    "eventsInProgress_one": "event in progress",
+    "eventsInProgress_other": "events in progress",
+    "viewMap": "View the world map →",
+    "upcomingEvents": "Upcoming events",
+    "noUpcomingEvents": "No upcoming events for now.",
+    "viewAllEvents": "View all events →",
+    "recentTestimonies": "Recent testimonies",
+    "noTestimonies": "No testimonies published yet.",
+    "viewAllTestimonies": "View all testimonies →",
+    "testimonyExcerpt": "{{type}} testimony shared on TAG.",
+    "mediaType": {
+      "TEXT": "Text",
+      "PHOTO": "Photo",
+      "AUDIO": "Audio",
+      "VIDEO": "Video"
+    }
   }
 }

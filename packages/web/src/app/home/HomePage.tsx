@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n/config';
 import {
   ActivePrayerSlot,
   EVENT_TYPE_LABELS,
@@ -18,7 +20,7 @@ const UPCOMING_EVENT_STATUSES = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
 const MEDIA_TYPE_ICONS: Record<string, string> = { TEXT: '📝', PHOTO: '📷', AUDIO: '🎧', VIDEO: '🎬' };
 
 function formatSchedule(iso: string): string {
-  return new Date(iso).toLocaleString('fr-FR', {
+  return new Date(iso).toLocaleString(i18n.language, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -27,12 +29,14 @@ function formatSchedule(iso: string): string {
   });
 }
 
-function testimonyExcerpt(testimony: PublicTestimony): string {
+function testimonyExcerpt(testimony: PublicTestimony, t: (key: string, opts?: object) => string): string {
   if (testimony.content) return testimony.content;
-  return `Témoignage ${(testimony.media_type ?? 'TEXT').toLowerCase()} partagé sur TAG.`;
+  const type = t(`home.mediaType.${testimony.media_type ?? 'TEXT'}`);
+  return t('home.testimonyExcerpt', { type });
 }
 
 export function HomePage() {
+  const { t } = useTranslation();
   const [slot, setSlot] = useState<ActivePrayerSlot | null>(null);
   const [roomLive, setRoomLive] = useState(false);
   const [snapshot, setSnapshot] = useState<WorldMapSnapshot | null>(null);
@@ -77,59 +81,52 @@ export function HomePage() {
     <div className="home-page">
       <section className="home-hero">
         <span className={roomLive ? 'live-badge' : 'home-hero-paused'}>
-          {roomLive ? '● EN DIRECT' : "La salle s'apprête à s'ouvrir"}
+          {roomLive ? t('home.live') : t('home.paused')}
         </span>
-        <h2>Tour de prière mondiale 24h/24</h2>
+        <h2>{t('home.title')}</h2>
         {roomLive && slot ? (
           <p className="home-hero-subject">
-            Sujet actuel : <strong>{slot.title}</strong> · ⏱ {formatRemaining(remainingSeconds)}
+            {t('home.currentSubject')} <strong>{slot.title}</strong> · ⏱ {formatRemaining(remainingSeconds)}
           </p>
         ) : (
-          <p className="hint">
-            Aucun créneau n'est en cours pour l'instant — rejoins la salle pour être prêt·e dès
-            qu'elle démarre.
-          </p>
+          <p className="hint">{t('home.noSlot')}</p>
         )}
         <Link to="/room" className="home-hero-cta">
-          Rejoindre la prière →
+          {t('home.joinCta')}
         </Link>
-        <p className="hint">Aucune inscription requise pour écouter.</p>
+        <p className="hint">{t('home.noSignup')}</p>
       </section>
 
       {snapshot && (
         <section className="worldmap-kpis home-kpis">
           <div className="worldmap-kpi">
             <div className="worldmap-kpi-value">{snapshot.presence}</div>
-            <div className="worldmap-kpi-label">en prière en ce moment</div>
+            <div className="worldmap-kpi-label">{t('home.presenceLabel')}</div>
           </div>
           <div className="worldmap-kpi">
             <div className="worldmap-kpi-value">{snapshot.activeRooms}</div>
-            <div className="worldmap-kpi-label">
-              salle{snapshot.activeRooms > 1 ? 's' : ''} active{snapshot.activeRooms > 1 ? 's' : ''}
-            </div>
+            <div className="worldmap-kpi-label">{t('home.activeRooms', { count: snapshot.activeRooms })}</div>
           </div>
           <div className="worldmap-kpi">
             <div className="worldmap-kpi-value">{snapshot.timezones.length}</div>
-            <div className="worldmap-kpi-label">
-              fuseau{snapshot.timezones.length > 1 ? 'x' : ''} horaire{snapshot.timezones.length > 1 ? 's' : ''}
-            </div>
+            <div className="worldmap-kpi-label">{t('home.timezones', { count: snapshot.timezones.length })}</div>
           </div>
           <div className="worldmap-kpi">
             <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
             <div className="worldmap-kpi-label">
-              événement{snapshot.activeEvents > 1 ? 's' : ''} en cours
+              {t('home.eventsInProgress', { count: snapshot.activeEvents })}
             </div>
           </div>
           <Link to="/world-map" className="home-kpis-link">
-            Voir la carte mondiale →
+            {t('home.viewMap')}
           </Link>
         </section>
       )}
 
       <div className="home-columns">
         <section>
-          <h3>Prochains événements</h3>
-          {events.length === 0 && <p className="hint">Aucun événement à venir pour l'instant.</p>}
+          <h3>{t('home.upcomingEvents')}</h3>
+          {events.length === 0 && <p className="hint">{t('home.noUpcomingEvents')}</p>}
           <ul className="request-list">
             {events.map((event) => (
               <li key={event.id} className="request-row">
@@ -144,24 +141,24 @@ export function HomePage() {
             ))}
           </ul>
           <Link to="/events" className="link-button">
-            Voir tous les événements →
+            {t('home.viewAllEvents')}
           </Link>
         </section>
 
         <section>
-          <h3>Témoignages récents</h3>
-          {testimonies.length === 0 && <p className="hint">Aucun témoignage publié pour l'instant.</p>}
+          <h3>{t('home.recentTestimonies')}</h3>
+          {testimonies.length === 0 && <p className="hint">{t('home.noTestimonies')}</p>}
           <ul className="request-list">
             {testimonies.map((testimony) => (
               <li key={testimony.id} className="request-row">
                 <p>
-                  {MEDIA_TYPE_ICONS[testimony.media_type] ?? '📝'} {testimonyExcerpt(testimony)}
+                  {MEDIA_TYPE_ICONS[testimony.media_type] ?? '📝'} {testimonyExcerpt(testimony, t)}
                 </p>
               </li>
             ))}
           </ul>
           <Link to="/testimonies" className="link-button">
-            Voir tous les témoignages →
+            {t('home.viewAllTestimonies')}
           </Link>
         </section>
       </div>

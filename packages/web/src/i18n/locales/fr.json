@@ -60,5 +60,35 @@
       "alreadyRegistered": "Déjà inscrit ?",
       "login": "Se connecter"
     }
+  },
+  "home": {
+    "live": "● EN DIRECT",
+    "paused": "La salle s'apprête à s'ouvrir",
+    "title": "Tour de prière mondiale 24h/24",
+    "currentSubject": "Sujet actuel :",
+    "noSlot": "Aucun créneau n'est en cours pour l'instant — rejoins la salle pour être prêt·e dès qu'elle démarre.",
+    "joinCta": "Rejoindre la prière →",
+    "noSignup": "Aucune inscription requise pour écouter.",
+    "presenceLabel": "en prière en ce moment",
+    "activeRooms_one": "salle active",
+    "activeRooms_other": "salles actives",
+    "timezones_one": "fuseau horaire",
+    "timezones_other": "fuseaux horaires",
+    "eventsInProgress_one": "événement en cours",
+    "eventsInProgress_other": "événements en cours",
+    "viewMap": "Voir la carte mondiale →",
+    "upcomingEvents": "Prochains événements",
+    "noUpcomingEvents": "Aucun événement à venir pour l'instant.",
+    "viewAllEvents": "Voir tous les événements →",
+    "recentTestimonies": "Témoignages récents",
+    "noTestimonies": "Aucun témoignage publié pour l'instant.",
+    "viewAllTestimonies": "Voir tous les témoignages →",
+    "testimonyExcerpt": "Témoignage {{type}} partagé sur TAG.",
+    "mediaType": {
+      "TEXT": "texte",
+      "PHOTO": "photo",
+      "AUDIO": "audio",
+      "VIDEO": "vidéo"
+    }
   }
 }

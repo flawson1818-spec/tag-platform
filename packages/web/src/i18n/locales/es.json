@@ -60,5 +60,35 @@
       "alreadyRegistered": "¿Ya tienes una cuenta?",
       "login": "Iniciar sesión"
     }
+  },
+  "home": {
+    "live": "● EN VIVO",
+    "paused": "La sala está por abrir",
+    "title": "Vigilia mundial de oración 24 horas",
+    "currentSubject": "Tema actual:",
+    "noSlot": "No hay ningún turno en curso por el momento — únete a la sala para estar listo en cuanto comience.",
+    "joinCta": "Unirse a la oración →",
+    "noSignup": "No se requiere registro para escuchar.",
+    "presenceLabel": "orando en este momento",
+    "activeRooms_one": "sala activa",
+    "activeRooms_other": "salas activas",
+    "timezones_one": "huso horario",
+    "timezones_other": "husos horarios",
+    "eventsInProgress_one": "evento en curso",
+    "eventsInProgress_other": "eventos en curso",
+    "viewMap": "Ver el mapa mundial →",
+    "upcomingEvents": "Próximos eventos",
+    "noUpcomingEvents": "No hay eventos próximos por el momento.",
+    "viewAllEvents": "Ver todos los eventos →",
+    "recentTestimonies": "Testimonios recientes",
+    "noTestimonies": "Aún no se ha publicado ningún testimonio.",
+    "viewAllTestimonies": "Ver todos los testimonios →",
+    "testimonyExcerpt": "Testimonio de {{type}} compartido en TAG.",
+    "mediaType": {
+      "TEXT": "texto",
+      "PHOTO": "foto",
+      "AUDIO": "audio",
+      "VIDEO": "video"
+    }
   }
 }
