@@ -168,5 +168,52 @@
     "roomOpening": "A sala está prestes a abrir…",
     "pointTooltip_one": "{{timezone}} — {{count}} pessoa",
     "pointTooltip_other": "{{timezone}} — {{count}} pessoas"
+  },
+  "prayerRequests": {
+    "title": "Pedidos de oração",
+    "intro": "Qualquer pessoa pode enviar um pedido, mesmo sem conta. Sem entrar, ele permanece anônimo.",
+    "descriptionPlaceholder": "Descreva seu pedido de oração…",
+    "photoAlt": "Pedido de oração",
+    "photoTooLarge": "Foto muito pesada (5 MB no máximo).",
+    "submit": "Enviar o pedido",
+    "submitting": "Enviando…",
+    "confirmationPrefix": "Pedido enviado — confidencialidade mantida:",
+    "communityTitle": "Pedidos da comunidade",
+    "loginToView": "Entre para ver os pedidos enviados por outras pessoas.",
+    "statusLabel": "Status",
+    "allStatuses": "Todos",
+    "categoryLabel": "Categoria",
+    "allCategories": "Todas",
+    "loading": "Carregando…",
+    "choosePgm": "Escolher um programa…",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "promote": "Transformar em tema coletivo (Mod)"
+  },
+  "confidentiality": {
+    "ANONYMOUS": "Anônimo",
+    "PRIVATE": "Privado (apenas moderadores)",
+    "PUBLIC": "Público"
+  },
+  "requestStatuses": {
+    "DRAFT": "Rascunho",
+    "NEW": "Novo",
+    "ASSIGNED": "Atribuído",
+    "IN_PROGRESS": "Em andamento",
+    "WAITING": "Aguardando",
+    "ANSWERED": "Respondido",
+    "ARCHIVED": "Arquivado",
+    "RESTORED": "Restaurado"
+  },
+  "prayerCategories": {
+    "Maladie": "Doença",
+    "Mariage": "Casamento",
+    "Emploi": "Emprego",
+    "Études": "Estudos",
+    "Visa": "Visto",
+    "Enfant": "Filho",
+    "Délivrance": "Libertação",
+    "Famille": "Família",
+    "Autre": "Outro"
   }
 }

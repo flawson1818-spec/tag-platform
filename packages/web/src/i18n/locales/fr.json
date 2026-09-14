@@ -168,5 +168,52 @@
     "roomOpening": "La salle s'apprête à s'ouvrir…",
     "pointTooltip_one": "{{timezone}} — {{count}} personne",
     "pointTooltip_other": "{{timezone}} — {{count}} personnes"
+  },
+  "prayerRequests": {
+    "title": "Demandes de prière",
+    "intro": "Tout le monde peut déposer une demande, même sans compte. Sans connexion, elle reste anonyme.",
+    "descriptionPlaceholder": "Décris ta demande de prière…",
+    "photoAlt": "Demande de prière",
+    "photoTooLarge": "Photo trop lourde (5 Mo maximum).",
+    "submit": "Envoyer la demande",
+    "submitting": "Envoi…",
+    "confirmationPrefix": "Demande envoyée — confidentialité retenue :",
+    "communityTitle": "Demandes de la communauté",
+    "loginToView": "Connecte-toi pour voir les demandes déposées par les autres.",
+    "statusLabel": "Statut",
+    "allStatuses": "Tous",
+    "categoryLabel": "Catégorie",
+    "allCategories": "Toutes",
+    "loading": "Chargement…",
+    "choosePgm": "Choisir un programme…",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "promote": "Transformer en sujet collectif (Modo)"
+  },
+  "confidentiality": {
+    "ANONYMOUS": "Anonyme",
+    "PRIVATE": "Privé (modérateurs uniquement)",
+    "PUBLIC": "Public"
+  },
+  "requestStatuses": {
+    "DRAFT": "Brouillon",
+    "NEW": "Nouveau",
+    "ASSIGNED": "Assignée",
+    "IN_PROGRESS": "En cours",
+    "WAITING": "En attente",
+    "ANSWERED": "Exaucée",
+    "ARCHIVED": "Archivée",
+    "RESTORED": "Restaurée"
+  },
+  "prayerCategories": {
+    "Maladie": "Maladie",
+    "Mariage": "Mariage",
+    "Emploi": "Emploi",
+    "Études": "Études",
+    "Visa": "Visa",
+    "Enfant": "Enfant",
+    "Délivrance": "Délivrance",
+    "Famille": "Famille",
+    "Autre": "Autre"
   }
 }

@@ -168,5 +168,52 @@
     "roomOpening": "The room is about to open…",
     "pointTooltip_one": "{{timezone}} — {{count}} person",
     "pointTooltip_other": "{{timezone}} — {{count}} people"
+  },
+  "prayerRequests": {
+    "title": "Prayer requests",
+    "intro": "Anyone can submit a request, even without an account. Without signing in, it stays anonymous.",
+    "descriptionPlaceholder": "Describe your prayer request…",
+    "photoAlt": "Prayer request",
+    "photoTooLarge": "Photo too large (5 MB maximum).",
+    "submit": "Send the request",
+    "submitting": "Sending…",
+    "confirmationPrefix": "Request sent — confidentiality kept:",
+    "communityTitle": "Community requests",
+    "loginToView": "Log in to see requests submitted by others.",
+    "statusLabel": "Status",
+    "allStatuses": "All",
+    "categoryLabel": "Category",
+    "allCategories": "All",
+    "loading": "Loading…",
+    "choosePgm": "Choose a program…",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "promote": "Turn into a collective subject (Mod)"
+  },
+  "confidentiality": {
+    "ANONYMOUS": "Anonymous",
+    "PRIVATE": "Private (moderators only)",
+    "PUBLIC": "Public"
+  },
+  "requestStatuses": {
+    "DRAFT": "Draft",
+    "NEW": "New",
+    "ASSIGNED": "Assigned",
+    "IN_PROGRESS": "In progress",
+    "WAITING": "Waiting",
+    "ANSWERED": "Answered",
+    "ARCHIVED": "Archived",
+    "RESTORED": "Restored"
+  },
+  "prayerCategories": {
+    "Maladie": "Illness",
+    "Mariage": "Marriage",
+    "Emploi": "Employment",
+    "Études": "Studies",
+    "Visa": "Visa",
+    "Enfant": "Child",
+    "Délivrance": "Deliverance",
+    "Famille": "Family",
+    "Autre": "Other"
   }
 }

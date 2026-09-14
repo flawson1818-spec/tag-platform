@@ -1,4 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import {
   CONFIDENTIALITY_LEVELS,
@@ -17,6 +18,7 @@ const MODERATOR_STATUSES = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING', 'ANSWER
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
 function RequestPhoto({ requestId }: { requestId: string }) {
+  const { t } = useTranslation();
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,27 +31,11 @@ function RequestPhoto({ requestId }: { requestId: string }) {
   }, [requestId]);
 
   if (!url) return null;
-  return <img src={url} alt="Demande de prière" className="testimony-media" />;
+  return <img src={url} alt={t('prayerRequests.photoAlt')} className="testimony-media" />;
 }
 
-const CONFIDENTIALITY_LABELS: Record<string, string> = {
-  ANONYMOUS: 'Anonyme',
-  PRIVATE: 'Privé (modérateurs uniquement)',
-  PUBLIC: 'Public',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Brouillon',
-  NEW: 'Nouveau',
-  ASSIGNED: 'Assignée',
-  IN_PROGRESS: 'En cours',
-  WAITING: 'En attente',
-  ANSWERED: 'Exaucée',
-  ARCHIVED: 'Archivée',
-  RESTORED: 'Restaurée',
-};
-
 export function PrayerRequestsPage() {
+  const { t } = useTranslation();
   const [category, setCategory] = useState<string>(PRAYER_REQUEST_CATEGORIES[0]);
   const [description, setDescription] = useState('');
   const [confidentiality, setConfidentiality] = useState('ANONYMOUS');
@@ -122,7 +108,7 @@ export function PrayerRequestsPage() {
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file && file.size > MAX_PHOTO_SIZE_BYTES) {
-      setSubmitError('Photo trop lourde (5 Mo maximum).');
+      setSubmitError(t('prayerRequests.photoTooLarge'));
       setPhoto(null);
       return;
     }
@@ -167,22 +153,20 @@ export function PrayerRequestsPage() {
 
   return (
     <div className="requests-page">
-      <h2>Demandes de prière</h2>
-      <p className="hint">
-        Tout le monde peut déposer une demande, même sans compte. Sans connexion, elle reste anonyme.
-      </p>
+      <h2>{t('prayerRequests.title')}</h2>
+      <p className="hint">{t('prayerRequests.intro')}</p>
 
       <form onSubmit={handleSubmit} className="request-form">
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
           {PRAYER_REQUEST_CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {t(`prayerCategories.${c}`, c)}
             </option>
           ))}
         </select>
 
         <textarea
-          placeholder="Décris ta demande de prière…"
+          placeholder={t('prayerRequests.descriptionPlaceholder')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -203,59 +187,59 @@ export function PrayerRequestsPage() {
                 checked={confidentiality === level}
                 onChange={(e) => setConfidentiality(e.target.value)}
               />
-              {CONFIDENTIALITY_LABELS[level]}
+              {t(`confidentiality.${level}`)}
             </label>
           ))}
         </div>
 
         <button type="submit" disabled={submitting}>
-          {submitting ? 'Envoi…' : 'Envoyer la demande'}
+          {submitting ? t('prayerRequests.submitting') : t('prayerRequests.submit')}
         </button>
       </form>
 
       {submitError && <p className="error">{submitError}</p>}
       {confirmation && (
         <p className="confirmation">
-          Demande envoyée — confidentialité retenue :{' '}
-          <strong>{CONFIDENTIALITY_LABELS[confirmation.confidentiality]}</strong>
+          {t('prayerRequests.confirmationPrefix')}{' '}
+          <strong>{t(`confidentiality.${confirmation.confidentiality}`)}</strong>
         </p>
       )}
 
-      <h3>Demandes de la communauté</h3>
-      {!getAccessToken() && <p className="hint">Connecte-toi pour voir les demandes déposées par les autres.</p>}
+      <h3>{t('prayerRequests.communityTitle')}</h3>
+      {!getAccessToken() && <p className="hint">{t('prayerRequests.loginToView')}</p>}
 
       {getAccessToken() && (
         <div className="inline-form">
-          <label htmlFor="request-status-filter">Statut</label>
+          <label htmlFor="request-status-filter">{t('prayerRequests.statusLabel')}</label>
           <select id="request-status-filter" value={statusFilter} onChange={handleFilterChange(setStatusFilter)}>
-            <option value="">Tous</option>
+            <option value="">{t('prayerRequests.allStatuses')}</option>
             {REQUEST_STATUSES.map((s) => (
               <option key={s} value={s}>
-                {STATUS_LABELS[s] ?? s}
+                {t(`requestStatuses.${s}`, s)}
               </option>
             ))}
           </select>
-          <label htmlFor="request-category-filter">Catégorie</label>
+          <label htmlFor="request-category-filter">{t('prayerRequests.categoryLabel')}</label>
           <select id="request-category-filter" value={categoryFilter} onChange={handleFilterChange(setCategoryFilter)}>
-            <option value="">Toutes</option>
+            <option value="">{t('prayerRequests.allCategories')}</option>
             {PRAYER_REQUEST_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {t(`prayerCategories.${c}`, c)}
               </option>
             ))}
           </select>
         </div>
       )}
 
-      {listLoading && <p>Chargement…</p>}
+      {listLoading && <p>{t('prayerRequests.loading')}</p>}
       {listError && <p className="error">{listError}</p>}
       {requests.length > 0 && (
         <ul className="request-list">
           {requests.map((r) => (
             <li key={r.id} className="request-row">
               <div className="request-meta">
-                <span className="chip">{r.category}</span>
-                <span className="chip chip-status">{STATUS_LABELS[r.status] ?? r.status}</span>
+                <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
+                <span className="chip chip-status">{t(`requestStatuses.${r.status}`, r.status)}</span>
               </div>
               <p>{r.description}</p>
               {r.photo_file_id && <RequestPhoto requestId={r.id} />}
@@ -263,7 +247,7 @@ export function PrayerRequestsPage() {
               <div className="request-form">
                 {MODERATOR_STATUSES.filter((s) => s !== r.status).map((s) => (
                   <button key={s} type="button" onClick={() => handleStatusChange(r.id, s)}>
-                    {STATUS_LABELS[s]}
+                    {t(`requestStatuses.${s}`, s)}
                   </button>
                 ))}
               </div>
@@ -271,7 +255,7 @@ export function PrayerRequestsPage() {
               {promotingId === r.id ? (
                 <div className="request-form">
                   <select value={promoteProgramId} onChange={(e) => setPromoteProgramId(e.target.value)}>
-                    <option value="">Choisir un programme…</option>
+                    <option value="">{t('prayerRequests.choosePgm')}</option>
                     {programs.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.title}
@@ -279,10 +263,10 @@ export function PrayerRequestsPage() {
                     ))}
                   </select>
                   <button type="button" onClick={() => handlePromote(r.id)} disabled={!promoteProgramId}>
-                    Confirmer
+                    {t('prayerRequests.confirm')}
                   </button>
                   <button type="button" className="link-button" onClick={() => setPromotingId(null)}>
-                    Annuler
+                    {t('prayerRequests.cancel')}
                   </button>
                 </div>
               ) : (
@@ -294,7 +278,7 @@ export function PrayerRequestsPage() {
                     setPromoteProgramId('');
                   }}
                 >
-                  Transformer en sujet collectif (Modo)
+                  {t('prayerRequests.promote')}
                 </button>
               )}
             </li>
