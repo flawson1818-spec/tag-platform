@@ -289,5 +289,49 @@
       "INSTRUMENTAL_ADORATION": "Instrumental worship",
       "GOSPEL": "Gospel"
     }
+  },
+  "communities": {
+    "title": "Communities",
+    "intro": "Groups, teams, cells, churches… Creating one is reserved for Team Leaders and above.",
+    "searchPlaceholder": "Search for a community by name…",
+    "namePlaceholder": "Community name",
+    "create": "Create the community",
+    "creating": "Creating…",
+    "loading": "Loading…",
+    "noCommunities": "No communities yet.",
+    "loginToView": "Log in to see communities."
+  },
+  "communityTypes": {
+    "GROUP": "Group",
+    "TEAM": "Team",
+    "CELL": "Cell",
+    "COUNTRY": "Country",
+    "CITY": "City",
+    "CHURCH": "Church",
+    "MINISTRY": "Ministry"
+  },
+  "joinPolicies": {
+    "OPEN": "Join directly",
+    "APPROVAL": "Requires a Leader's approval"
+  },
+  "campaigns": {
+    "title": "Prayer campaigns",
+    "intro": "Targeted prayer periods (fasts, vigils, themed weeks…). Creating one is reserved for accounts with the",
+    "titlePlaceholder": "Campaign title",
+    "create": "Create the campaign",
+    "creating": "Creating…",
+    "loading": "Loading…",
+    "noCampaigns": "No campaigns yet.",
+    "needLoginCreate": "Log in to create a campaign.",
+    "fromDate": "From {{date}}",
+    "toDate": "to {{date}}"
+  },
+  "campaignStatuses": {
+    "DRAFT": "Draft",
+    "PLANNED": "Planned",
+    "ACTIVE": "Active",
+    "PAUSED": "Paused",
+    "COMPLETED": "Completed",
+    "ARCHIVED": "Archived"
   }
 }

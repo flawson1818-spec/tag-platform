@@ -289,5 +289,49 @@
       "INSTRUMENTAL_ADORATION": "Adoración instrumental",
       "GOSPEL": "Gospel"
     }
+  },
+  "communities": {
+    "title": "Comunidades",
+    "intro": "Grupos, equipos, células, iglesias… La creación está reservada a Líderes de equipo y superiores.",
+    "searchPlaceholder": "Buscar una comunidad por nombre…",
+    "namePlaceholder": "Nombre de la comunidad",
+    "create": "Crear la comunidad",
+    "creating": "Creando…",
+    "loading": "Cargando…",
+    "noCommunities": "Ninguna comunidad por el momento.",
+    "loginToView": "Inicia sesión para ver las comunidades."
+  },
+  "communityTypes": {
+    "GROUP": "Grupo",
+    "TEAM": "Equipo",
+    "CELL": "Célula",
+    "COUNTRY": "País",
+    "CITY": "Ciudad",
+    "CHURCH": "Iglesia",
+    "MINISTRY": "Ministerio"
+  },
+  "joinPolicies": {
+    "OPEN": "Adhesión directa",
+    "APPROVAL": "Requiere aprobación de un Líder"
+  },
+  "campaigns": {
+    "title": "Campañas de oración",
+    "intro": "Períodos de oración específicos (ayunos, vigilias, semanas temáticas…). La creación está reservada a las cuentas con el permiso",
+    "titlePlaceholder": "Título de la campaña",
+    "create": "Crear la campaña",
+    "creating": "Creando…",
+    "loading": "Cargando…",
+    "noCampaigns": "Ninguna campaña por el momento.",
+    "needLoginCreate": "Inicia sesión para crear una campaña.",
+    "fromDate": "Del {{date}}",
+    "toDate": "al {{date}}"
+  },
+  "campaignStatuses": {
+    "DRAFT": "Borrador",
+    "PLANNED": "Planificada",
+    "ACTIVE": "Activa",
+    "PAUSED": "Pausada",
+    "COMPLETED": "Completada",
+    "ARCHIVED": "Archivada"
   }
 }

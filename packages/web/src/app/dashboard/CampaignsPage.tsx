@@ -1,9 +1,11 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { CAMPAIGN_STATUSES, Campaign, campaignsApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 
 export function CampaignsPage() {
+  const { t } = useTranslation();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function CampaignsPage() {
     e.preventDefault();
     const token = getAccessToken();
     if (!token) {
-      setCreateError('Connecte-toi pour créer une campagne.');
+      setCreateError(t('campaigns.needLoginCreate'));
       return;
     }
     setCreateError(null);
@@ -68,16 +70,15 @@ export function CampaignsPage() {
 
   return (
     <div className="communities-page">
-      <h2>Campagnes de prière</h2>
+      <h2>{t('campaigns.title')}</h2>
       <p className="hint">
-        Périodes de prière ciblées (jeûnes, veillées, semaines thématiques…). La création est
-        réservée aux comptes disposant de la permission <code>campaign.manage</code>.
+        {t('campaigns.intro')} <code>campaign.manage</code>.
       </p>
 
       <form onSubmit={handleCreate} className="request-form">
         <input
           type="text"
-          placeholder="Titre de la campagne"
+          placeholder={t('campaigns.titlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -85,21 +86,21 @@ export function CampaignsPage() {
         <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         <button type="submit" disabled={creating}>
-          {creating ? 'Création…' : 'Créer la campagne'}
+          {creating ? t('campaigns.creating') : t('campaigns.create')}
         </button>
       </form>
       {createError && <p className="error">{createError}</p>}
 
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('campaigns.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
       <ul className="request-list">
         {campaigns.map((c) => (
           <li key={c.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{c.status}</span>
-              {c.start_date && <span className="hint">Du {c.start_date}</span>}
-              {c.end_date && <span className="hint">au {c.end_date}</span>}
+              <span className="chip">{t(`campaignStatuses.${c.status}`, c.status)}</span>
+              {c.start_date && <span className="hint">{t('campaigns.fromDate', { date: c.start_date })}</span>}
+              {c.end_date && <span className="hint">{t('campaigns.toDate', { date: c.end_date })}</span>}
             </div>
             <p>
               <strong>{c.title}</strong>
@@ -107,14 +108,14 @@ export function CampaignsPage() {
             <div className="request-form">
               {CAMPAIGN_STATUSES.filter((s) => s !== c.status).map((s) => (
                 <button key={s} onClick={() => handleStatusChange(c.id, s)}>
-                  {s}
+                  {t(`campaignStatuses.${s}`, s)}
                 </button>
               ))}
             </div>
           </li>
         ))}
       </ul>
-      {!loading && campaigns.length === 0 && !error && <p className="hint">Aucune campagne pour l'instant.</p>}
+      {!loading && campaigns.length === 0 && !error && <p className="hint">{t('campaigns.noCampaigns')}</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );

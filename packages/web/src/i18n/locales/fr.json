@@ -289,5 +289,49 @@
       "INSTRUMENTAL_ADORATION": "Adoration instrumentale",
       "GOSPEL": "Gospel"
     }
+  },
+  "communities": {
+    "title": "Communautés",
+    "intro": "Groupes, équipes, cellules, églises… La création est réservée aux Responsables d'équipe et au-dessus.",
+    "searchPlaceholder": "Rechercher une communauté par nom…",
+    "namePlaceholder": "Nom de la communauté",
+    "create": "Créer la communauté",
+    "creating": "Création…",
+    "loading": "Chargement…",
+    "noCommunities": "Aucune communauté pour l'instant.",
+    "loginToView": "Connecte-toi pour voir les communautés."
+  },
+  "communityTypes": {
+    "GROUP": "Groupe",
+    "TEAM": "Équipe",
+    "CELL": "Cellule",
+    "COUNTRY": "Pays",
+    "CITY": "Ville",
+    "CHURCH": "Église",
+    "MINISTRY": "Ministère"
+  },
+  "joinPolicies": {
+    "OPEN": "Adhésion directe",
+    "APPROVAL": "Sur validation d'un Responsable"
+  },
+  "campaigns": {
+    "title": "Campagnes de prière",
+    "intro": "Périodes de prière ciblées (jeûnes, veillées, semaines thématiques…). La création est réservée aux comptes disposant de la permission",
+    "titlePlaceholder": "Titre de la campagne",
+    "create": "Créer la campagne",
+    "creating": "Création…",
+    "loading": "Chargement…",
+    "noCampaigns": "Aucune campagne pour l'instant.",
+    "needLoginCreate": "Connecte-toi pour créer une campagne.",
+    "fromDate": "Du {{date}}",
+    "toDate": "au {{date}}"
+  },
+  "campaignStatuses": {
+    "DRAFT": "Brouillon",
+    "PLANNED": "Planifiée",
+    "ACTIVE": "Active",
+    "PAUSED": "En pause",
+    "COMPLETED": "Terminée",
+    "ARCHIVED": "Archivée"
   }
 }

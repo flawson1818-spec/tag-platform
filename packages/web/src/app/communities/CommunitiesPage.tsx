@@ -1,19 +1,17 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { COMMUNITY_TYPES, Community, JOIN_POLICIES, communitiesApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
-
-const JOIN_POLICY_LABELS: Record<string, string> = {
-  OPEN: 'Adhésion directe',
-  APPROVAL: "Sur validation d'un Responsable",
-};
+import i18n from '../../i18n/config';
 
 export function CommunitiesPage() {
+  const { t } = useTranslation();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(() => Boolean(getAccessToken()));
   const [listError, setListError] = useState<string | null>(() =>
-    getAccessToken() ? null : 'Connecte-toi pour voir les communautés.',
+    getAccessToken() ? null : i18n.t('communities.loginToView'),
   );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -66,14 +64,12 @@ export function CommunitiesPage() {
 
   return (
     <div className="communities-page">
-      <h2>Communautés</h2>
-      <p className="hint">
-        Groupes, équipes, cellules, églises… La création est réservée aux Responsables d'équipe et au-dessus.
-      </p>
+      <h2>{t('communities.title')}</h2>
+      <p className="hint">{t('communities.intro')}</p>
 
       <input
         type="text"
-        placeholder="Rechercher une communauté par nom…"
+        placeholder={t('communities.searchPlaceholder')}
         value={search}
         onChange={(e) => handleSearchChange(e.target.value)}
         style={{ marginBottom: '1rem', width: '100%' }}
@@ -81,15 +77,15 @@ export function CommunitiesPage() {
 
       <form onSubmit={handleCreate} className="request-form">
         <select value={type} onChange={(e) => setType(e.target.value)}>
-          {COMMUNITY_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          {COMMUNITY_TYPES.map((communityType) => (
+            <option key={communityType} value={communityType}>
+              {t(`communityTypes.${communityType}`, communityType)}
             </option>
           ))}
         </select>
         <input
           type="text"
-          placeholder="Nom de la communauté"
+          placeholder={t('communities.namePlaceholder')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -97,24 +93,24 @@ export function CommunitiesPage() {
         <select value={joinPolicy} onChange={(e) => setJoinPolicy(e.target.value)}>
           {JOIN_POLICIES.map((p) => (
             <option key={p} value={p}>
-              {JOIN_POLICY_LABELS[p]}
+              {t(`joinPolicies.${p}`)}
             </option>
           ))}
         </select>
         <button type="submit" disabled={creating}>
-          {creating ? 'Création…' : 'Créer la communauté'}
+          {creating ? t('communities.creating') : t('communities.create')}
         </button>
       </form>
       {createError && <p className="error">{createError}</p>}
 
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('communities.loading')}</p>}
       {listError && <p className="error">{listError}</p>}
 
       <ul className="request-list">
         {communities.map((c) => (
           <li key={c.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{c.type}</span>
+              <span className="chip">{t(`communityTypes.${c.type}`, c.type)}</span>
             </div>
             <p>
               <Link to={`/communities/${c.id}`}>{c.name}</Link>
@@ -122,7 +118,7 @@ export function CommunitiesPage() {
           </li>
         ))}
       </ul>
-      {!loading && communities.length === 0 && !listError && <p className="hint">Aucune communauté pour l'instant.</p>}
+      {!loading && communities.length === 0 && !listError && <p className="hint">{t('communities.noCommunities')}</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );
