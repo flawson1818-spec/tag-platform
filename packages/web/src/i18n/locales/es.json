@@ -430,5 +430,42 @@
     "PUBLISHED": "Publicado",
     "EDITED": "Editado",
     "ARCHIVED": "Archivado"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "pushNotConfigured": "Las notificaciones push no están configuradas en este despliegue.",
+    "permissionDenied": "Permiso denegado.",
+    "pushNotSupported": "Las notificaciones push no son compatibles con este navegador.",
+    "disablePush": "Desactivar las notificaciones push",
+    "enablePush": "Activar las notificaciones push",
+    "markAllRead": "Marcar todo como leído",
+    "loading": "Cargando…",
+    "view": "Ver",
+    "markRead": "Marcar como leída",
+    "archive": "Archivar",
+    "noNotifications": "Ninguna notificación.",
+    "needLogin": "Inicia sesión para ver tus notificaciones.",
+    "filters": {
+      "all": "Todas",
+      "unread": "No leídas",
+      "read": "Leídas",
+      "archived": "Archivadas"
+    }
+  },
+  "notificationTypes": {
+    "TESTIMONY_PUBLISHED": "Tu testimonio fue publicado",
+    "TESTIMONY_REJECTED": "Tu testimonio fue rechazado",
+    "PRAYER_REQUEST_ANSWERED": "Tu petición de oración tiene una respuesta",
+    "AI_CRISIS_ESCALATION": "Alerta de IA: un usuario podría estar en una situación de crisis",
+    "AI_USER_AUTO_MUTED": "IA Moderadora: un usuario fue silenciado automáticamente",
+    "PRAYER_REMINDER": "Es hora de tu recordatorio de oración",
+    "EVENT_CREATED": "Se creó un nuevo evento en una comunidad a la que perteneces",
+    "EVENT_REMINDER": "Un evento en el que estás inscrito comienza pronto",
+    "PRAYER_TOPIC_STARTED": "Un tema de oración que sigues acaba de comenzar"
+  },
+  "notificationStatuses": {
+    "DELIVERED": "No leída",
+    "READ": "Leída",
+    "ARCHIVED": "Archivada"
   }
 }

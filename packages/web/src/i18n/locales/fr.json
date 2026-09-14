@@ -430,5 +430,42 @@
     "PUBLISHED": "Publié",
     "EDITED": "Modifié",
     "ARCHIVED": "Archivé"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "pushNotConfigured": "Notifications push non configurées sur ce déploiement.",
+    "permissionDenied": "Autorisation refusée.",
+    "pushNotSupported": "Notifications push non prises en charge par ce navigateur.",
+    "disablePush": "Désactiver les notifications push",
+    "enablePush": "Activer les notifications push",
+    "markAllRead": "Tout marquer comme lu",
+    "loading": "Chargement…",
+    "view": "Voir",
+    "markRead": "Marquer comme lue",
+    "archive": "Archiver",
+    "noNotifications": "Aucune notification.",
+    "needLogin": "Connecte-toi pour voir tes notifications.",
+    "filters": {
+      "all": "Toutes",
+      "unread": "Non lues",
+      "read": "Lues",
+      "archived": "Archivées"
+    }
+  },
+  "notificationTypes": {
+    "TESTIMONY_PUBLISHED": "Ton témoignage a été publié",
+    "TESTIMONY_REJECTED": "Ton témoignage a été refusé",
+    "PRAYER_REQUEST_ANSWERED": "Ta demande de prière a une réponse",
+    "AI_CRISIS_ESCALATION": "Alerte IA : un utilisateur pourrait être en situation de crise",
+    "AI_USER_AUTO_MUTED": "IA Modératrice : un utilisateur a été mis en sourdine automatiquement",
+    "PRAYER_REMINDER": "C'est l'heure de ton rappel de prière",
+    "EVENT_CREATED": "Un nouvel événement a été créé dans une communauté dont tu es membre",
+    "EVENT_REMINDER": "Un événement auquel tu es inscrit commence bientôt",
+    "PRAYER_TOPIC_STARTED": "Un sujet de prière que tu suis vient de commencer"
+  },
+  "notificationStatuses": {
+    "DELIVERED": "Non lue",
+    "READ": "Lue",
+    "ARCHIVED": "Archivée"
   }
 }

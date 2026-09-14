@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { AppNotification, notificationsApi, pushApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
+import i18n from '../../i18n/config';
 
 const PUSH_SUPPORTED = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window;
 
@@ -14,6 +16,7 @@ function urlBase64ToUint8Array(base64Url: string): Uint8Array {
 }
 
 function PushNotificationsToggle() {
+  const { t } = useTranslation();
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +40,12 @@ function PushNotificationsToggle() {
     try {
       const { publicKey } = await pushApi.vapidPublicKey();
       if (!publicKey) {
-        setError('Notifications push non configurées sur ce déploiement.');
+        setError(t('notifications.pushNotConfigured'));
         return;
       }
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
-        setError('Autorisation refusée.');
+        setError(t('notifications.permissionDenied'));
         return;
       }
       const reg = await navigator.serviceWorker.register('/sw.js');
@@ -75,18 +78,18 @@ function PushNotificationsToggle() {
     }
   };
 
-  if (!PUSH_SUPPORTED) return <p className="hint">Notifications push non prises en charge par ce navigateur.</p>;
+  if (!PUSH_SUPPORTED) return <p className="hint">{t('notifications.pushNotSupported')}</p>;
   if (!checked) return null;
 
   return (
     <div className="request-form">
       {subscription ? (
         <button onClick={handleDisable} disabled={busy}>
-          {busy ? '…' : 'Désactiver les notifications push'}
+          {busy ? '…' : t('notifications.disablePush')}
         </button>
       ) : (
         <button onClick={handleEnable} disabled={busy}>
-          {busy ? '…' : 'Activer les notifications push'}
+          {busy ? '…' : t('notifications.enablePush')}
         </button>
       )}
       {error && <p className="error">{error}</p>}
@@ -94,20 +97,8 @@ function PushNotificationsToggle() {
   );
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  TESTIMONY_PUBLISHED: 'Ton témoignage a été publié',
-  TESTIMONY_REJECTED: 'Ton témoignage a été refusé',
-  PRAYER_REQUEST_ANSWERED: 'Ta demande de prière a une réponse',
-  AI_CRISIS_ESCALATION: "Alerte IA : un utilisateur pourrait être en situation de crise",
-  AI_USER_AUTO_MUTED: "IA Modératrice : un utilisateur a été mis en sourdine automatiquement",
-  PRAYER_REMINDER: "C'est l'heure de ton rappel de prière",
-  EVENT_CREATED: "Un nouvel événement a été créé dans une communauté dont tu es membre",
-  EVENT_REMINDER: "Un événement auquel tu es inscrit commence bientôt",
-  PRAYER_TOPIC_STARTED: "Un sujet de prière que tu suis vient de commencer",
-};
-
 function describe(notification: AppNotification): string {
-  return TYPE_LABELS[notification.type] ?? notification.type;
+  return i18n.t(`notificationTypes.${notification.type}`, notification.type);
 }
 
 /**
@@ -139,18 +130,19 @@ function resourceLink(notification: AppNotification): string | null {
 }
 
 const FILTERS = [
-  { value: '', label: 'Toutes' },
-  { value: 'DELIVERED', label: 'Non lues' },
-  { value: 'READ', label: 'Lues' },
-  { value: 'ARCHIVED', label: 'Archivées' },
+  { value: '', key: 'all' },
+  { value: 'DELIVERED', key: 'unread' },
+  { value: 'READ', key: 'read' },
+  { value: 'ARCHIVED', key: 'archived' },
 ];
 
 export function NotificationsPage() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [filter, setFilter] = useState('');
   const [loading, setLoading] = useState(() => Boolean(getAccessToken()));
   const [error, setError] = useState<string | null>(() =>
-    getAccessToken() ? null : 'Connecte-toi pour voir tes notifications.',
+    getAccessToken() ? null : i18n.t('notifications.needLogin'),
   );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -196,7 +188,7 @@ export function NotificationsPage() {
 
   return (
     <div className="communities-page">
-      <h2>Notifications</h2>
+      <h2>{t('notifications.title')}</h2>
 
       {getAccessToken() && <PushNotificationsToggle />}
 
@@ -208,13 +200,13 @@ export function NotificationsPage() {
             disabled={filter === f.value}
             className={filter === f.value ? '' : 'link-button'}
           >
-            {f.label}
+            {t(`notifications.filters.${f.key}`)}
           </button>
         ))}
-        <button onClick={handleMarkAllRead}>Tout marquer comme lu</button>
+        <button onClick={handleMarkAllRead}>{t('notifications.markAllRead')}</button>
       </div>
 
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('notifications.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
       <ul className="request-list">
@@ -223,22 +215,22 @@ export function NotificationsPage() {
           return (
             <li key={n.id} className="request-row">
               <div className="request-meta">
-                <span className="chip">{n.status}</span>
-                <span className="hint">{new Date(n.created_at).toLocaleString('fr-FR')}</span>
+                <span className="chip">{t(`notificationStatuses.${n.status}`, n.status)}</span>
+                <span className="hint">{new Date(n.created_at).toLocaleString(i18n.language)}</span>
               </div>
               <p>{describe(n)}</p>
               <div className="request-form">
-                {link && <Link to={link}>Voir</Link>}
+                {link && <Link to={link}>{t('notifications.view')}</Link>}
                 {n.status !== 'READ' && n.status !== 'ARCHIVED' && (
-                  <button onClick={() => handleMarkRead(n.id)}>Marquer comme lue</button>
+                  <button onClick={() => handleMarkRead(n.id)}>{t('notifications.markRead')}</button>
                 )}
-                {n.status !== 'ARCHIVED' && <button onClick={() => handleArchive(n.id)}>Archiver</button>}
+                {n.status !== 'ARCHIVED' && <button onClick={() => handleArchive(n.id)}>{t('notifications.archive')}</button>}
               </div>
             </li>
           );
         })}
       </ul>
-      {!loading && notifications.length === 0 && !error && <p className="hint">Aucune notification.</p>}
+      {!loading && notifications.length === 0 && !error && <p className="hint">{t('notifications.noNotifications')}</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );

@@ -430,5 +430,42 @@
     "PUBLISHED": "Published",
     "EDITED": "Edited",
     "ARCHIVED": "Archived"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "pushNotConfigured": "Push notifications aren't configured on this deployment.",
+    "permissionDenied": "Permission denied.",
+    "pushNotSupported": "Push notifications aren't supported by this browser.",
+    "disablePush": "Disable push notifications",
+    "enablePush": "Enable push notifications",
+    "markAllRead": "Mark all as read",
+    "loading": "Loading…",
+    "view": "View",
+    "markRead": "Mark as read",
+    "archive": "Archive",
+    "noNotifications": "No notifications.",
+    "needLogin": "Log in to see your notifications.",
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "read": "Read",
+      "archived": "Archived"
+    }
+  },
+  "notificationTypes": {
+    "TESTIMONY_PUBLISHED": "Your testimony was published",
+    "TESTIMONY_REJECTED": "Your testimony was rejected",
+    "PRAYER_REQUEST_ANSWERED": "Your prayer request has an answer",
+    "AI_CRISIS_ESCALATION": "AI alert: a user may be in a crisis situation",
+    "AI_USER_AUTO_MUTED": "AI Moderator: a user was automatically muted",
+    "PRAYER_REMINDER": "It's time for your prayer reminder",
+    "EVENT_CREATED": "A new event was created in a community you belong to",
+    "EVENT_REMINDER": "An event you're registered for starts soon",
+    "PRAYER_TOPIC_STARTED": "A prayer topic you follow has just started"
+  },
+  "notificationStatuses": {
+    "DELIVERED": "Unread",
+    "READ": "Read",
+    "ARCHIVED": "Archived"
   }
 }
