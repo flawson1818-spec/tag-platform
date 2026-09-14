@@ -246,5 +246,48 @@
       "AUDIO": "Audio",
       "VIDEO": "Video"
     }
+  },
+  "room": {
+    "title": "Sala de oración mundial",
+    "connecting": "Conectando a la sala…",
+    "empty": "Ninguna sala está activa por el momento.",
+    "urgent": "Urgente",
+    "endingSoon": "El tema termina en {{seconds}}s",
+    "leaderNamed": "Dirigido por {{name}}",
+    "leaderAi": "Dirigido por la IA Intercesora",
+    "handLabel": "🖐 Mano",
+    "speaking": "Estás hablando",
+    "speakRequested": "Solicitud enviada",
+    "speak": "Hablar",
+    "needLogin": "Inicia sesión para participar en la sala.",
+    "returnedToListening": "Has vuelto al modo escucha.",
+    "activeSpeakersLabel": "🎤 Con la palabra:",
+    "raisedHandsLabel": "🖐 Manos levantadas:",
+    "waitingToSpeak": "Esperando para hablar:",
+    "grantSpeak": "Dar la palabra",
+    "revokeSpeakPrefix": "Quitar la palabra a",
+    "musicTitle": "🎵 Música de adoración",
+    "musicIntro": "Busca una canción en YouTube o Spotify, luego pega su enlace abajo para reproducirla en un pequeño reproductor aquí mismo, transmitido a toda la sala.",
+    "musicSearchPlaceholder": "Ej. Hillsong, gospel...",
+    "search": "Buscar →",
+    "musicLinkPlaceholder": "Pega un enlace de YouTube encontrado arriba...",
+    "playInRoom": "▶ Reproducir en la sala",
+    "stopForEveryone": "⏹ Detener para todos",
+    "invalidYoutubeLink": "Ese enlace no parece una URL de YouTube válida.",
+    "defaultMusicTitle": "Música de adoración",
+    "chatTitle": "Chat",
+    "chatEmpty": "Ningún mensaje por el momento.",
+    "anonymous": "Anónimo",
+    "hide": "Ocultar",
+    "mute15": "Silenciar 15 min",
+    "mutedUntil": "Estás silenciado hasta las {{time}}.",
+    "chatPlaceholder": "Escribe un mensaje...",
+    "send": "Enviar",
+    "needLoginChat": "Inicia sesión para escribir en el chat.",
+    "musicQuickPicks": {
+      "PRAISE": "Alabanza",
+      "INSTRUMENTAL_ADORATION": "Adoración instrumental",
+      "GOSPEL": "Gospel"
+    }
   }
 }

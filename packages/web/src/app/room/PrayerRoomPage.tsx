@@ -1,18 +1,20 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { ChatMessage, PrayerSlot, RoomPerson, WS_URL, prayerApi } from '../../lib/api';
 import { formatRemaining } from '../../lib/format';
+import i18n from '../../i18n/config';
 
 const ROOM_ID = 'world';
 const CHAT_MAX_LENGTH = 500;
 const QUICK_REACTIONS = ['🙏', '❤️', '🙌', '🔥'];
-const MUSIC_QUICK_PICKS = ['Louange', 'Adoration instrumentale', 'Gospel'];
+const MUSIC_QUICK_PICK_CODES = ['PRAISE', 'INSTRUMENTAL_ADORATION', 'GOSPEL'] as const;
 
 type MusicPlatform = 'youtube' | 'spotify';
 
 function musicSearchUrl(platform: MusicPlatform, query: string): string {
-  const q = encodeURIComponent(query.trim() || 'louange et adoration');
+  const q = encodeURIComponent(query.trim() || i18n.t('room.musicQuickPicks.PRAISE'));
   return platform === 'spotify'
     ? `https://open.spotify.com/search/${q}`
     : `https://www.youtube.com/results?search_query=${q}`;
@@ -30,6 +32,7 @@ type ConnectionState = 'connecting' | 'live' | 'empty';
 type FloatingReaction = { id: number; emoji: string };
 
 export function PrayerRoomPage() {
+  const { t } = useTranslation();
   const { status, user } = useAuth();
   const [connectionState, setConnectionState] = useState<ConnectionState>('connecting');
   const [slot, setSlot] = useState<PrayerSlot | null>(null);
@@ -143,7 +146,7 @@ export function PrayerRoomPage() {
     socket.on('speak:revoked', (payload: { userIds: string[] }) => {
       const me = userRef.current;
       if (me && payload.userIds.includes(me.id)) {
-        setRoomNotice('Vous avez été remis en écoute.');
+        setRoomNotice(t('room.returnedToListening'));
       }
     });
 
@@ -221,7 +224,7 @@ export function PrayerRoomPage() {
 
   function requireAuth(): boolean {
     if (status === 'authenticated') return true;
-    setRoomError('Connecte-toi pour participer à la salle.');
+    setRoomError(t('room.needLogin'));
     return false;
   }
 
@@ -261,7 +264,7 @@ export function PrayerRoomPage() {
     event.preventDefault();
     const videoId = extractYouTubeId(musicLinkInput.trim());
     if (!videoId) {
-      setMusicLinkError("Ce lien ne ressemble pas à une URL YouTube valide.");
+      setMusicLinkError(t('room.invalidYoutubeLink'));
       return;
     }
     setMusicLinkError(null);
@@ -277,13 +280,11 @@ export function PrayerRoomPage() {
 
   return (
     <div className="room-page">
-      <h2>Salle de prière mondiale</h2>
+      <h2>{t('room.title')}</h2>
 
       {connectionState !== 'live' && (
         <p className="room-status">
-          {connectionState === 'connecting'
-            ? 'Connexion à la salle en cours…'
-            : "Aucune salle n'est active pour le moment."}
+          {connectionState === 'connecting' ? t('room.connecting') : t('room.empty')}
         </p>
       )}
 
@@ -291,7 +292,7 @@ export function PrayerRoomPage() {
         <div className="room-stage">
           <div className="room-chips">
             <span className="chip">{slot.category}</span>
-            {slot.importance === 'Urgent' && <span className="chip chip-urgent">Urgent</span>}
+            {slot.importance === 'Urgent' && <span className="chip chip-urgent">{t('room.urgent')}</span>}
           </div>
 
           <div className="room-timer">{formatRemaining(remainingSeconds)}</div>
@@ -299,7 +300,7 @@ export function PrayerRoomPage() {
             <div className="room-progress-fill" style={{ width: `${progressPct}%` }} />
           </div>
           {remainingSeconds > 0 && remainingSeconds <= 5 && (
-            <p className="hint room-ending-soon">Fin du sujet dans {remainingSeconds}s</p>
+            <p className="hint room-ending-soon">{t('room.endingSoon', { seconds: remainingSeconds })}</p>
           )}
 
           <h3>{slot.title}</h3>
@@ -314,7 +315,7 @@ export function PrayerRoomPage() {
           )}
 
           <p className="room-leader">
-            {slot.leader_display_name ? `Animé par ${slot.leader_display_name}` : "Animé par l'IA Intercession"}
+            {slot.leader_display_name ? t('room.leaderNamed', { name: slot.leader_display_name }) : t('room.leaderAi')}
           </p>
 
           <div className="room-reactions-overlay">
@@ -329,7 +330,7 @@ export function PrayerRoomPage() {
 
       <div className="room-actions">
         <button className={handRaisedByMe ? 'room-action active' : 'room-action'} onClick={toggleHand}>
-          🖐 Main{raisedHands.length > 0 ? ` (${raisedHands.length})` : ''}
+          {t('room.handLabel')}{raisedHands.length > 0 ? ` (${raisedHands.length})` : ''}
         </button>
         <div className="room-action-group">
           {QUICK_REACTIONS.map((emoji) => (
@@ -344,7 +345,7 @@ export function PrayerRoomPage() {
           }
           onClick={toggleSpeakRequest}
         >
-          🎤 {speakingByMe ? 'Vous parlez' : speakPendingByMe ? 'Demande envoyée' : 'Parler'}
+          🎤 {speakingByMe ? t('room.speaking') : speakPendingByMe ? t('room.speakRequested') : t('room.speak')}
         </button>
       </div>
 
@@ -354,20 +355,20 @@ export function PrayerRoomPage() {
       {(raisedHands.length > 0 || pendingSpeakers.length > 0 || activeSpeakers.length > 0) && (
         <div className="room-live-status">
           {activeSpeakers.length > 0 && (
-            <p>🎤 A la parole : {activeSpeakers.map((s) => s.displayName).join(', ')}</p>
+            <p>{t('room.activeSpeakersLabel')} {activeSpeakers.map((s) => s.displayName).join(', ')}</p>
           )}
           {raisedHands.length > 0 && (
-            <p>🖐 Mains levées : {raisedHands.map((p) => p.displayName).join(', ')}</p>
+            <p>{t('room.raisedHandsLabel')} {raisedHands.map((p) => p.displayName).join(', ')}</p>
           )}
           {pendingSpeakers.length > 0 && (
             <div className="room-speak-queue">
-              <p>En attente de parole :</p>
+              <p>{t('room.waitingToSpeak')}</p>
               <ul>
                 {pendingSpeakers.map((p) => (
                   <li key={p.userId}>
                     {p.displayName}
                     <button className="link-button" onClick={() => grantSpeak(p.userId)}>
-                      Accorder la parole
+                      {t('room.grantSpeak')}
                     </button>
                   </li>
                 ))}
@@ -378,7 +379,7 @@ export function PrayerRoomPage() {
             <div className="room-speak-queue">
               {activeSpeakers.map((s) => (
                 <button key={s.userId} className="link-button" onClick={() => revokeSpeak(s.userId)}>
-                  Retirer la parole à {s.displayName}
+                  {t('room.revokeSpeakPrefix')} {s.displayName}
                 </button>
               ))}
             </div>
@@ -387,7 +388,7 @@ export function PrayerRoomPage() {
       )}
 
       <div className="room-music">
-        <h3>🎵 Musique d'adoration</h3>
+        <h3>{t('room.musicTitle')}</h3>
 
         {nowPlaying && (
           <div className="room-music-player">
@@ -395,20 +396,17 @@ export function PrayerRoomPage() {
               width="100%"
               height="200"
               src={`https://www.youtube.com/embed/${nowPlaying.videoId}?autoplay=1`}
-              title={nowPlaying.title || 'Musique d\'adoration'}
+              title={nowPlaying.title || t('room.defaultMusicTitle')}
               allow="autoplay; encrypted-media"
               allowFullScreen
             />
             <button type="button" className="room-action" onClick={stopMusic}>
-              ⏹ Arrêter pour tout le monde
+              {t('room.stopForEveryone')}
             </button>
           </div>
         )}
 
-        <p className="hint">
-          Cherche un chant sur YouTube ou Spotify, puis colle son lien ci-dessous pour le jouer
-          dans un petit lecteur ici même, diffusé à toute la salle.
-        </p>
+        <p className="hint">{t('room.musicIntro')}</p>
         <form className="room-music-form" onSubmit={submitMusicSearch}>
           <select value={musicPlatform} onChange={(event) => setMusicPlatform(event.target.value as MusicPlatform)}>
             <option value="youtube">YouTube</option>
@@ -418,16 +416,19 @@ export function PrayerRoomPage() {
             type="text"
             value={musicQuery}
             onChange={(event) => setMusicQuery(event.target.value)}
-            placeholder="Ex. Hillsong, gospel congolais..."
+            placeholder={t('room.musicSearchPlaceholder')}
           />
-          <button type="submit">Rechercher →</button>
+          <button type="submit">{t('room.search')}</button>
         </form>
         <div className="room-music-quick">
-          {MUSIC_QUICK_PICKS.map((label) => (
-            <button key={label} type="button" className="room-action" onClick={() => openMusicSearch(label)}>
-              {label}
-            </button>
-          ))}
+          {MUSIC_QUICK_PICK_CODES.map((code) => {
+            const label = t(`room.musicQuickPicks.${code}`);
+            return (
+              <button key={code} type="button" className="room-action" onClick={() => openMusicSearch(label)}>
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <form className="room-music-form room-music-link-form" onSubmit={playMusicLink}>
@@ -435,28 +436,28 @@ export function PrayerRoomPage() {
             type="text"
             value={musicLinkInput}
             onChange={(event) => setMusicLinkInput(event.target.value)}
-            placeholder="Colle un lien YouTube trouvé ci-dessus..."
+            placeholder={t('room.musicLinkPlaceholder')}
           />
-          <button type="submit">▶ Jouer dans la salle</button>
+          <button type="submit">{t('room.playInRoom')}</button>
         </form>
         {musicLinkError && <p className="error">{musicLinkError}</p>}
       </div>
 
       <div className="room-chat">
-        <h3>Chat</h3>
+        <h3>{t('room.chatTitle')}</h3>
         <div className="room-chat-list" ref={chatListRef}>
-          {messages.length === 0 && <p className="room-chat-empty">Aucun message pour le moment.</p>}
+          {messages.length === 0 && <p className="room-chat-empty">{t('room.chatEmpty')}</p>}
           {messages.map((message) => (
             <div key={message.id} className="room-chat-message">
-              <strong>{message.author_display_name ?? 'Anonyme'}</strong>
+              <strong>{message.author_display_name ?? t('room.anonymous')}</strong>
               <span>{message.content}</span>
               {status === 'authenticated' && message.author_id !== user?.id && (
                 <span className="room-chat-mod-actions">
                   <button type="button" className="link-button" onClick={() => hideMessage(message.id)}>
-                    Masquer
+                    {t('room.hide')}
                   </button>
                   <button type="button" className="link-button" onClick={() => muteAuthor(message.author_id)}>
-                    Sourdine 15 min
+                    {t('room.mute15')}
                   </button>
                 </span>
               )}
@@ -469,7 +470,12 @@ export function PrayerRoomPage() {
         {status === 'authenticated' ? (
           isMutedNow ? (
             <p className="hint room-chat-error">
-              Tu es en sourdine jusqu'à {new Date(mutedUntil as string).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.
+              {t('room.mutedUntil', {
+                time: new Date(mutedUntil as string).toLocaleTimeString(i18n.language, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+              })}
             </p>
           ) : (
             <form className="room-chat-form" onSubmit={sendChat}>
@@ -477,16 +483,16 @@ export function PrayerRoomPage() {
                 type="text"
                 value={chatInput}
                 onChange={(event) => setChatInput(event.target.value)}
-                placeholder="Écrire un message..."
+                placeholder={t('room.chatPlaceholder')}
                 maxLength={CHAT_MAX_LENGTH}
               />
               <button type="submit" disabled={!chatInput.trim()}>
-                Envoyer
+                {t('room.send')}
               </button>
             </form>
           )
         ) : (
-          <p className="hint">Connecte-toi pour écrire dans le chat.</p>
+          <p className="hint">{t('room.needLoginChat')}</p>
         )}
       </div>
     </div>

@@ -246,5 +246,48 @@
       "AUDIO": "Audio",
       "VIDEO": "Vidéo"
     }
+  },
+  "room": {
+    "title": "Salle de prière mondiale",
+    "connecting": "Connexion à la salle en cours…",
+    "empty": "Aucune salle n'est active pour le moment.",
+    "urgent": "Urgent",
+    "endingSoon": "Fin du sujet dans {{seconds}}s",
+    "leaderNamed": "Animé par {{name}}",
+    "leaderAi": "Animé par l'IA Intercession",
+    "handLabel": "🖐 Main",
+    "speaking": "Vous parlez",
+    "speakRequested": "Demande envoyée",
+    "speak": "Parler",
+    "needLogin": "Connecte-toi pour participer à la salle.",
+    "returnedToListening": "Vous avez été remis en écoute.",
+    "activeSpeakersLabel": "🎤 A la parole :",
+    "raisedHandsLabel": "🖐 Mains levées :",
+    "waitingToSpeak": "En attente de parole :",
+    "grantSpeak": "Accorder la parole",
+    "revokeSpeakPrefix": "Retirer la parole à",
+    "musicTitle": "🎵 Musique d'adoration",
+    "musicIntro": "Cherche un chant sur YouTube ou Spotify, puis colle son lien ci-dessous pour le jouer dans un petit lecteur ici même, diffusé à toute la salle.",
+    "musicSearchPlaceholder": "Ex. Hillsong, gospel congolais...",
+    "search": "Rechercher →",
+    "musicLinkPlaceholder": "Colle un lien YouTube trouvé ci-dessus...",
+    "playInRoom": "▶ Jouer dans la salle",
+    "stopForEveryone": "⏹ Arrêter pour tout le monde",
+    "invalidYoutubeLink": "Ce lien ne ressemble pas à une URL YouTube valide.",
+    "defaultMusicTitle": "Musique d'adoration",
+    "chatTitle": "Chat",
+    "chatEmpty": "Aucun message pour le moment.",
+    "anonymous": "Anonyme",
+    "hide": "Masquer",
+    "mute15": "Sourdine 15 min",
+    "mutedUntil": "Tu es en sourdine jusqu'à {{time}}.",
+    "chatPlaceholder": "Écrire un message...",
+    "send": "Envoyer",
+    "needLoginChat": "Connecte-toi pour écrire dans le chat.",
+    "musicQuickPicks": {
+      "PRAISE": "Louange",
+      "INSTRUMENTAL_ADORATION": "Adoration instrumentale",
+      "GOSPEL": "Gospel"
+    }
   }
 }

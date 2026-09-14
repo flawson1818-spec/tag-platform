@@ -246,5 +246,48 @@
       "AUDIO": "Audio",
       "VIDEO": "Video"
     }
+  },
+  "room": {
+    "title": "Global prayer room",
+    "connecting": "Connecting to the room…",
+    "empty": "No room is active right now.",
+    "urgent": "Urgent",
+    "endingSoon": "Subject ends in {{seconds}}s",
+    "leaderNamed": "Led by {{name}}",
+    "leaderAi": "Led by the AI Intercessor",
+    "handLabel": "🖐 Hand",
+    "speaking": "You're speaking",
+    "speakRequested": "Request sent",
+    "speak": "Speak",
+    "needLogin": "Log in to take part in the room.",
+    "returnedToListening": "You've been moved back to listening.",
+    "activeSpeakersLabel": "🎤 Speaking:",
+    "raisedHandsLabel": "🖐 Hands raised:",
+    "waitingToSpeak": "Waiting to speak:",
+    "grantSpeak": "Give the floor",
+    "revokeSpeakPrefix": "Remove the floor from",
+    "musicTitle": "🎵 Worship music",
+    "musicIntro": "Search for a song on YouTube or Spotify, then paste its link below to play it in a small player right here, broadcast to the whole room.",
+    "musicSearchPlaceholder": "E.g. Hillsong, gospel...",
+    "search": "Search →",
+    "musicLinkPlaceholder": "Paste a YouTube link found above...",
+    "playInRoom": "▶ Play in the room",
+    "stopForEveryone": "⏹ Stop for everyone",
+    "invalidYoutubeLink": "That link doesn't look like a valid YouTube URL.",
+    "defaultMusicTitle": "Worship music",
+    "chatTitle": "Chat",
+    "chatEmpty": "No messages yet.",
+    "anonymous": "Anonymous",
+    "hide": "Hide",
+    "mute15": "Mute 15 min",
+    "mutedUntil": "You're muted until {{time}}.",
+    "chatPlaceholder": "Write a message...",
+    "send": "Send",
+    "needLoginChat": "Log in to write in the chat.",
+    "musicQuickPicks": {
+      "PRAISE": "Praise",
+      "INSTRUMENTAL_ADORATION": "Instrumental worship",
+      "GOSPEL": "Gospel"
+    }
   }
 }
