@@ -702,5 +702,34 @@
     "liveBadge": "Live",
     "leaderAi": "AI Intercessor",
     "saving": "Saving…"
+  },
+  "analytics": {
+    "title": "Dashboard",
+    "intro": "Aggregated statistics — growth, attendance, prayer topics, retention.",
+    "needLogin": "Log in to see the dashboard.",
+    "loading": "Loading…",
+    "noGrowthData": "No growth data yet.",
+    "noAttendanceData": "No attendance data yet.",
+    "noTopics": "No prayer topics yet.",
+    "growthChartAriaLabel": "New accounts per day over 30 days",
+    "attendanceChartAriaLabel": "Attendance by hour of day",
+    "newAccountTooltip": "{{day}} — {{count}} new account(s)",
+    "attendanceTooltip": "{{hour}}h — {{count}} attendee(s)",
+    "retentionLabel": "{{period}} retention ({{retained}}/{{eligible}})",
+    "retentionTitle": "Retention",
+    "newAccountsTitle": "New accounts (last 30 days)",
+    "peakHoursTitle": "Peak hours",
+    "topCategoriesTitle": "Most frequent prayer topics",
+    "exportTitle": "Export",
+    "exportIntro": "Generates a downloadable JSON export (link valid for 24h).",
+    "generating": "Generating…",
+    "export": "Export",
+    "downloadExport": "Download the {{scope}} export"
+  },
+  "exportScopes": {
+    "prayer_requests": "Prayer requests",
+    "testimonies": "Testimonies",
+    "users": "Users",
+    "communities": "Communities"
   }
 }

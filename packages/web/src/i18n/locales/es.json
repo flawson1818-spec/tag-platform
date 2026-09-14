@@ -702,5 +702,34 @@
     "liveBadge": "En vivo",
     "leaderAi": "IA Intercesora",
     "saving": "Guardando…"
+  },
+  "analytics": {
+    "title": "Panel de control",
+    "intro": "Estadísticas agregadas — crecimiento, asistencia, temas de oración, retención.",
+    "needLogin": "Inicia sesión para ver el panel de control.",
+    "loading": "Cargando…",
+    "noGrowthData": "Aún no hay datos de crecimiento.",
+    "noAttendanceData": "Aún no hay datos de asistencia.",
+    "noTopics": "Aún no hay temas de oración.",
+    "growthChartAriaLabel": "Nuevas cuentas por día durante 30 días",
+    "attendanceChartAriaLabel": "Asistencia por hora del día",
+    "newAccountTooltip": "{{day}} — {{count}} cuenta(s) nueva(s)",
+    "attendanceTooltip": "{{hour}}h — {{count}} asistente(s)",
+    "retentionLabel": "Retención {{period}} ({{retained}}/{{eligible}})",
+    "retentionTitle": "Retención",
+    "newAccountsTitle": "Nuevas cuentas (últimos 30 días)",
+    "peakHoursTitle": "Horas pico",
+    "topCategoriesTitle": "Temas de oración más frecuentes",
+    "exportTitle": "Exportación",
+    "exportIntro": "Genera una exportación JSON descargable (enlace válido por 24h).",
+    "generating": "Generando…",
+    "export": "Exportar",
+    "downloadExport": "Descargar la exportación de {{scope}}"
+  },
+  "exportScopes": {
+    "prayer_requests": "Peticiones de oración",
+    "testimonies": "Testimonios",
+    "users": "Usuarios",
+    "communities": "Comunidades"
   }
 }

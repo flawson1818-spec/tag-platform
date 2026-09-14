@@ -702,5 +702,34 @@
     "liveBadge": "En direct",
     "leaderAi": "IA Intercession",
     "saving": "Enregistrement…"
+  },
+  "analytics": {
+    "title": "Tableau de bord",
+    "intro": "Statistiques agrégées — croissance, fréquentation, sujets de prière, rétention.",
+    "needLogin": "Connecte-toi pour voir le tableau de bord.",
+    "loading": "Chargement…",
+    "noGrowthData": "Pas encore de données de croissance.",
+    "noAttendanceData": "Pas encore de données de fréquentation.",
+    "noTopics": "Pas encore de sujets de prière.",
+    "growthChartAriaLabel": "Nouveaux comptes par jour sur 30 jours",
+    "attendanceChartAriaLabel": "Fréquentation par heure de la journée",
+    "newAccountTooltip": "{{day}} — {{count}} nouveau(x) compte(s)",
+    "attendanceTooltip": "{{hour}}h — {{count}} présence(s)",
+    "retentionLabel": "Rétention {{period}} ({{retained}}/{{eligible}})",
+    "retentionTitle": "Rétention",
+    "newAccountsTitle": "Nouveaux comptes (30 derniers jours)",
+    "peakHoursTitle": "Heures de pointe",
+    "topCategoriesTitle": "Sujets de prière les plus fréquents",
+    "exportTitle": "Export",
+    "exportIntro": "Génère un export JSON téléchargeable (lien valable 24h).",
+    "generating": "Génération…",
+    "export": "Exporter",
+    "downloadExport": "Télécharger l'export {{scope}}"
+  },
+  "exportScopes": {
+    "prayer_requests": "Demandes de prière",
+    "testimonies": "Témoignages",
+    "users": "Utilisateurs",
+    "communities": "Communautés"
   }
 }
