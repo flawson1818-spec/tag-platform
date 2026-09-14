@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import {
   CreateSlotPayload,
@@ -10,15 +11,16 @@ import {
   prayerApi,
 } from '../../lib/api';
 import { CalendarView, formatViewRangeLabel, isWithinView, shiftReferenceDate } from '../../lib/calendar';
+import i18n from '../../i18n/config';
 
-const CALENDAR_VIEWS: { value: CalendarView; label: string }[] = [
-  { value: 'day', label: 'Jour' },
-  { value: 'week', label: 'Semaine' },
-  { value: 'month', label: 'Mois' },
+const CALENDAR_VIEWS: { value: CalendarView; key: string }[] = [
+  { value: 'day', key: 'day' },
+  { value: 'week', key: 'week' },
+  { value: 'month', key: 'month' },
 ];
 
 function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString(i18n.language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 function toCsv(list: string[]): string {
@@ -46,6 +48,7 @@ const EMPTY_SLOT_FORM = {
 };
 
 export function ProgramsPage() {
+  const { t } = useTranslation();
   const [programs, setPrograms] = useState<PrayerProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +97,7 @@ export function ProgramsPage() {
     e.preventDefault();
     const token = getAccessToken();
     if (!token) {
-      setError('Connecte-toi avec un compte modérateur pour créer un programme.');
+      setError(t('programs.needLoginCreate'));
       return;
     }
     setCreating(true);
@@ -209,32 +212,37 @@ export function ProgramsPage() {
 
   return (
     <div className="communities-page">
-      <h2>Programmes de prière</h2>
+      <h2>{t('programs.title')}</h2>
       <p className="hint">
-        Créer et planifier les créneaux de la salle mondiale (ou d'une communauté). Réservé aux comptes
-        disposant de la permission <code>prayer_program.create</code>.
+        {t('programs.intro')} <code>prayer_program.create</code>.
       </p>
 
       <form onSubmit={handleCreateProgram} className="request-form">
-        <input type="text" placeholder="Titre du programme" value={title} onChange={(e) => setTitle(e.target.value)} required />
         <input
           type="text"
-          placeholder="Règle de récurrence (facultatif, ex : FREQ=DAILY)"
+          placeholder={t('programs.titlePlaceholder')}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder={t('programs.recurrencePlaceholder')}
           value={recurrenceRule}
           onChange={(e) => setRecurrenceRule(e.target.value)}
         />
         <button type="submit" disabled={creating}>
-          {creating ? 'Création…' : 'Créer le programme'}
+          {creating ? t('programs.creating') : t('programs.create')}
         </button>
       </form>
       {error && <p className="error">{error}</p>}
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('programs.loading')}</p>}
 
       <ul className="request-list">
         {programs.map((program) => (
           <li key={program.id} className={`request-row ${selectedId === program.id ? 'slot-row-live' : ''}`}>
             <div className="request-meta">
-              <span className="chip chip-status">{program.status}</span>
+              <span className="chip chip-status">{t(`campaignStatuses.${program.status}`, program.status)}</span>
               {program.recurrence_rule && <span className="hint">{program.recurrence_rule}</span>}
             </div>
             <p>
@@ -242,26 +250,26 @@ export function ProgramsPage() {
             </p>
             <div className="request-form">
               <button type="button" onClick={() => selectProgram(program.id)}>
-                {selectedId === program.id ? 'Créneaux sélectionnés ▾' : 'Voir les créneaux'}
+                {selectedId === program.id ? t('programs.viewSlotsSelected') : t('programs.viewSlots')}
               </button>
               {PRAYER_PROGRAM_STATUSES.filter((s) => s !== program.status).map((s) => (
                 <button key={s} type="button" onClick={() => handleStatusChange(program.id, s)}>
-                  {s}
+                  {t(`campaignStatuses.${s}`, s)}
                 </button>
               ))}
               <button type="button" onClick={() => handleDeleteProgram(program.id)}>
-                Supprimer
+                {t('programs.delete')}
               </button>
             </div>
           </li>
         ))}
       </ul>
-      {!loading && programs.length === 0 && <p className="hint">Aucun programme pour l'instant.</p>}
+      {!loading && programs.length === 0 && <p className="hint">{t('programs.noPrograms')}</p>}
 
       {selectedProgram && (
         <>
-          <h3>Créneaux — {selectedProgram.title}</h3>
-          {slotsLoading && <p>Chargement…</p>}
+          <h3>{t('programs.slotsTitle', { title: selectedProgram.title })}</h3>
+          {slotsLoading && <p>{t('programs.loading')}</p>}
 
           <div className="calendar-toolbar">
             <div className="calendar-view-switch">
@@ -272,20 +280,20 @@ export function ProgramsPage() {
                   className={calendarView === v.value ? 'active' : ''}
                   onClick={() => setCalendarView(v.value)}
                 >
-                  {v.label}
+                  {t(`programs.calendarViews.${v.key}`)}
                 </button>
               ))}
             </div>
             <div className="calendar-nav">
               <button type="button" onClick={() => setReferenceDate((d) => shiftReferenceDate(calendarView, d, -1))}>
-                ← Précédent
+                {t('programs.previous')}
               </button>
               <span className="calendar-range-label">{formatViewRangeLabel(calendarView, referenceDate)}</span>
               <button type="button" onClick={() => setReferenceDate(new Date())}>
-                Aujourd'hui
+                {t('programs.today')}
               </button>
               <button type="button" onClick={() => setReferenceDate((d) => shiftReferenceDate(calendarView, d, 1))}>
-                Suivant →
+                {t('programs.next')}
               </button>
             </div>
           </div>
@@ -293,11 +301,11 @@ export function ProgramsPage() {
           <table className="slot-table">
             <thead>
               <tr>
-                <th>Heure</th>
-                <th>Titre</th>
-                <th>Catégorie</th>
-                <th>Importance</th>
-                <th>Animé par</th>
+                <th>{t('programs.tableTime')}</th>
+                <th>{t('programs.tableTitle')}</th>
+                <th>{t('programs.tableCategory')}</th>
+                <th>{t('programs.tableImportance')}</th>
+                <th>{t('programs.tableLeader')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -306,34 +314,34 @@ export function ProgramsPage() {
                 <tr key={slot.id} className={slot.status === 'RUNNING' ? 'slot-row-live' : ''}>
                   <td>
                     {formatDateTime(slot.start_at)}–{formatDateTime(slot.end_at)}
-                    {slot.status === 'RUNNING' && <span className="live-badge"> En direct</span>}
+                    {slot.status === 'RUNNING' && <span className="live-badge"> {t('programs.liveBadge')}</span>}
                   </td>
                   <td>{slot.title}</td>
-                  <td>{slot.category}</td>
-                  <td>{slot.importance}</td>
-                  <td>{slot.leader_display_name ?? 'IA Intercession'}</td>
+                  <td>{t(`prayerTopicCategories.${slot.category}`, slot.category)}</td>
+                  <td>{t(`prayerImportance.${slot.importance}`, slot.importance)}</td>
+                  <td>{slot.leader_display_name ?? t('programs.leaderAi')}</td>
                   <td>
                     <button type="button" onClick={() => startEditSlot(slot)}>
-                      Modifier
+                      {t('programs.edit')}
                     </button>
                     <button type="button" onClick={() => handleDeleteSlot(slot.id)}>
-                      Supprimer
+                      {t('programs.delete')}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!slotsLoading && slots.length === 0 && <p className="hint">Aucun créneau pour ce programme.</p>}
+          {!slotsLoading && slots.length === 0 && <p className="hint">{t('programs.noSlots')}</p>}
           {!slotsLoading && slots.length > 0 && visibleSlots.length === 0 && (
-            <p className="hint">Aucun créneau sur cette période — essaie une autre semaine/mois.</p>
+            <p className="hint">{t('programs.noSlotsInPeriod')}</p>
           )}
 
-          <h4>{editingSlotId ? 'Modifier le créneau' : 'Ajouter un créneau'}</h4>
+          <h4>{editingSlotId ? t('programs.editSlotTitle') : t('programs.addSlotTitle')}</h4>
           <form onSubmit={editingSlotId ? handleUpdateSlot : handleCreateSlot} className="request-form">
             <input
               type="text"
-              placeholder="Titre du créneau"
+              placeholder={t('programs.slotTitlePlaceholder')}
               value={slotForm.title}
               onChange={(e) => setSlotForm({ ...slotForm, title: e.target.value })}
               required
@@ -341,14 +349,14 @@ export function ProgramsPage() {
             <select value={slotForm.category} onChange={(e) => setSlotForm({ ...slotForm, category: e.target.value })}>
               {PRAYER_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {t(`prayerTopicCategories.${c}`, c)}
                 </option>
               ))}
             </select>
             <select value={slotForm.importance} onChange={(e) => setSlotForm({ ...slotForm, importance: e.target.value })}>
               {PRAYER_IMPORTANCE_LEVELS.map((i) => (
                 <option key={i} value={i}>
-                  {i}
+                  {t(`prayerImportance.${i}`, i)}
                 </option>
               ))}
             </select>
@@ -369,33 +377,33 @@ export function ProgramsPage() {
               </>
             )}
             <textarea
-              placeholder="Texte guidé (facultatif)"
+              placeholder={t('programs.guidedTextPlaceholder')}
               value={slotForm.guidedText}
               onChange={(e) => setSlotForm({ ...slotForm, guidedText: e.target.value })}
               rows={3}
             />
             <input
               type="text"
-              placeholder="Références bibliques, séparées par des virgules"
+              placeholder={t('programs.bibleRefsPlaceholder')}
               value={slotForm.bibleReferences}
               onChange={(e) => setSlotForm({ ...slotForm, bibleReferences: e.target.value })}
             />
             <input
               type="text"
-              placeholder="Chants recommandés, séparés par des virgules"
+              placeholder={t('programs.songsPlaceholder')}
               value={slotForm.recommendedSongs}
               onChange={(e) => setSlotForm({ ...slotForm, recommendedSongs: e.target.value })}
             />
             <input
               type="number"
-              placeholder="Ordre (facultatif)"
+              placeholder={t('programs.orderPlaceholder')}
               value={slotForm.orderIndex}
               onChange={(e) => setSlotForm({ ...slotForm, orderIndex: e.target.value })}
               min={0}
             />
             <div className="request-form">
               <button type="submit" disabled={slotSaving}>
-                {slotSaving ? 'Enregistrement…' : editingSlotId ? 'Enregistrer' : 'Ajouter le créneau'}
+                {slotSaving ? t('programs.saving') : editingSlotId ? t('programs.save') : t('programs.addSlot')}
               </button>
               {editingSlotId && (
                 <button
@@ -405,7 +413,7 @@ export function ProgramsPage() {
                     setSlotForm(EMPTY_SLOT_FORM);
                   }}
                 >
-                  Annuler
+                  {t('programs.cancel')}
                 </button>
               )}
             </div>
