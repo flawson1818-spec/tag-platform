@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "home": "Início",
+    "room": "Sala de oração",
+    "prayerRequests": "Pedidos de oração",
+    "testimonies": "Testemunhos",
+    "communities": "Comunidades",
+    "campaigns": "Campanhas",
+    "events": "Eventos",
+    "aiWelcome": "IA Boas-vindas",
+    "aiEvangelism": "IA Evangelização",
+    "worldMap": "Mapa mundial",
+    "notifications": "Notificações",
+    "dashboard": "Painel",
+    "logout": "Sair",
+    "login": "Entrar",
+    "register": "Criar uma conta",
+    "languageLabel": "Idioma"
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar",
+      "emailPlaceholder": "Endereço de e-mail",
+      "passwordPlaceholder": "Senha",
+      "submit": "Entrar",
+      "submitting": "Entrando…",
+      "noAccount": "Ainda não tem uma conta?",
+      "createAccount": "Criar uma conta",
+      "forgotPassword": "Esqueceu a senha?"
+    },
+    "mfa": {
+      "title": "Verificação em duas etapas",
+      "recoveryHint": "Digite um dos seus códigos de recuperação de uso único.",
+      "totpHint": "Digite o código de 6 dígitos gerado pelo seu aplicativo autenticador.",
+      "otpHintSent": "Um código de 6 dígitos foi enviado por {{channel}}.",
+      "otpHintUnsent": "Receba um código de uso único por e-mail ou WhatsApp.",
+      "channelEmail": "e-mail",
+      "channelWhatsapp": "WhatsApp",
+      "receiveByEmail": "Receber por e-mail",
+      "receiveByWhatsapp": "Receber por WhatsApp",
+      "sending": "Enviando…",
+      "recoveryCodePlaceholder": "Código de recuperação",
+      "sixDigitPlaceholder": "Código de 6 dígitos",
+      "trustDevice": "Lembrar este dispositivo por 30 dias",
+      "verifying": "Verificando…",
+      "submit": "Confirmar",
+      "useAuthenticator": "Tenho meu aplicativo autenticador",
+      "receiveOtp": "Receber um código por e-mail ou WhatsApp",
+      "lostDevice": "Perdi meu dispositivo — usar um código de recuperação",
+      "back": "Voltar"
+    },
+    "register": {
+      "title": "Criar uma conta",
+      "displayNamePlaceholder": "Nome de exibição",
+      "emailPlaceholder": "Endereço de e-mail",
+      "passwordPlaceholder": "Senha",
+      "passwordHint": "Mínimo de 12 caracteres, com maiúscula, minúscula, número e caractere especial.",
+      "submit": "Criar minha conta",
+      "submitting": "Criando…",
+      "alreadyRegistered": "Já tem uma conta?",
+      "login": "Entrar"
+    }
+  }
+}

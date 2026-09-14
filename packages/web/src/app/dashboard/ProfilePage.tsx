@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { changeLocale, LOCALE_LABELS, SUPPORTED_LOCALES, SupportedLocale } from '../../i18n/config';
 import {
   usersApi,
   filesApi,
@@ -640,7 +641,10 @@ export function ProfilePage() {
     setSaving(true);
     usersApi
       .updateMe(token, { displayName, phone: phone || undefined, locale, timezone })
-      .then(() => setSaved(true))
+      .then(() => {
+        setSaved(true);
+        changeLocale(locale as SupportedLocale);
+      })
       .catch((err) => setError((err as Error).message))
       .finally(() => setSaving(false));
   };
@@ -663,12 +667,13 @@ export function ProfilePage() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
-        <input
-          type="text"
-          placeholder="Langue (ex : fr)"
-          value={locale}
-          onChange={(e) => setLocale(e.target.value)}
-        />
+        <select value={locale} onChange={(e) => setLocale(e.target.value)}>
+          {SUPPORTED_LOCALES.map((code) => (
+            <option key={code} value={code}>
+              {LOCALE_LABELS[code]}
+            </option>
+          ))}
+        </select>
         <input
           type="text"
           placeholder="Fuseau horaire (ex : Africa/Abidjan)"

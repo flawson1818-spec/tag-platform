@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "room": "Sala de oración",
+    "prayerRequests": "Peticiones de oración",
+    "testimonies": "Testimonios",
+    "communities": "Comunidades",
+    "campaigns": "Campañas",
+    "events": "Eventos",
+    "aiWelcome": "IA Bienvenida",
+    "aiEvangelism": "IA Evangelización",
+    "worldMap": "Mapa mundial",
+    "notifications": "Notificaciones",
+    "dashboard": "Panel de control",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "register": "Crear una cuenta",
+    "languageLabel": "Idioma"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "emailPlaceholder": "Correo electrónico",
+      "passwordPlaceholder": "Contraseña",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión…",
+      "noAccount": "¿Todavía no tienes una cuenta?",
+      "createAccount": "Crear una cuenta",
+      "forgotPassword": "¿Olvidaste tu contraseña?"
+    },
+    "mfa": {
+      "title": "Verificación en dos pasos",
+      "recoveryHint": "Introduce uno de tus códigos de recuperación de un solo uso.",
+      "totpHint": "Introduce el código de 6 dígitos generado por tu aplicación de autenticación.",
+      "otpHintSent": "Se ha enviado un código de 6 dígitos por {{channel}}.",
+      "otpHintUnsent": "Recibe un código de un solo uso por correo electrónico o WhatsApp.",
+      "channelEmail": "correo electrónico",
+      "channelWhatsapp": "WhatsApp",
+      "receiveByEmail": "Recibir por correo electrónico",
+      "receiveByWhatsapp": "Recibir por WhatsApp",
+      "sending": "Enviando…",
+      "recoveryCodePlaceholder": "Código de recuperación",
+      "sixDigitPlaceholder": "Código de 6 dígitos",
+      "trustDevice": "Recordar este dispositivo durante 30 días",
+      "verifying": "Verificando…",
+      "submit": "Confirmar",
+      "useAuthenticator": "Tengo mi aplicación de autenticación",
+      "receiveOtp": "Recibir un código por correo electrónico o WhatsApp",
+      "lostDevice": "Perdí mi dispositivo — usar un código de recuperación",
+      "back": "Volver"
+    },
+    "register": {
+      "title": "Crear una cuenta",
+      "displayNamePlaceholder": "Nombre visible",
+      "emailPlaceholder": "Correo electrónico",
+      "passwordPlaceholder": "Contraseña",
+      "passwordHint": "Mínimo 12 caracteres, con mayúscula, minúscula, número y carácter especial.",
+      "submit": "Crear mi cuenta",
+      "submitting": "Creando…",
+      "alreadyRegistered": "¿Ya tienes una cuenta?",
+      "login": "Iniciar sesión"
+    }
+  }
+}

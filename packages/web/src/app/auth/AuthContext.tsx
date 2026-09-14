@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { AuthUser, authApi, isMfaRequired } from '../../lib/api';
+import { getStoredLocale, changeLocale, isSupportedLocale } from '../../i18n/config';
 
 const ACCESS_TOKEN_KEY = 'tag.accessToken';
 const REFRESH_TOKEN_KEY = 'tag.refreshToken';
@@ -32,6 +33,12 @@ export function getAccessToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
+/** Adopts the account's saved language only if this browser has no explicit manual choice yet. */
+function syncLocaleFromUser(sessionUser: AuthUser): void {
+  if (getStoredLocale()) return;
+  if (isSupportedLocale(sessionUser.locale)) changeLocale(sessionUser.locale);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthContextValue['status']>(() =>
@@ -44,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       setUser(sessionUser);
       setStatus('authenticated');
+      syncLocaleFromUser(sessionUser);
     },
     [],
   );
@@ -65,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((me) => {
         setUser(me);
         setStatus('authenticated');
+        syncLocaleFromUser(me);
       })
       .catch(() =>
         authApi

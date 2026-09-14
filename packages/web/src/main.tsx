@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import * as ReactDOM from 'react-dom/client';
 import App from './app/app';
 import { applyTheme, getStoredTheme } from './lib/theme';
+import './i18n/config';
 
 // Applied before the first render so an explicit theme choice never flashes the other theme.
 applyTheme(getStoredTheme());
