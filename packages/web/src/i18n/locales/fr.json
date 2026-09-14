@@ -380,5 +380,55 @@
     "loading": "Chargement…",
     "commentPlaceholder": "Écrire un commentaire…",
     "send": "Envoyer"
+  },
+  "dashboard": {
+    "welcome": "Bienvenue, {{name}}",
+    "emailUnverified": "Adresse e-mail non vérifiée —",
+    "verifyIt": "vérifie-la",
+    "emailLabel": "E-mail",
+    "statusLabel": "Statut",
+    "languageLabel": "Langue",
+    "timezoneLabel": "Fuseau horaire",
+    "mfaLabel": "Vérification en deux étapes",
+    "mfaEnabled": "Activée",
+    "mfaDisabled": "Désactivée",
+    "quickAccessTitle": "Accès rapide",
+    "managementTitle": "Gestion",
+    "managementIntro": "Accessible selon ton rôle — un accès refusé ici signifie simplement que ton compte n'a pas encore la permission requise.",
+    "securityTitle": "Sécurité",
+    "links": {
+      "room": { "label": "Salle de prière", "description": "Rejoindre la prière en direct" },
+      "prayerRequests": { "label": "Demandes de prière", "description": "Déposer ou consulter une demande" },
+      "testimonies": { "label": "Témoignages", "description": "Partager ou modérer un témoignage" },
+      "communities": { "label": "Communautés", "description": "Rejoindre une cellule, une équipe, une église" },
+      "worldMap": { "label": "Carte mondiale", "description": "Voir la prière se vivre à travers le monde" },
+      "programs": { "label": "Programmes de prière", "description": "Créer et planifier les créneaux" },
+      "moderateRoom": { "label": "Gérer les intercesseurs", "description": "Assigner un animateur à chaque section" },
+      "socialPublications": { "label": "Brouillons réseaux sociaux", "description": "Valider les publications générées" },
+      "moderationQueue": { "label": "Contenus signalés", "description": "Témoignages et demandes signalés par l'IA Modératrice" },
+      "adminUsers": { "label": "Utilisateurs & rôles", "description": "Statut des comptes, attribution des rôles" },
+      "adminAnalytics": { "label": "Tableau de bord", "description": "Croissance, fréquentation, rétention, export" },
+      "adminSystem": { "label": "Système", "description": "Santé, sauvegardes, journaux d'audit" },
+      "mfa": { "label": "Vérification en deux étapes", "description": "Protéger le compte avec un code à usage unique" },
+      "profile": { "label": "Mon profil", "description": "Nom, téléphone, langue, fuseau horaire" }
+    }
+  },
+  "moderation": {
+    "title": "Contenus signalés",
+    "intro": "Signalés par l'IA Modératrice (texte, cohérence, contenu sensible) — l'IA n'exclut ni ne supprime jamais rien elle-même, chaque signalement attend une revue humaine. Le chat n'apparaît pas ici : un message jugé critique est mis en quarantaine automatiquement et immédiatement dans la salle.",
+    "loading": "Chargement…",
+    "needModerator": "Connecte-toi avec un compte modérateur.",
+    "testimoniesTitle": "Témoignages ({{count}})",
+    "noFlaggedTestimonies": "Aucun témoignage signalé.",
+    "requestsTitle": "Demandes de prière ({{count}})",
+    "noFlaggedRequests": "Aucune demande signalée.",
+    "flaggedNoReason": "Signalé sans motif précis",
+    "confidenceSuffix": "(confiance {{percent}}%)"
+  },
+  "testimonyStatuses": {
+    "DRAFT": "Brouillon",
+    "PUBLISHED": "Publié",
+    "EDITED": "Modifié",
+    "ARCHIVED": "Archivé"
   }
 }

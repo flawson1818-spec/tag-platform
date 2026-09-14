@@ -380,5 +380,55 @@
     "loading": "Loading…",
     "commentPlaceholder": "Write a comment…",
     "send": "Send"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "emailUnverified": "Email address unverified —",
+    "verifyIt": "verify it",
+    "emailLabel": "Email",
+    "statusLabel": "Status",
+    "languageLabel": "Language",
+    "timezoneLabel": "Time zone",
+    "mfaLabel": "Two-step verification",
+    "mfaEnabled": "Enabled",
+    "mfaDisabled": "Disabled",
+    "quickAccessTitle": "Quick access",
+    "managementTitle": "Management",
+    "managementIntro": "Available depending on your role — a denied access here just means your account doesn't have the required permission yet.",
+    "securityTitle": "Security",
+    "links": {
+      "room": { "label": "Prayer room", "description": "Join the live prayer" },
+      "prayerRequests": { "label": "Prayer requests", "description": "Submit or browse a request" },
+      "testimonies": { "label": "Testimonies", "description": "Share or moderate a testimony" },
+      "communities": { "label": "Communities", "description": "Join a cell, a team, a church" },
+      "worldMap": { "label": "World map", "description": "See prayer happening across the world" },
+      "programs": { "label": "Prayer programs", "description": "Create and schedule slots" },
+      "moderateRoom": { "label": "Manage intercessors", "description": "Assign a leader to each section" },
+      "socialPublications": { "label": "Social media drafts", "description": "Approve generated posts" },
+      "moderationQueue": { "label": "Flagged content", "description": "Testimonies and requests flagged by the AI Moderator" },
+      "adminUsers": { "label": "Users & roles", "description": "Account status, role assignment" },
+      "adminAnalytics": { "label": "Dashboard", "description": "Growth, attendance, retention, export" },
+      "adminSystem": { "label": "System", "description": "Health, backups, audit logs" },
+      "mfa": { "label": "Two-step verification", "description": "Protect the account with a one-time code" },
+      "profile": { "label": "My profile", "description": "Name, phone, language, time zone" }
+    }
+  },
+  "moderation": {
+    "title": "Flagged content",
+    "intro": "Flagged by the AI Moderator (text, consistency, sensitive content) — the AI never excludes or deletes anything itself, every flag awaits human review. Chat doesn't appear here: a message judged critical is automatically and immediately quarantined in the room.",
+    "loading": "Loading…",
+    "needModerator": "Log in with a moderator account.",
+    "testimoniesTitle": "Testimonies ({{count}})",
+    "noFlaggedTestimonies": "No flagged testimonies.",
+    "requestsTitle": "Prayer requests ({{count}})",
+    "noFlaggedRequests": "No flagged requests.",
+    "flaggedNoReason": "Flagged with no specific reason",
+    "confidenceSuffix": "(confidence {{percent}}%)"
+  },
+  "testimonyStatuses": {
+    "DRAFT": "Draft",
+    "PUBLISHED": "Published",
+    "EDITED": "Edited",
+    "ARCHIVED": "Archived"
   }
 }

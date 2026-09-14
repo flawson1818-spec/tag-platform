@@ -380,5 +380,55 @@
     "loading": "Cargando…",
     "commentPlaceholder": "Escribe un comentario…",
     "send": "Enviar"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido, {{name}}",
+    "emailUnverified": "Correo electrónico no verificado —",
+    "verifyIt": "verifícalo",
+    "emailLabel": "Correo electrónico",
+    "statusLabel": "Estado",
+    "languageLabel": "Idioma",
+    "timezoneLabel": "Huso horario",
+    "mfaLabel": "Verificación en dos pasos",
+    "mfaEnabled": "Activada",
+    "mfaDisabled": "Desactivada",
+    "quickAccessTitle": "Acceso rápido",
+    "managementTitle": "Gestión",
+    "managementIntro": "Disponible según tu rol — un acceso denegado aquí solo significa que tu cuenta aún no tiene el permiso necesario.",
+    "securityTitle": "Seguridad",
+    "links": {
+      "room": { "label": "Sala de oración", "description": "Unirse a la oración en vivo" },
+      "prayerRequests": { "label": "Peticiones de oración", "description": "Enviar o consultar una petición" },
+      "testimonies": { "label": "Testimonios", "description": "Compartir o moderar un testimonio" },
+      "communities": { "label": "Comunidades", "description": "Unirse a una célula, un equipo, una iglesia" },
+      "worldMap": { "label": "Mapa mundial", "description": "Ver la oración vivida en todo el mundo" },
+      "programs": { "label": "Programas de oración", "description": "Crear y planificar los turnos" },
+      "moderateRoom": { "label": "Gestionar intercesores", "description": "Asignar un guía a cada sección" },
+      "socialPublications": { "label": "Borradores de redes sociales", "description": "Validar las publicaciones generadas" },
+      "moderationQueue": { "label": "Contenido marcado", "description": "Testimonios y peticiones marcados por la IA Moderadora" },
+      "adminUsers": { "label": "Usuarios y roles", "description": "Estado de las cuentas, asignación de roles" },
+      "adminAnalytics": { "label": "Panel de control", "description": "Crecimiento, asistencia, retención, exportación" },
+      "adminSystem": { "label": "Sistema", "description": "Salud, copias de seguridad, registros de auditoría" },
+      "mfa": { "label": "Verificación en dos pasos", "description": "Proteger la cuenta con un código de un solo uso" },
+      "profile": { "label": "Mi perfil", "description": "Nombre, teléfono, idioma, huso horario" }
+    }
+  },
+  "moderation": {
+    "title": "Contenido marcado",
+    "intro": "Marcado por la IA Moderadora (texto, coherencia, contenido sensible) — la IA nunca excluye ni elimina nada por sí misma, cada marca espera una revisión humana. El chat no aparece aquí: un mensaje considerado crítico se pone en cuarentena automática e inmediatamente en la sala.",
+    "loading": "Cargando…",
+    "needModerator": "Inicia sesión con una cuenta de moderador.",
+    "testimoniesTitle": "Testimonios ({{count}})",
+    "noFlaggedTestimonies": "Ningún testimonio marcado.",
+    "requestsTitle": "Peticiones de oración ({{count}})",
+    "noFlaggedRequests": "Ninguna petición marcada.",
+    "flaggedNoReason": "Marcado sin motivo específico",
+    "confidenceSuffix": "(confianza {{percent}}%)"
+  },
+  "testimonyStatuses": {
+    "DRAFT": "Borrador",
+    "PUBLISHED": "Publicado",
+    "EDITED": "Editado",
+    "ARCHIVED": "Archivado"
   }
 }

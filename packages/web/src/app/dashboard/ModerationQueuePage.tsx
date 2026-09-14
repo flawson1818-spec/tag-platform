@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { FlaggedPrayerRequest, Testimony, prayerRequestsApi, testimoniesApi } from '../../lib/api';
+import i18n from '../../i18n/config';
 
 function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString(i18n.language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 export function ModerationQueuePage() {
+  const { t } = useTranslation();
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
   const [requests, setRequests] = useState<FlaggedPrayerRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,51 +30,51 @@ export function ModerationQueuePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (!getAccessToken()) return <p className="hint">Connecte-toi avec un compte modérateur.</p>;
+  if (!getAccessToken()) return <p className="hint">{t('moderation.needModerator')}</p>;
 
   return (
     <div className="communities-page">
-      <h2>Contenus signalés</h2>
-      <p className="hint">
-        Signalés par l'IA Modératrice (texte, cohérence, contenu sensible) — l'IA n'exclut ni ne supprime
-        jamais rien elle-même, chaque signalement attend une revue humaine. Le chat n'apparaît pas ici : un
-        message jugé critique est mis en quarantaine automatiquement et immédiatement dans la salle.
-      </p>
-      {loading && <p>Chargement…</p>}
+      <h2>{t('moderation.title')}</h2>
+      <p className="hint">{t('moderation.intro')}</p>
+      {loading && <p>{t('moderation.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
-      <h3>Témoignages ({testimonies.length})</h3>
-      {testimonies.length === 0 && !loading && <p className="hint">Aucun témoignage signalé.</p>}
+      <h3>{t('moderation.testimoniesTitle', { count: testimonies.length })}</h3>
+      {testimonies.length === 0 && !loading && <p className="hint">{t('moderation.noFlaggedTestimonies')}</p>}
       <ul className="request-list">
-        {testimonies.map((t) => (
-          <li key={t.id} className="request-row">
+        {testimonies.map((item) => (
+          <li key={item.id} className="request-row">
             <div className="request-meta">
-              <span className="chip chip-status">{t.status}</span>
-              <span className="hint">{formatDateTime(t.created_at)}</span>
+              <span className="chip chip-status">{t(`testimonyStatuses.${item.status}`, item.status)}</span>
+              <span className="hint">{formatDateTime(item.created_at)}</span>
             </div>
-            <p>{t.content}</p>
+            <p>{item.content}</p>
             <p className="error">
-              ⚠ {t.ai_flag_reason ?? 'Signalé sans motif précis'}
-              {t.ai_flag_confidence !== null ? ` (confiance ${Math.round(t.ai_flag_confidence * 100)}%)` : ''}
+              ⚠ {item.ai_flag_reason ?? t('moderation.flaggedNoReason')}
+              {item.ai_flag_confidence !== null
+                ? ` ${t('moderation.confidenceSuffix', { percent: Math.round(item.ai_flag_confidence * 100) })}`
+                : ''}
             </p>
           </li>
         ))}
       </ul>
 
-      <h3>Demandes de prière ({requests.length})</h3>
-      {requests.length === 0 && !loading && <p className="hint">Aucune demande signalée.</p>}
+      <h3>{t('moderation.requestsTitle', { count: requests.length })}</h3>
+      {requests.length === 0 && !loading && <p className="hint">{t('moderation.noFlaggedRequests')}</p>}
       <ul className="request-list">
         {requests.map((r) => (
           <li key={r.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{r.category}</span>
-              <span className="chip chip-status">{r.status}</span>
+              <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
+              <span className="chip chip-status">{t(`requestStatuses.${r.status}`, r.status)}</span>
               <span className="hint">{formatDateTime(r.created_at)}</span>
             </div>
             <p>{r.description}</p>
             <p className="error">
-              ⚠ {r.ai_flag_reason ?? 'Signalé sans motif précis'}
-              {r.ai_flag_confidence !== null ? ` (confiance ${Math.round(r.ai_flag_confidence * 100)}%)` : ''}
+              ⚠ {r.ai_flag_reason ?? t('moderation.flaggedNoReason')}
+              {r.ai_flag_confidence !== null
+                ? ` ${t('moderation.confidenceSuffix', { percent: Math.round(r.ai_flag_confidence * 100) })}`
+                : ''}
             </p>
           </li>
         ))}
