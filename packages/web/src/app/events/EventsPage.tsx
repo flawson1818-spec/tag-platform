@@ -1,10 +1,10 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import {
   EVENT_STATUSES,
   EVENT_TYPES,
-  EVENT_TYPE_LABELS,
   EventBreakoutRoom,
   EventParticipant,
   EventPoll,
@@ -13,6 +13,7 @@ import {
   eventsApi,
 } from '../../lib/api';
 import { Pagination } from '../Pagination';
+import i18n from '../../i18n/config';
 
 const EVENT_CHAT_MAX_LENGTH = 500;
 const EVENT_QUICK_REACTIONS = ['🙏', '❤️', '🙌', '🔥'];
@@ -25,7 +26,7 @@ interface EventChatEntry {
 }
 
 function formatSchedule(iso: string): string {
-  return new Date(iso).toLocaleString('fr-FR', {
+  return new Date(iso).toLocaleString(i18n.language, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -36,6 +37,7 @@ function formatSchedule(iso: string): string {
 
 export function EventsPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [events, setEvents] = useState<TagEvent[]>([]);
   const [typeFilter, setTypeFilter] = useState('');
   const [loading, setLoading] = useState(true);
@@ -118,7 +120,7 @@ export function EventsPage() {
     e.preventDefault();
     const token = getAccessToken();
     if (!token) {
-      setFormError('Connecte-toi pour créer un événement.');
+      setFormError(t('events.needLoginCreate'));
       return;
     }
     setFormError(null);
@@ -140,7 +142,7 @@ export function EventsPage() {
   const handleJoin = async (eventId: string) => {
     const token = getAccessToken();
     if (!token) {
-      setFormError('Connecte-toi pour t\'inscrire.');
+      setFormError(t('events.needLoginJoin'));
       return;
     }
     try {
@@ -195,7 +197,7 @@ export function EventsPage() {
   const handleRaiseHand = () => {
     const token = getAccessToken();
     if (!token || !liveEventId) {
-      setFormError('Connecte-toi pour lever la main.');
+      setFormError(t('events.needLoginHand'));
       return;
     }
     eventsApi
@@ -238,7 +240,7 @@ export function EventsPage() {
       .joinBreakoutRoom(token, liveEventId, roomId)
       .then((res) => {
         setMyRoomId(res.roomId);
-        setBreakoutNotice(res.redirected ? 'Cette salle était pleine — tu as été redirigé vers la salle la moins chargée.' : null);
+        setBreakoutNotice(res.redirected ? t('events.breakoutRedirectedNotice') : null);
         refreshBreakoutRooms(liveEventId);
       })
       .catch((err) => setFormError((err as Error).message));
@@ -250,7 +252,7 @@ export function EventsPage() {
     if (!token || !liveEventId) return;
     const options = pollOptions.split(',').map((o) => o.trim()).filter(Boolean);
     if (!pollQuestion.trim() || options.length < 2) {
-      setFormError('Un sondage a besoin d\'une question et d\'au moins deux options séparées par des virgules.');
+      setFormError(t('events.pollValidation'));
       return;
     }
     eventsApi
@@ -309,23 +311,28 @@ export function EventsPage() {
 
   return (
     <div className="communities-page">
-      <h2>Événements</h2>
+      <h2>{t('events.title')}</h2>
       <p className="hint">
-        Veillées, jeûnes, croisades, études bibliques… La création est réservée aux comptes
-        disposant de la permission <code>event.manage</code>.
+        {t('events.intro')} <code>event.manage</code>.
       </p>
 
       <form onSubmit={handleCreate} className="request-form">
         <select value={type} onChange={(e) => setType(e.target.value)}>
-          {EVENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {EVENT_TYPE_LABELS[t]}
+          {EVENT_TYPES.map((eventType) => (
+            <option key={eventType} value={eventType}>
+              {t(`eventTypes.${eventType}`)}
             </option>
           ))}
         </select>
-        <input type="text" placeholder="Titre" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <input
+          type="text"
+          placeholder={t('events.titlePlaceholder')}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
         <textarea
-          placeholder="Description (facultatif)"
+          placeholder={t('events.descriptionPlaceholder')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -336,32 +343,32 @@ export function EventsPage() {
           required
         />
         <button type="submit" disabled={creating}>
-          {creating ? 'Création…' : "Créer l'événement"}
+          {creating ? t('events.creating') : t('events.createSubmit')}
         </button>
       </form>
       {formError && <p className="error">{formError}</p>}
 
       <div className="inline-form">
-        <label htmlFor="event-type-filter">Filtrer par type</label>
+        <label htmlFor="event-type-filter">{t('events.filterByType')}</label>
         <select id="event-type-filter" value={typeFilter} onChange={(e) => handleTypeFilterChange(e.target.value)}>
-          <option value="">Tous</option>
-          {EVENT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {EVENT_TYPE_LABELS[t]}
+          <option value="">{t('events.allTypes')}</option>
+          {EVENT_TYPES.map((eventType) => (
+            <option key={eventType} value={eventType}>
+              {t(`eventTypes.${eventType}`)}
             </option>
           ))}
         </select>
       </div>
 
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('events.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
       <ul className="request-list">
         {events.map((event) => (
           <li key={event.id} className="request-row">
             <div className="request-meta">
-              <span className="chip">{EVENT_TYPE_LABELS[event.type] ?? event.type}</span>
-              <span className="chip chip-status">{event.status}</span>
+              <span className="chip">{t(`eventTypes.${event.type}`, event.type)}</span>
+              <span className="chip chip-status">{t(`eventStatuses.${event.status}`, event.status)}</span>
               <span className="hint">{formatSchedule(event.scheduled_at)}</span>
             </div>
             <p>
@@ -370,26 +377,26 @@ export function EventsPage() {
             {event.description && <p className="hint">{event.description}</p>}
             <div className="request-form">
               <button onClick={() => handleJoin(event.id)} disabled={joinedIds.has(event.id)}>
-                {joinedIds.has(event.id) ? 'Inscrit ✓' : "S'inscrire"}
+                {joinedIds.has(event.id) ? t('events.joined') : t('events.join')}
               </button>
               {event.status === 'RUNNING' && (
                 <button type="button" onClick={() => toggleLive(event.id)}>
-                  {liveEventId === event.id ? 'Fermer la salle en direct' : '🖐 Salle en direct'}
+                  {liveEventId === event.id ? t('events.liveRoomClose') : t('events.liveRoomOpen')}
                 </button>
               )}
               {EVENT_STATUSES.filter((s) => s !== event.status).map((s) => (
                 <button key={s} onClick={() => handleStatusChange(event.id, s)}>
-                  {s}
+                  {t(`eventStatuses.${s}`, s)}
                 </button>
               ))}
             </div>
 
             {liveEventId === event.id && (
               <div className="request-row" style={{ marginTop: '0.6rem' }}>
-                {participantsLoading && <p>Chargement…</p>}
+                {participantsLoading && <p>{t('events.loading')}</p>}
                 <div className="request-form">
                   <button type="button" onClick={me?.hand_raised_at ? handleLowerHand : handleRaiseHand}>
-                    {me?.hand_raised_at ? 'Baisser la main' : 'Lever la main 🖐'}
+                    {me?.hand_raised_at ? t('events.lowerHand') : t('events.raiseHand')}
                   </button>
                   {EVENT_QUICK_REACTIONS.map((emoji) => (
                     <button key={emoji} type="button" onClick={() => sendEventReaction(emoji)}>
@@ -405,15 +412,12 @@ export function EventsPage() {
                   ))}
                 </div>
                 {!participantsLoading && participants.filter((p) => p.hand_raised_at).length === 0 && (
-                  <p className="hint">Aucune main levée pour l'instant.</p>
+                  <p className="hint">{t('events.noHandsRaised')}</p>
                 )}
 
                 <div className="request-row" style={{ marginTop: '0.6rem' }}>
-                  <p><strong>Salles ▾</strong></p>
-                  <p className="hint">
-                    Répartition en petites salles de prière — capacité atteinte : redirection automatique
-                    vers la salle la moins chargée, jamais de blocage.
-                  </p>
+                  <p><strong>{t('events.breakoutTitle')}</strong></p>
+                  <p className="hint">{t('events.breakoutIntro')}</p>
                   <div className="request-form">
                     <input
                       type="number"
@@ -424,11 +428,11 @@ export function EventsPage() {
                       style={{ width: '4rem' }}
                     />
                     <button type="button" onClick={handleCreateBreakoutRooms}>
-                      Créer / répartir
+                      {t('events.breakoutCreate')}
                     </button>
                     {myRoomId && (
                       <button type="button" onClick={handleLeaveBreakoutRoom}>
-                        Retour salle principale
+                        {t('events.backToMainRoom')}
                       </button>
                     )}
                   </div>
@@ -449,7 +453,7 @@ export function EventsPage() {
                               onClick={() => handleJoinBreakoutRoom(room.id)}
                               disabled={myRoomId === room.id}
                             >
-                              {myRoomId === room.id ? 'Dans cette salle ✓' : 'Rejoindre'}
+                              {myRoomId === room.id ? t('events.inThisRoom') : t('events.joinRoom')}
                             </button>
                           </div>
                         </li>
@@ -463,17 +467,17 @@ export function EventsPage() {
                     .map((p) => (
                       <li key={p.id} className="request-row">
                         <div className="request-meta">
-                          <span>{p.display_name ?? 'Anonyme'}</span>
+                          <span>{p.display_name ?? t('events.anonymous')}</span>
                           <span className="chip chip-status">{p.role_in_event}</span>
                         </div>
                         <div className="request-form">
                           {p.role_in_event === 'SPEAKER' ? (
                             <button type="button" onClick={() => handleSetRole(p.user_id, 'ATTENDEE')}>
-                              Retirer la parole
+                              {t('events.removeSpeaker')}
                             </button>
                           ) : (
                             <button type="button" onClick={() => handleSetRole(p.user_id, 'SPEAKER')}>
-                              Donner la parole
+                              {t('events.giveSpeaker')}
                             </button>
                           )}
                         </div>
@@ -482,9 +486,9 @@ export function EventsPage() {
                 </ul>
 
                 <div className="request-row" style={{ marginTop: '0.6rem' }}>
-                  <p><strong>Chat</strong></p>
+                  <p><strong>{t('events.chatTitle')}</strong></p>
                   <div className="room-chat-list">
-                    {eventChatMessages.length === 0 && <p className="room-chat-empty">Aucun message pour le moment.</p>}
+                    {eventChatMessages.length === 0 && <p className="room-chat-empty">{t('events.chatEmpty')}</p>}
                     {eventChatMessages.map((m, index) => (
                       <div key={index} className="room-chat-message">
                         <strong>{m.displayName}</strong>
@@ -498,46 +502,48 @@ export function EventsPage() {
                       type="text"
                       value={eventChatInput}
                       onChange={(e) => setEventChatInput(e.target.value)}
-                      placeholder="Écrire un message..."
+                      placeholder={t('events.chatPlaceholder')}
                       maxLength={EVENT_CHAT_MAX_LENGTH}
                     />
                     <button type="submit" disabled={!eventChatInput.trim()}>
-                      Envoyer
+                      {t('events.send')}
                     </button>
                   </form>
                 </div>
 
                 <div className="request-row" style={{ marginTop: '0.6rem' }}>
-                  <p><strong>Sondages</strong></p>
+                  <p><strong>{t('events.pollsTitle')}</strong></p>
                   <form className="request-form" onSubmit={handleCreatePoll}>
                     <input
                       type="text"
-                      placeholder="Question"
+                      placeholder={t('events.pollQuestionPlaceholder')}
                       value={pollQuestion}
                       onChange={(e) => setPollQuestion(e.target.value)}
                     />
                     <input
                       type="text"
-                      placeholder="Options séparées par des virgules"
+                      placeholder={t('events.pollOptionsPlaceholder')}
                       value={pollOptions}
                       onChange={(e) => setPollOptions(e.target.value)}
                     />
-                    <button type="submit">Créer le sondage</button>
+                    <button type="submit">{t('events.pollCreate')}</button>
                   </form>
-                  {polls.length === 0 && <p className="hint">Aucun sondage pour l'instant.</p>}
+                  {polls.length === 0 && <p className="hint">{t('events.noPolls')}</p>}
                   <ul className="request-list">
                     {polls.map((poll) => (
                       <li key={poll.id} className="request-row">
                         <p>
                           <strong>{poll.question}</strong>
-                          {poll.closed_at && <span className="chip chip-status"> Clos</span>}
+                          {poll.closed_at && <span className="chip chip-status"> {t('events.pollClosed')}</span>}
                         </p>
                         <ul className="request-list">
                           {poll.options.map((option, index) => (
                             <li key={option} className="request-row">
                               <div className="request-meta">
                                 <span>{option}</span>
-                                <span className="chip chip-status">{poll.vote_counts[index] ?? 0} voix</span>
+                                <span className="chip chip-status">
+                                  {t('events.votes', { count: poll.vote_counts[index] ?? 0 })}
+                                </span>
                               </div>
                               {!poll.closed_at && (
                                 <button
@@ -545,16 +551,16 @@ export function EventsPage() {
                                   onClick={() => handleVotePoll(poll.id, index)}
                                   disabled={poll.my_vote === index}
                                 >
-                                  {poll.my_vote === index ? 'Ton choix ✓' : 'Voter'}
+                                  {poll.my_vote === index ? t('events.yourChoice') : t('events.vote')}
                                 </button>
                               )}
                             </li>
                           ))}
                         </ul>
-                        <p className="hint">{poll.total_votes} vote(s) au total.</p>
+                        <p className="hint">{t('events.totalVotes', { count: poll.total_votes })}</p>
                         {!poll.closed_at && (
                           <button type="button" className="link-button" onClick={() => handleClosePoll(poll.id)}>
-                            Clore le sondage
+                            {t('events.closePoll')}
                           </button>
                         )}
                       </li>
@@ -566,7 +572,7 @@ export function EventsPage() {
           </li>
         ))}
       </ul>
-      {!loading && events.length === 0 && !error && <p className="hint">Aucun événement pour l'instant.</p>}
+      {!loading && events.length === 0 && !error && <p className="hint">{t('events.noEvents')}</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );
