@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { Comment, Post, postsApi } from '../../lib/api';
 
@@ -11,6 +12,7 @@ function CommentRow({
   onUpdated: (updated: Comment) => void;
   onDeleted: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(comment.content);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +48,9 @@ function CommentRow({
       <li>
         <form onSubmit={handleSave} className="reject-row">
           <input type="text" value={content} onChange={(e) => setContent(e.target.value)} required />
-          <button type="submit">Enregistrer</button>
+          <button type="submit">{t('posts.save')}</button>
           <button type="button" className="link-button" onClick={() => setEditing(false)}>
-            Annuler
+            {t('posts.cancel')}
           </button>
         </form>
         {error && <p className="error">{error}</p>}
@@ -59,12 +61,12 @@ function CommentRow({
   return (
     <li>
       {comment.content}
-      {comment.status === 'EDITED' && <span className="hint"> (modifié)</span>}
+      {comment.status === 'EDITED' && <span className="hint"> {t('posts.edited')}</span>}
       <button type="button" className="link-button" onClick={() => setEditing(true)}>
-        Modifier
+        {t('posts.edit')}
       </button>
       <button type="button" className="link-button" onClick={handleDelete}>
-        Supprimer
+        {t('posts.delete')}
       </button>
       {error && <p className="error">{error}</p>}
     </li>
@@ -72,6 +74,7 @@ function CommentRow({
 }
 
 export function PostRow({ post }: { post: Post }) {
+  const { t } = useTranslation();
   const [localPost, setLocalPost] = useState(post);
   const [expanded, setExpanded] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -145,26 +148,26 @@ export function PostRow({ post }: { post: Post }) {
       {editingPost ? (
         <form onSubmit={handleSavePost} className="reject-row">
           <input type="text" value={postContent} onChange={(e) => setPostContent(e.target.value)} required />
-          <button type="submit">Enregistrer</button>
+          <button type="submit">{t('posts.save')}</button>
           <button type="button" className="link-button" onClick={() => setEditingPost(false)}>
-            Annuler
+            {t('posts.cancel')}
           </button>
         </form>
       ) : (
         <>
           <p>
             {localPost.content}
-            {localPost.status === 'EDITED' && <span className="hint"> (modifié)</span>}
+            {localPost.status === 'EDITED' && <span className="hint"> {t('posts.edited')}</span>}
           </p>
           <div className="request-form">
             <button type="button" onClick={toggle}>
-              {expanded ? 'Masquer les commentaires' : 'Voir les commentaires'}
+              {expanded ? t('posts.hideComments') : t('posts.showComments')}
             </button>
             <button type="button" className="link-button" onClick={() => setEditingPost(true)}>
-              Modifier
+              {t('posts.edit')}
             </button>
             <button type="button" className="link-button" onClick={handleArchive}>
-              Archiver
+              {t('posts.archive')}
             </button>
           </div>
         </>
@@ -174,7 +177,7 @@ export function PostRow({ post }: { post: Post }) {
 
       {expanded && (
         <div className="comments-block">
-          {loading && <p>Chargement…</p>}
+          {loading && <p>{t('posts.loading')}</p>}
           <ul className="comment-list">
             {comments.map((c) => (
               <CommentRow
@@ -188,12 +191,12 @@ export function PostRow({ post }: { post: Post }) {
           <form onSubmit={handleSubmit} className="reject-row">
             <input
               type="text"
-              placeholder="Écrire un commentaire…"
+              placeholder={t('posts.commentPlaceholder')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
             <button type="submit" disabled={submitting}>
-              Envoyer
+              {t('posts.send')}
             </button>
           </form>
         </div>

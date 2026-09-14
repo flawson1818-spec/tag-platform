@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import {
   Announcement,
@@ -33,6 +34,7 @@ async function fetchAncestors(token: string, community: Community): Promise<Comm
 }
 
 export function CommunityDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
 
@@ -211,7 +213,7 @@ export function CommunityDetailPage() {
     }
   };
 
-  if (loading) return <p>Chargement…</p>;
+  if (loading) return <p>{t('communityDetail.loading')}</p>;
   if (error) return <p className="error">{error}</p>;
   if (!community) return null;
 
@@ -230,16 +232,16 @@ export function CommunityDetailPage() {
       )}
       <h2>{community.name}</h2>
       <p className="hint">
-        {community.type} · {members.length} membre{members.length > 1 ? 's' : ''}
+        {t(`communityTypes.${community.type}`, community.type)} · {t('communityDetail.memberCount', { count: members.length })}
       </p>
 
-      <h3>Sous-communautés</h3>
+      <h3>{t('communityDetail.subCommunitiesTitle')}</h3>
       {children.length > 0 && (
         <ul className="request-list">
           {children.map((c) => (
             <li key={c.id} className="request-row">
               <div className="request-meta">
-                <span className="chip">{c.type}</span>
+                <span className="chip">{t(`communityTypes.${c.type}`, c.type)}</span>
               </div>
               <p>
                 <Link to={`/communities/${c.id}`}>{c.name}</Link>
@@ -250,21 +252,21 @@ export function CommunityDetailPage() {
       )}
       <form onSubmit={handleCreateSub} className="request-form">
         <select value={subType} onChange={(e) => setSubType(e.target.value)}>
-          {COMMUNITY_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          {COMMUNITY_TYPES.map((communityType) => (
+            <option key={communityType} value={communityType}>
+              {t(`communityTypes.${communityType}`, communityType)}
             </option>
           ))}
         </select>
         <input
           type="text"
-          placeholder="Nom de la sous-communauté"
+          placeholder={t('communityDetail.subNamePlaceholder')}
           value={subName}
           onChange={(e) => setSubName(e.target.value)}
           required
         />
         <button type="submit" disabled={subCreating}>
-          {subCreating ? 'Création…' : 'Ajouter une sous-communauté'}
+          {subCreating ? t('communityDetail.creating') : t('communityDetail.addSubCommunity')}
         </button>
       </form>
       {subError && <p className="error">{subError}</p>}
@@ -272,28 +274,29 @@ export function CommunityDetailPage() {
       {membershipStatus === 'NONE' && (
         <div>
           <button onClick={handleJoin} disabled={joining}>
-            {joining ? 'Adhésion…' : 'Devenir membre'}
+            {joining ? t('communityDetail.joining') : t('communityDetail.becomeMember')}
           </button>
           {joinError && <p className="error">{joinError}</p>}
         </div>
       )}
       {membershipStatus === 'PENDING' && (
         <p className="hint">
-          Ta demande d'adhésion est <strong>en attente</strong> de validation par un Responsable.
+          {t('communityDetail.pendingApprovalPrefix')} <strong>{t('communityDetail.pendingApprovalStrong')}</strong>{' '}
+          {t('communityDetail.pendingApprovalSuffix')}
         </p>
       )}
 
       {pendingMembers && pendingMembers.length > 0 && (
         <>
-          <h3>Demandes en attente</h3>
+          <h3>{t('communityDetail.pendingRequestsTitle')}</h3>
           <ul className="request-list">
             {pendingMembers.map((m) => (
               <li key={m.id} className="request-row">
                 <div className="request-meta">
-                  <span>{m.users?.display_name ?? 'Utilisateur'}</span>
+                  <span>{m.users?.display_name ?? t('communityDetail.unknownUser')}</span>
                 </div>
                 <button type="button" disabled={approvingId === m.user_id} onClick={() => handleApprove(m.user_id)}>
-                  {approvingId === m.user_id ? 'Approbation…' : 'Approuver'}
+                  {approvingId === m.user_id ? t('communityDetail.approving') : t('communityDetail.approve')}
                 </button>
               </li>
             ))}
@@ -301,74 +304,72 @@ export function CommunityDetailPage() {
         </>
       )}
 
-      <h3>Membres</h3>
+      <h3>{t('communityDetail.membersTitle')}</h3>
       <ul className="request-list">
         {members.map((m) => (
           <li key={m.id} className="request-row">
-            {m.users?.display_name ?? 'Utilisateur'}
+            {m.users?.display_name ?? t('communityDetail.unknownUser')}
             {m.internal_role ? ` — ${m.internal_role}` : ''}
           </li>
         ))}
       </ul>
 
-      <h3>Annonces</h3>
-      <p className="hint">
-        Communications officielles de la communauté ou nationales, épinglées en tête de liste.
-      </p>
+      <h3>{t('communityDetail.announcementsTitle')}</h3>
+      <p className="hint">{t('communityDetail.announcementsIntro')}</p>
       <form onSubmit={handleAnnouncement} className="request-form">
         <textarea
-          placeholder="Publier une annonce (réservé aux Responsables+)…"
+          placeholder={t('communityDetail.announcementPlaceholder')}
           value={announcementContent}
           onChange={(e) => setAnnouncementContent(e.target.value)}
           rows={2}
           required
         />
         <button type="submit" disabled={announcementSubmitting}>
-          {announcementSubmitting ? 'Publication…' : 'Publier'}
+          {announcementSubmitting ? t('communityDetail.publishing') : t('communityDetail.publish')}
         </button>
       </form>
       {announcementError && <p className="error">{announcementError}</p>}
-      {announcements.length === 0 && <p className="hint">Aucune annonce pour l'instant.</p>}
+      {announcements.length === 0 && <p className="hint">{t('communityDetail.noAnnouncements')}</p>}
       <ul className="request-list">
         {announcements.map((a) => (
           <li key={a.id} className="request-row">
             <div className="request-meta">
               {a.pinned_at && (
                 <span className="chip chip-status">
-                  <span role="img" aria-label="Épinglée">📌</span> Épinglée
+                  <span role="img" aria-label={t('communityDetail.pinned')}>📌</span> {t('communityDetail.pinned')}
                 </span>
               )}
-              {a.community_id === null && <span className="chip">Nationale</span>}
+              {a.community_id === null && <span className="chip">{t('communityDetail.national')}</span>}
             </div>
             <p>{a.content}</p>
             <div className="request-form">
               <button type="button" className="link-button" onClick={() => handleTogglePin(a)}>
-                {a.pinned_at ? 'Désépingler' : 'Épingler'}
+                {a.pinned_at ? t('communityDetail.unpin') : t('communityDetail.pin')}
               </button>
               <button type="button" className="link-button" onClick={() => handleRemoveAnnouncement(a.id)}>
-                Supprimer
+                {t('communityDetail.remove')}
               </button>
             </div>
           </li>
         ))}
       </ul>
 
-      <h3>Fil d'actualité</h3>
+      <h3>{t('communityDetail.feedTitle')}</h3>
       {isMember ? (
         <form onSubmit={handlePost} className="request-form">
           <textarea
-            placeholder="Partage une annonce ou une nouvelle…"
+            placeholder={t('communityDetail.postPlaceholder')}
             value={postContent}
             onChange={(e) => setPostContent(e.target.value)}
             rows={2}
             required
           />
           <button type="submit" disabled={postSubmitting}>
-            {postSubmitting ? 'Publication…' : 'Publier'}
+            {postSubmitting ? t('communityDetail.publishing') : t('communityDetail.publish')}
           </button>
         </form>
       ) : (
-        <p className="hint">Deviens membre pour publier.</p>
+        <p className="hint">{t('communityDetail.becomeMemberToPost')}</p>
       )}
       {postError && <p className="error">{postError}</p>}
 
@@ -377,7 +378,7 @@ export function CommunityDetailPage() {
           <PostRow key={p.id} post={p} />
         ))}
       </ul>
-      {posts.length === 0 && <p className="hint">Aucune publication pour l'instant.</p>}
+      {posts.length === 0 && <p className="hint">{t('communityDetail.noPosts')}</p>}
       <Pagination page={postsPage} totalPages={postsTotalPages} onChange={setPostsPage} />
     </div>
   );
