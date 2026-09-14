@@ -904,17 +904,6 @@ export const EVENT_TYPES = [
   'INTERCESSION_SPECIALE',
 ] as const;
 
-export const EVENT_TYPE_LABELS: Record<string, string> = {
-  VEILLEE: 'Veillée',
-  JEUNE: 'Jeûne',
-  CROISADE: 'Croisade',
-  CONFERENCE: 'Conférence',
-  ETUDE_BIBLIQUE: 'Étude biblique',
-  DEBAT_BIBLIQUE: 'Débat biblique',
-  FORMATION: 'Formation',
-  INTERCESSION_SPECIALE: 'Intercession spéciale',
-};
-
 export const EVENT_STATUSES = ['CREATED', 'SCHEDULED', 'OPEN', 'RUNNING', 'FINISHED', 'ARCHIVED'] as const;
 
 export interface TagEvent {

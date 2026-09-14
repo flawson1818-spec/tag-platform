@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n/config';
 import {
   ActivePrayerSlot,
-  EVENT_TYPE_LABELS,
   PublicTestimony,
   TagEvent,
   WorldMapSnapshot,
@@ -131,7 +130,7 @@ export function HomePage() {
             {events.map((event) => (
               <li key={event.id} className="request-row">
                 <div className="request-meta">
-                  <span className="chip">{EVENT_TYPE_LABELS[event.type] ?? event.type}</span>
+                  <span className="chip">{t(`eventTypes.${event.type}`, event.type)}</span>
                   <span className="hint">{formatSchedule(event.scheduled_at)}</span>
                 </div>
                 <p>
