@@ -215,5 +215,36 @@
     "Délivrance": "Deliverance",
     "Famille": "Family",
     "Autre": "Other"
+  },
+  "testimonies": {
+    "title": "Testimonies",
+    "contentPlaceholder": "Tell what God has done…",
+    "captionPlaceholder": "Caption (optional)",
+    "submit": "Submit for moderation",
+    "submitting": "Sending…",
+    "loginToShare": "Log in to share a testimony.",
+    "writeYours": "Write your testimony.",
+    "chooseFile": "Choose a file.",
+    "fileTooLarge": "File too large (25 MB maximum).",
+    "confirmation": "Testimony sent — awaiting moderator approval.",
+    "loading": "Loading…",
+    "pendingTitle": "Awaiting moderation",
+    "aiFlagged": "⚠ Flagged by the AI Moderator",
+    "rejectReasonPlaceholder": "Reason for rejection",
+    "confirmReject": "Confirm rejection",
+    "cancel": "Cancel",
+    "approve": "Approve",
+    "reject": "Reject",
+    "publishedTitle": "Published testimonies",
+    "noPublished": "No testimonies published yet.",
+    "mediaUnavailable": "Media unavailable.",
+    "mediaLoading": "Loading media…",
+    "mediaAlt": "Testimony",
+    "mediaType": {
+      "TEXT": "Text",
+      "PHOTO": "Photo",
+      "AUDIO": "Audio",
+      "VIDEO": "Video"
+    }
   }
 }

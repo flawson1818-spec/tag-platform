@@ -215,5 +215,36 @@
     "Délivrance": "Liberación",
     "Famille": "Familia",
     "Autre": "Otro"
+  },
+  "testimonies": {
+    "title": "Testimonios",
+    "contentPlaceholder": "Cuenta lo que Dios ha hecho…",
+    "captionPlaceholder": "Leyenda (opcional)",
+    "submit": "Enviar a moderación",
+    "submitting": "Enviando…",
+    "loginToShare": "Inicia sesión para compartir un testimonio.",
+    "writeYours": "Escribe tu testimonio.",
+    "chooseFile": "Elige un archivo.",
+    "fileTooLarge": "Archivo demasiado pesado (25 MB máximo).",
+    "confirmation": "Testimonio enviado — a la espera de validación por un moderador.",
+    "loading": "Cargando…",
+    "pendingTitle": "A la espera de moderación",
+    "aiFlagged": "⚠ Marcado por la IA Moderadora",
+    "rejectReasonPlaceholder": "Motivo del rechazo",
+    "confirmReject": "Confirmar el rechazo",
+    "cancel": "Cancelar",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "publishedTitle": "Testimonios publicados",
+    "noPublished": "Ningún testimonio publicado por el momento.",
+    "mediaUnavailable": "Contenido no disponible.",
+    "mediaLoading": "Cargando contenido…",
+    "mediaAlt": "Testimonio",
+    "mediaType": {
+      "TEXT": "Texto",
+      "PHOTO": "Foto",
+      "AUDIO": "Audio",
+      "VIDEO": "Video"
+    }
   }
 }

@@ -1,14 +1,15 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { Testimony, filesApi, testimoniesApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 
 const MEDIA_TYPES = ['TEXT', 'PHOTO', 'AUDIO', 'VIDEO'] as const;
-const MEDIA_TYPE_LABELS: Record<string, string> = { TEXT: 'Texte', PHOTO: 'Photo', AUDIO: 'Audio', VIDEO: 'Vidéo' };
 const MEDIA_TYPE_ACCEPT: Record<string, string> = { PHOTO: 'image/*', AUDIO: 'audio/*', VIDEO: 'video/*' };
 const MAX_MEDIA_SIZE_BYTES = 25 * 1024 * 1024;
 
 function TestimonyMedia({ testimonyId, mediaType }: { testimonyId: string; mediaType: string }) {
+  const { t } = useTranslation();
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -21,15 +22,16 @@ function TestimonyMedia({ testimonyId, mediaType }: { testimonyId: string; media
       .catch(() => setError(true));
   }, [testimonyId]);
 
-  if (error) return <p className="hint">Média indisponible.</p>;
-  if (!url) return <p className="hint">Chargement du média…</p>;
-  if (mediaType === 'PHOTO') return <img src={url} alt="Témoignage" className="testimony-media" />;
+  if (error) return <p className="hint">{t('testimonies.mediaUnavailable')}</p>;
+  if (!url) return <p className="hint">{t('testimonies.mediaLoading')}</p>;
+  if (mediaType === 'PHOTO') return <img src={url} alt={t('testimonies.mediaAlt')} className="testimony-media" />;
   if (mediaType === 'AUDIO') return <audio src={url} controls className="testimony-media" />;
   if (mediaType === 'VIDEO') return <video src={url} controls className="testimony-media" />;
   return null;
 }
 
 export function TestimoniesPage() {
+  const { t } = useTranslation();
   const token = getAccessToken();
 
   const [mediaType, setMediaType] = useState<string>('TEXT');
@@ -74,7 +76,7 @@ export function TestimoniesPage() {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file && file.size > MAX_MEDIA_SIZE_BYTES) {
-      setSubmitError('Fichier trop lourd (25 Mo maximum).');
+      setSubmitError(t('testimonies.fileTooLarge'));
       setMediaFile(null);
       return;
     }
@@ -89,11 +91,11 @@ export function TestimoniesPage() {
     setConfirmation(false);
 
     if (mediaType === 'TEXT' && !content.trim()) {
-      setSubmitError('Écris ton témoignage.');
+      setSubmitError(t('testimonies.writeYours'));
       return;
     }
     if (mediaType !== 'TEXT' && !mediaFile) {
-      setSubmitError('Choisis un fichier.');
+      setSubmitError(t('testimonies.chooseFile'));
       return;
     }
 
@@ -152,7 +154,7 @@ export function TestimoniesPage() {
 
   return (
     <div className="testimonies-page">
-      <h2>Témoignages</h2>
+      <h2>{t('testimonies.title')}</h2>
 
       {token ? (
         <form onSubmit={handleSubmit} className="request-form">
@@ -166,13 +168,13 @@ export function TestimoniesPage() {
                   checked={mediaType === type}
                   onChange={() => handleMediaTypeChange(type)}
                 />
-                {MEDIA_TYPE_LABELS[type]}
+                {t(`testimonies.mediaType.${type}`)}
               </label>
             ))}
           </div>
           {mediaType === 'TEXT' ? (
             <textarea
-              placeholder="Raconte ce que Dieu a fait…"
+              placeholder={t('testimonies.contentPlaceholder')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={3}
@@ -181,7 +183,7 @@ export function TestimoniesPage() {
             <>
               <input type="file" accept={MEDIA_TYPE_ACCEPT[mediaType]} onChange={handleFileChange} />
               <textarea
-                placeholder="Légende (facultatif)"
+                placeholder={t('testimonies.captionPlaceholder')}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={2}
@@ -189,53 +191,53 @@ export function TestimoniesPage() {
             </>
           )}
           <button type="submit" disabled={submitting}>
-            {submitting ? 'Envoi…' : 'Soumettre à modération'}
+            {submitting ? t('testimonies.submitting') : t('testimonies.submit')}
           </button>
         </form>
       ) : (
-        <p className="hint">Connecte-toi pour partager un témoignage.</p>
+        <p className="hint">{t('testimonies.loginToShare')}</p>
       )}
       {submitError && <p className="error">{submitError}</p>}
-      {confirmation && <p className="confirmation">Témoignage envoyé — en attente de validation par un modérateur.</p>}
+      {confirmation && <p className="confirmation">{t('testimonies.confirmation')}</p>}
 
-      {loading && <p>Chargement…</p>}
+      {loading && <p>{t('testimonies.loading')}</p>}
       {listError && <p className="error">{listError}</p>}
 
       {pending.length > 0 && (
         <>
-          <h3>En attente de modération</h3>
+          <h3>{t('testimonies.pendingTitle')}</h3>
           <ul className="request-list">
-            {pending.map((t) => (
-              <li key={t.id} className="request-row">
-                {t.content && <p>{t.content}</p>}
-                {t.file_id && <TestimonyMedia testimonyId={t.id} mediaType={t.media_type} />}
-                {t.ai_flagged && (
+            {pending.map((item) => (
+              <li key={item.id} className="request-row">
+                {item.content && <p>{item.content}</p>}
+                {item.file_id && <TestimonyMedia testimonyId={item.id} mediaType={item.media_type} />}
+                {item.ai_flagged && (
                   <p className="error">
-                    ⚠ Signalé par l'IA Modératrice{t.ai_flag_reason ? ` — ${t.ai_flag_reason}` : ''}
+                    {t('testimonies.aiFlagged')}{item.ai_flag_reason ? ` — ${item.ai_flag_reason}` : ''}
                   </p>
                 )}
-                {rejectingId === t.id ? (
+                {rejectingId === item.id ? (
                   <div className="reject-row">
                     <input
                       type="text"
-                      placeholder="Motif du rejet"
+                      placeholder={t('testimonies.rejectReasonPlaceholder')}
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                     />
-                    <button disabled={actingId === t.id} onClick={() => handleReject(t.id)}>
-                      Confirmer le rejet
+                    <button disabled={actingId === item.id} onClick={() => handleReject(item.id)}>
+                      {t('testimonies.confirmReject')}
                     </button>
                     <button type="button" onClick={() => setRejectingId(null)}>
-                      Annuler
+                      {t('testimonies.cancel')}
                     </button>
                   </div>
                 ) : (
                   <div className="reject-row">
-                    <button disabled={actingId === t.id} onClick={() => handleApprove(t.id)}>
-                      Approuver
+                    <button disabled={actingId === item.id} onClick={() => handleApprove(item.id)}>
+                      {t('testimonies.approve')}
                     </button>
-                    <button type="button" onClick={() => setRejectingId(t.id)}>
-                      Rejeter
+                    <button type="button" onClick={() => setRejectingId(item.id)}>
+                      {t('testimonies.reject')}
                     </button>
                   </div>
                 )}
@@ -245,13 +247,13 @@ export function TestimoniesPage() {
         </>
       )}
 
-      <h3>Témoignages publiés</h3>
-      {published.length === 0 && !loading && <p className="hint">Aucun témoignage publié pour l'instant.</p>}
+      <h3>{t('testimonies.publishedTitle')}</h3>
+      {published.length === 0 && !loading && <p className="hint">{t('testimonies.noPublished')}</p>}
       <ul className="request-list">
-        {published.map((t) => (
-          <li key={t.id} className="request-row">
-            {t.content && <p>{t.content}</p>}
-            {t.file_id && <TestimonyMedia testimonyId={t.id} mediaType={t.media_type} />}
+        {published.map((item) => (
+          <li key={item.id} className="request-row">
+            {item.content && <p>{item.content}</p>}
+            {item.file_id && <TestimonyMedia testimonyId={item.id} mediaType={item.media_type} />}
           </li>
         ))}
       </ul>

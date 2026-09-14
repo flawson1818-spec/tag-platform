@@ -215,5 +215,36 @@
     "Délivrance": "Délivrance",
     "Famille": "Famille",
     "Autre": "Autre"
+  },
+  "testimonies": {
+    "title": "Témoignages",
+    "contentPlaceholder": "Raconte ce que Dieu a fait…",
+    "captionPlaceholder": "Légende (facultatif)",
+    "submit": "Soumettre à modération",
+    "submitting": "Envoi…",
+    "loginToShare": "Connecte-toi pour partager un témoignage.",
+    "writeYours": "Écris ton témoignage.",
+    "chooseFile": "Choisis un fichier.",
+    "fileTooLarge": "Fichier trop lourd (25 Mo maximum).",
+    "confirmation": "Témoignage envoyé — en attente de validation par un modérateur.",
+    "loading": "Chargement…",
+    "pendingTitle": "En attente de modération",
+    "aiFlagged": "⚠ Signalé par l'IA Modératrice",
+    "rejectReasonPlaceholder": "Motif du rejet",
+    "confirmReject": "Confirmer le rejet",
+    "cancel": "Annuler",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "publishedTitle": "Témoignages publiés",
+    "noPublished": "Aucun témoignage publié pour l'instant.",
+    "mediaUnavailable": "Média indisponible.",
+    "mediaLoading": "Chargement du média…",
+    "mediaAlt": "Témoignage",
+    "mediaType": {
+      "TEXT": "Texte",
+      "PHOTO": "Photo",
+      "AUDIO": "Audio",
+      "VIDEO": "Vidéo"
+    }
   }
 }

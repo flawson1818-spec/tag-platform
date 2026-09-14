@@ -215,5 +215,36 @@
     "Délivrance": "Libertação",
     "Famille": "Família",
     "Autre": "Outro"
+  },
+  "testimonies": {
+    "title": "Testemunhos",
+    "contentPlaceholder": "Conte o que Deus fez…",
+    "captionPlaceholder": "Legenda (opcional)",
+    "submit": "Enviar para moderação",
+    "submitting": "Enviando…",
+    "loginToShare": "Entre para compartilhar um testemunho.",
+    "writeYours": "Escreva seu testemunho.",
+    "chooseFile": "Escolha um arquivo.",
+    "fileTooLarge": "Arquivo muito pesado (25 MB no máximo).",
+    "confirmation": "Testemunho enviado — aguardando validação de um moderador.",
+    "loading": "Carregando…",
+    "pendingTitle": "Aguardando moderação",
+    "aiFlagged": "⚠ Sinalizado pela IA Moderadora",
+    "rejectReasonPlaceholder": "Motivo da rejeição",
+    "confirmReject": "Confirmar a rejeição",
+    "cancel": "Cancelar",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "publishedTitle": "Testemunhos publicados",
+    "noPublished": "Nenhum testemunho publicado no momento.",
+    "mediaUnavailable": "Mídia indisponível.",
+    "mediaLoading": "Carregando mídia…",
+    "mediaAlt": "Testemunho",
+    "mediaType": {
+      "TEXT": "Texto",
+      "PHOTO": "Foto",
+      "AUDIO": "Áudio",
+      "VIDEO": "Vídeo"
+    }
   }
 }
