@@ -833,5 +833,16 @@
     "unnamedDevice": "Appareil sans nom",
     "expiresOn": "Expire le {{date}}",
     "revoke": "Révoquer"
+  },
+  "pagination": {
+    "previous": "← Précédent",
+    "next": "Suivant →",
+    "status": "Page {{page}} / {{totalPages}}"
+  },
+  "themeToggle": {
+    "switchToLight": "Passer au thème clair",
+    "switchToDark": "Passer au thème sombre",
+    "lightTheme": "Thème clair",
+    "darkTheme": "Thème sombre"
   }
 }

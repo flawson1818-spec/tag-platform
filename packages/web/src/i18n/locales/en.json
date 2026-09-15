@@ -833,5 +833,16 @@
     "unnamedDevice": "Unnamed device",
     "expiresOn": "Expires on {{date}}",
     "revoke": "Revoke"
+  },
+  "pagination": {
+    "previous": "← Previous",
+    "next": "Next →",
+    "status": "Page {{page}} / {{totalPages}}"
+  },
+  "themeToggle": {
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme"
   }
 }

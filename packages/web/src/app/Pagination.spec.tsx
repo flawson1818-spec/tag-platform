@@ -1,7 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { Pagination } from './Pagination';
+import i18n from '../i18n/config';
 
 describe('Pagination', () => {
+  beforeAll(async () => {
+    await i18n.changeLanguage('fr');
+  });
+
   it('renders nothing when there is only one page', () => {
     const { container } = render(<Pagination page={1} totalPages={1} onChange={vi.fn()} />);
 
