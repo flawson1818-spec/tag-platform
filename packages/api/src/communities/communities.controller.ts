@@ -22,10 +22,12 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { PostsService } from '../posts/posts.service';
 import { AddMemberDto } from './dto/add-member.dto';
+import { CreateCommunityDocumentDto } from './dto/create-community-document.dto';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { ListCommunitiesQueryDto } from './dto/list-communities.query.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { CommunitiesService } from './communities.service';
+import { CommunityDocumentsService } from './community-documents.service';
 
 const COMMUNITY_MANAGE = 'community.manage';
 const COMMUNITY_MANAGE_MEMBERS = 'community.manage_members';
@@ -39,6 +41,7 @@ export class CommunitiesController {
     private readonly communitiesService: CommunitiesService,
     private readonly postsService: PostsService,
     private readonly permissionsService: PermissionsService,
+    private readonly communityDocumentsService: CommunityDocumentsService,
   ) {}
 
   private async assertPermission(
@@ -158,5 +161,37 @@ export class CommunitiesController {
   @Get(':id/posts')
   listPosts(@Param('id', ParseUUIDPipe) id: string, @Query() query: PaginationQueryDto) {
     return this.postsService.listForCommunity(id, query);
+  }
+
+  @Post(':id/documents')
+  async createDocument(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateCommunityDocumentDto,
+  ) {
+    await this.assertPermission(currentUser.id, id, COMMUNITY_MANAGE);
+    return this.communityDocumentsService.create(id, currentUser.id, dto.fileId, dto.title);
+  }
+
+  @Get(':id/documents')
+  listDocuments(@Param('id', ParseUUIDPipe) id: string) {
+    return this.communityDocumentsService.list(id);
+  }
+
+  @Get(':id/documents/:documentId/url')
+  async getDocumentUrl(@Param('documentId', ParseUUIDPipe) documentId: string) {
+    const url = await this.communityDocumentsService.getReadUrl(documentId);
+    return { url };
+  }
+
+  @Delete(':id/documents/:documentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeDocument(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('documentId', ParseUUIDPipe) documentId: string,
+  ) {
+    await this.assertPermission(currentUser.id, id, COMMUNITY_MANAGE);
+    return this.communityDocumentsService.remove(documentId);
   }
 }

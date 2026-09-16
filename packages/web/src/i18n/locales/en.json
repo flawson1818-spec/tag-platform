@@ -366,7 +366,13 @@
     "feedTitle": "Feed",
     "postPlaceholder": "Share an update or news…",
     "becomeMemberToPost": "Become a member to post.",
-    "noPosts": "No posts yet."
+    "noPosts": "No posts yet.",
+    "documentsTitle": "Documents",
+    "documentTitlePlaceholder": "Document title",
+    "uploading": "Uploading…",
+    "uploadDocument": "Add a document",
+    "noDocuments": "No documents yet.",
+    "documentIcon": "Document"
   },
   "posts": {
     "save": "Save",

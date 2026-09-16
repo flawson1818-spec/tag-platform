@@ -6,11 +6,14 @@ import {
   Announcement,
   COMMUNITY_TYPES,
   Community,
+  CommunityDocument,
   CommunityMember,
   MembershipStatus,
   Post,
   announcementsApi,
   communitiesApi,
+  communityDocumentsApi,
+  filesApi,
   postsApi,
 } from '../../lib/api';
 import { PostRow } from './PostRow';
@@ -68,6 +71,12 @@ export function CommunityDetailPage() {
   const [subCreating, setSubCreating] = useState(false);
   const [subError, setSubError] = useState<string | null>(null);
 
+  const [documents, setDocuments] = useState<CommunityDocument[]>([]);
+  const [docTitle, setDocTitle] = useState('');
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [docUploading, setDocUploading] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+
   const refresh = () => {
     const token = getAccessToken();
     if (!token || !id) return;
@@ -78,8 +87,9 @@ export function CommunityDetailPage() {
       communitiesApi.getMembership(token, id),
       communitiesApi.list(token, 1, id),
       announcementsApi.list(id),
+      communityDocumentsApi.list(id),
     ])
-      .then(([c, m, p, membership, sub, ann]) => {
+      .then(([c, m, p, membership, sub, ann, docs]) => {
         setCommunity(c);
         setMembers(m.data);
         setPosts(p.data);
@@ -87,6 +97,7 @@ export function CommunityDetailPage() {
         setMembershipStatus(membership.status);
         setChildren(sub.data);
         setAnnouncements(ann.data);
+        setDocuments(docs);
         return fetchAncestors(token, c);
       })
       .then(setAncestors)
@@ -210,6 +221,52 @@ export function CommunityDetailPage() {
       setAnnouncements((prev) => prev.filter((a) => a.id !== announcementId));
     } catch (err) {
       setAnnouncementError((err as Error).message);
+    }
+  };
+
+  const handleUploadDocument = async (e: FormEvent) => {
+    e.preventDefault();
+    const token = getAccessToken();
+    if (!token || !id || !docFile) return;
+    setDocError(null);
+    setDocUploading(true);
+    try {
+      const { file: stored, uploadUrl } = await filesApi.presign(token, {
+        filename: docFile.name,
+        mimeType: docFile.type,
+        sizeBytes: docFile.size,
+      });
+      await filesApi.upload(uploadUrl, docFile);
+      const created = await communityDocumentsApi.create(token, id, { fileId: stored.id, title: docTitle.trim() });
+      setDocuments((prev) => [created, ...prev]);
+      setDocTitle('');
+      setDocFile(null);
+    } catch (err) {
+      setDocError((err as Error).message);
+    } finally {
+      setDocUploading(false);
+    }
+  };
+
+  const handleOpenDocument = async (documentId: string) => {
+    if (!id) return;
+    setDocError(null);
+    try {
+      const { url } = await communityDocumentsApi.getUrl(id, documentId);
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      setDocError((err as Error).message);
+    }
+  };
+
+  const handleRemoveDocument = async (documentId: string) => {
+    const token = getAccessToken();
+    if (!token || !id) return;
+    try {
+      await communityDocumentsApi.remove(token, id, documentId);
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+    } catch (err) {
+      setDocError((err as Error).message);
     }
   };
 
@@ -347,6 +404,37 @@ export function CommunityDetailPage() {
                 {a.pinned_at ? t('communityDetail.unpin') : t('communityDetail.pin')}
               </button>
               <button type="button" className="link-button" onClick={() => handleRemoveAnnouncement(a.id)}>
+                {t('communityDetail.remove')}
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <h3>{t('communityDetail.documentsTitle')}</h3>
+      <form onSubmit={handleUploadDocument} className="request-form">
+        <input
+          type="text"
+          placeholder={t('communityDetail.documentTitlePlaceholder')}
+          value={docTitle}
+          onChange={(e) => setDocTitle(e.target.value)}
+          required
+        />
+        <input type="file" onChange={(e) => setDocFile(e.target.files?.[0] ?? null)} required />
+        <button type="submit" disabled={docUploading}>
+          {docUploading ? t('communityDetail.uploading') : t('communityDetail.uploadDocument')}
+        </button>
+      </form>
+      {docError && <p className="error">{docError}</p>}
+      {documents.length === 0 && <p className="hint">{t('communityDetail.noDocuments')}</p>}
+      <ul className="request-list">
+        {documents.map((d) => (
+          <li key={d.id} className="request-row">
+            <div className="request-form">
+              <button type="button" className="link-button" onClick={() => handleOpenDocument(d.id)}>
+                <span role="img" aria-label={t('communityDetail.documentIcon')}>📄</span> {d.title}
+              </button>
+              <button type="button" className="link-button" onClick={() => handleRemoveDocument(d.id)}>
                 {t('communityDetail.remove')}
               </button>
             </div>

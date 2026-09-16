@@ -366,7 +366,13 @@
     "feedTitle": "Fil d'actualité",
     "postPlaceholder": "Partage une annonce ou une nouvelle…",
     "becomeMemberToPost": "Deviens membre pour publier.",
-    "noPosts": "Aucune publication pour l'instant."
+    "noPosts": "Aucune publication pour l'instant.",
+    "documentsTitle": "Documents",
+    "documentTitlePlaceholder": "Titre du document",
+    "uploading": "Envoi…",
+    "uploadDocument": "Ajouter un document",
+    "noDocuments": "Aucun document pour l'instant.",
+    "documentIcon": "Document"
   },
   "posts": {
     "save": "Enregistrer",

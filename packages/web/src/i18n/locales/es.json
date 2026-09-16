@@ -366,7 +366,13 @@
     "feedTitle": "Muro",
     "postPlaceholder": "Comparte una novedad…",
     "becomeMemberToPost": "Hazte miembro para publicar.",
-    "noPosts": "Ninguna publicación por el momento."
+    "noPosts": "Ninguna publicación por el momento.",
+    "documentsTitle": "Documentos",
+    "documentTitlePlaceholder": "Título del documento",
+    "uploading": "Enviando…",
+    "uploadDocument": "Añadir un documento",
+    "noDocuments": "Ningún documento por el momento.",
+    "documentIcon": "Documento"
   },
   "posts": {
     "save": "Guardar",

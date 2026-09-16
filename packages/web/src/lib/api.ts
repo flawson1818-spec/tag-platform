@@ -600,6 +600,32 @@ export const announcementsApi = {
     request<void>(`/announcements/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
 };
 
+export interface CommunityDocument {
+  id: string;
+  community_id: string;
+  file_id: string;
+  title: string;
+  uploaded_by: string;
+  created_at: string;
+}
+
+export const communityDocumentsApi = {
+  list: (communityId: string) => request<CommunityDocument[]>(`/communities/${communityId}/documents`),
+  create: (token: string, communityId: string, data: { fileId: string; title: string }) =>
+    request<CommunityDocument>(`/communities/${communityId}/documents`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify(data),
+    }),
+  getUrl: (communityId: string, documentId: string) =>
+    request<{ url: string | null }>(`/communities/${communityId}/documents/${documentId}/url`),
+  remove: (token: string, communityId: string, documentId: string) =>
+    request<void>(`/communities/${communityId}/documents/${documentId}`, {
+      method: 'DELETE',
+      headers: authHeaders(token),
+    }),
+};
+
 export interface WorldMapSnapshot {
   presence: number;
   activeRooms: number;

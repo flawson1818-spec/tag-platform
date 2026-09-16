@@ -366,7 +366,13 @@
     "feedTitle": "Mural",
     "postPlaceholder": "Compartilhe uma novidade…",
     "becomeMemberToPost": "Torne-se membro para publicar.",
-    "noPosts": "Nenhuma publicação no momento."
+    "noPosts": "Nenhuma publicação no momento.",
+    "documentsTitle": "Documentos",
+    "documentTitlePlaceholder": "Título do documento",
+    "uploading": "Enviando…",
+    "uploadDocument": "Adicionar um documento",
+    "noDocuments": "Nenhum documento no momento.",
+    "documentIcon": "Documento"
   },
   "posts": {
     "save": "Salvar",

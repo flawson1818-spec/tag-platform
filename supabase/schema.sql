@@ -1228,3 +1228,22 @@ create table if not exists password_history (
 create index if not exists password_history_user_id_idx on password_history (user_id);
 
 alter table password_history enable row level security;
+
+-- docs/01_FUNCTIONAL_SPECIFICATION.md §8.2 "Contenu d'une communauté" lists Documents alongside
+-- Fil d'actualité/Annonces/Programme/Membres — the only one of the five never built. A brand-new,
+-- isolated table joining the existing files table; the file itself still goes through the
+-- existing presign/upload flow, this table just links it to a community with a title.
+-- Upload/remove reserved to community.manage, same tier already used for announcements/posts.
+create table if not exists community_documents (
+  id uuid primary key default gen_random_uuid(),
+  community_id uuid not null references communities (id) on delete cascade,
+  file_id uuid not null references files (id) on delete cascade,
+  title text not null,
+  uploaded_by uuid not null references users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create index if not exists community_documents_community_id_idx on community_documents (community_id);
+
+alter table community_documents enable row level security;
