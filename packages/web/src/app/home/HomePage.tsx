@@ -13,6 +13,7 @@ import {
   testimoniesApi,
 } from '../../lib/api';
 import { formatRemaining } from '../../lib/format';
+import { RotatingGlobe } from '../world-map/RotatingGlobe';
 
 const UPCOMING_EVENT_STATUSES = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
 
@@ -97,29 +98,32 @@ export function HomePage() {
       </section>
 
       {snapshot && (
-        <section className="worldmap-kpis home-kpis">
-          <div className="worldmap-kpi">
-            <div className="worldmap-kpi-value">{snapshot.presence}</div>
-            <div className="worldmap-kpi-label">{t('home.presenceLabel')}</div>
-          </div>
-          <div className="worldmap-kpi">
-            <div className="worldmap-kpi-value">{snapshot.activeRooms}</div>
-            <div className="worldmap-kpi-label">{t('home.activeRooms', { count: snapshot.activeRooms })}</div>
-          </div>
-          <div className="worldmap-kpi">
-            <div className="worldmap-kpi-value">{snapshot.timezones.length}</div>
-            <div className="worldmap-kpi-label">{t('home.timezones', { count: snapshot.timezones.length })}</div>
-          </div>
-          <div className="worldmap-kpi">
-            <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
-            <div className="worldmap-kpi-label">
-              {t('home.eventsInProgress', { count: snapshot.activeEvents })}
+        <>
+          <RotatingGlobe snapshot={snapshot} size={180} />
+          <section className="worldmap-kpis home-kpis">
+            <div className="worldmap-kpi">
+              <div className="worldmap-kpi-value">{snapshot.presence}</div>
+              <div className="worldmap-kpi-label">{t('home.presenceLabel')}</div>
             </div>
-          </div>
-          <Link to="/world-map" className="home-kpis-link">
-            {t('home.viewMap')}
-          </Link>
-        </section>
+            <div className="worldmap-kpi">
+              <div className="worldmap-kpi-value">{snapshot.activeRooms}</div>
+              <div className="worldmap-kpi-label">{t('home.activeRooms', { count: snapshot.activeRooms })}</div>
+            </div>
+            <div className="worldmap-kpi">
+              <div className="worldmap-kpi-value">{snapshot.timezones.length}</div>
+              <div className="worldmap-kpi-label">{t('home.timezones', { count: snapshot.timezones.length })}</div>
+            </div>
+            <div className="worldmap-kpi">
+              <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
+              <div className="worldmap-kpi-label">
+                {t('home.eventsInProgress', { count: snapshot.activeEvents })}
+              </div>
+            </div>
+            <Link to="/world-map" className="home-kpis-link">
+              {t('home.viewMap')}
+            </Link>
+          </section>
+        </>
       )}
 
       <div className="home-columns">

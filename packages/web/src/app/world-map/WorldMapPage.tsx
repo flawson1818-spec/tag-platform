@@ -1,26 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WorldMapSnapshot, analyticsApi } from '../../lib/api';
-import { approxCoordsForTimezone, projectCoords } from '../../lib/timezone-coordinates';
+import { RotatingGlobe } from './RotatingGlobe';
 
 const REFRESH_MS = 5000;
-const MAP_WIDTH = 1000;
-const MAP_HEIGHT = 500;
-
-// Continents esquissés en formes douces — une impression du monde, pas un
-// atlas précis. Chaque masse est composée d'ellipses superposées.
-const CONTINENTS = [
-  { cx: 195, cy: 110, rx: 140, ry: 75 },
-  { cx: 230, cy: 195, rx: 45, ry: 25 },
-  { cx: 330, cy: 250, rx: 70, ry: 45 },
-  { cx: 310, cy: 350, rx: 40, ry: 55 },
-  { cx: 535, cy: 100, rx: 65, ry: 45 },
-  { cx: 530, cy: 190, rx: 75, ry: 50 },
-  { cx: 520, cy: 300, rx: 50, ry: 70 },
-  { cx: 800, cy: 140, rx: 190, ry: 100 },
-  { cx: 850, cy: 230, rx: 70, ry: 40 },
-  { cx: 870, cy: 325, rx: 60, ry: 35 },
-];
 
 export function WorldMapPage() {
   const { t } = useTranslation();
@@ -49,13 +32,7 @@ export function WorldMapPage() {
   if (error) return <p className="error">{error}</p>;
   if (!snapshot) return null;
 
-  const maxCount = Math.max(1, ...snapshot.timezones.map((t) => t.count));
-  const points = snapshot.timezones.map((tz) => {
-    const { lat, lon } = approxCoordsForTimezone(tz.timezone);
-    const { x, y } = projectCoords(lat, lon, MAP_WIDTH, MAP_HEIGHT);
-    const radius = 9 + Math.sqrt(tz.count / maxCount) * 22;
-    return { ...tz, x, y, radius };
-  });
+  const maxCount = Math.max(1, ...snapshot.timezones.map((tz) => tz.count));
 
   return (
     <div className="worldmap-page">
@@ -87,46 +64,10 @@ export function WorldMapPage() {
         </div>
       </div>
 
-      <div className="worldmap-globe-wrap">
-        <svg
-          className="worldmap-globe"
-          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-          role="img"
-          aria-label={t('worldMap.mapAriaLabel')}
-        >
-          <defs>
-            <radialGradient id="worldmap-point-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(139, 150, 230, 0.85)" />
-              <stop offset="45%" stopColor="rgba(139, 150, 230, 0.35)" />
-              <stop offset="100%" stopColor="rgba(139, 150, 230, 0)" />
-            </radialGradient>
-          </defs>
+      <RotatingGlobe snapshot={snapshot} size={340} />
+      {snapshot.timezones.length === 0 && <p className="hint">{t('worldMap.roomOpening')}</p>}
 
-          {CONTINENTS.map((c, i) => (
-            <ellipse key={i} cx={c.cx} cy={c.cy} rx={c.rx} ry={c.ry} className="worldmap-land" />
-          ))}
-
-          {points.length === 0 && (
-            <text x={MAP_WIDTH / 2} y={MAP_HEIGHT / 2} textAnchor="middle" className="worldmap-empty-text">
-              {t('worldMap.roomOpening')}
-            </text>
-          )}
-
-          {points.map((p, i) => (
-            <g
-              key={p.timezone}
-              className="worldmap-point-group"
-              style={{ animationDelay: `${(i % 6) * 0.7}s` }}
-            >
-              <circle cx={p.x} cy={p.y} r={p.radius} fill="url(#worldmap-point-glow)" className="worldmap-point-glow" />
-              <circle cx={p.x} cy={p.y} r={3} className="worldmap-point-core" />
-              <title>{t('worldMap.pointTooltip', { timezone: p.timezone, count: p.count })}</title>
-            </g>
-          ))}
-        </svg>
-      </div>
-
-      {points.length > 0 && (
+      {snapshot.timezones.length > 0 && (
         <div className="worldmap-timezones">
           {snapshot.timezones.map((tz) => (
             <div key={tz.timezone} className="worldmap-tz-row">

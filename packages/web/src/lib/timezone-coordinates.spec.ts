@@ -1,4 +1,4 @@
-import { approxCoordsForTimezone, projectCoords } from './timezone-coordinates';
+import { approxCoordsForTimezone, projectCoords, projectOrthographic } from './timezone-coordinates';
 
 describe('approxCoordsForTimezone', () => {
   it('returns the real anchor for a known timezone', () => {
@@ -33,5 +33,35 @@ describe('projectCoords', () => {
 
   it('maps the bottom-right corner (lat -90, lon 180) to (width, height)', () => {
     expect(projectCoords(-90, 180, 1000, 500)).toEqual({ x: 1000, y: 500 });
+  });
+});
+
+describe('projectOrthographic', () => {
+  it('places a point at the equator facing the viewer dead center, at full depth', () => {
+    const p = projectOrthographic(0, 0, 0, 100);
+    expect(p.x).toBeCloseTo(0);
+    expect(p.y).toBeCloseTo(0);
+    expect(p.depth).toBeCloseTo(1);
+    expect(p.visible).toBe(true);
+  });
+
+  it('places the north pole at the top of the globe regardless of rotation, with zero depth', () => {
+    const p = projectOrthographic(90, 137, 42, 100);
+    expect(p.x).toBeCloseTo(0);
+    expect(p.y).toBeCloseTo(-100);
+    expect(p.depth).toBeCloseTo(0);
+  });
+
+  it('hides a point on the far side of the globe', () => {
+    const p = projectOrthographic(0, 180, 0, 100);
+    expect(p.depth).toBeCloseTo(-1);
+    expect(p.visible).toBe(false);
+  });
+
+  it('brings a point into view once rotation carries it onto the near hemisphere', () => {
+    const hidden = projectOrthographic(0, 100, 0, 100);
+    expect(hidden.visible).toBe(false);
+    const revealed = projectOrthographic(0, 100, -100, 100);
+    expect(revealed.visible).toBe(true);
   });
 });

@@ -34,7 +34,6 @@
   --color-map-sky-border: #d7dbee;
   --color-map-land-fill: #f8f2df;
   --color-map-land-stroke: #e3d7ae;
-  --color-map-empty-text: #a9acbb;
   --color-map-bar-1: #c7cce8;
   --color-map-bar-2: #8b96e6;
 
@@ -108,7 +107,6 @@
     --color-map-sky-border: #2b3050;
     --color-map-land-fill: #3a3624;
     --color-map-land-stroke: #52492e;
-    --color-map-empty-text: #5f6478;
     --color-map-bar-1: #3a3f6e;
     --color-map-bar-2: #6670c9;
 
@@ -155,7 +153,6 @@
   --color-map-sky-border: #2b3050;
   --color-map-land-fill: #3a3624;
   --color-map-land-stroke: #52492e;
-  --color-map-empty-text: #5f6478;
   --color-map-bar-1: #3a3f6e;
   --color-map-bar-2: #6670c9;
 
@@ -1439,27 +1436,32 @@ nav button {
   margin-top: 0.2rem;
 }
 
-.worldmap-globe-wrap {
-  margin: 0.5rem auto 2rem;
-  max-width: 640px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--color-map-sky-1), var(--color-map-sky-2));
-  border: 1px solid var(--color-map-sky-border);
-  box-shadow: inset 0 0 40px rgba(139, 150, 230, 0.12), var(--shadow-sm);
-  padding: 1rem;
+.rotating-globe-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.5rem auto 1.5rem;
+  filter: drop-shadow(0 10px 24px rgba(30, 30, 60, 0.18));
 }
 
-.worldmap-globe {
+.rotating-globe {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
 }
 
-.worldmap-land {
+.globe-graticule {
+  fill: none;
+  stroke: var(--color-map-land-stroke);
+  stroke-width: 0.75;
+  opacity: 0.3;
+}
+
+.globe-land {
   fill: var(--color-map-land-fill);
   stroke: var(--color-map-land-stroke);
-  stroke-width: 1.5;
-  opacity: 0.92;
+  stroke-width: 1;
+  transition: opacity 0.4s ease;
 }
 
 .worldmap-point-group {
@@ -1485,12 +1487,6 @@ nav button {
 .worldmap-point-core {
   fill: var(--color-primary);
   opacity: 0.8;
-}
-
-.worldmap-empty-text {
-  fill: var(--color-map-empty-text);
-  font-size: 22px;
-  font-style: italic;
 }
 
 .worldmap-timezones {

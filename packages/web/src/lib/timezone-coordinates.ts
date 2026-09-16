@@ -77,3 +77,31 @@ export function projectCoords(lat: number, lon: number, width: number, height: n
     y: ((90 - lat) / 180) * height,
   };
 }
+
+export interface OrthographicPoint {
+  x: number;
+  y: number;
+  /** -1 (far side, directly behind the globe) to 1 (facing the viewer head-on); also used to fake foreshortening near the limb. */
+  depth: number;
+  /** Whether the point sits on the visible (near) hemisphere for the current rotation. */
+  visible: boolean;
+}
+
+// Standard orthographic (globe) projection, viewed head-on from lon 0 / lat 0 before rotation.
+// `rotationDeg` spins the sphere around its polar axis — used to animate a turning globe.
+export function projectOrthographic(
+  lat: number,
+  lon: number,
+  rotationDeg: number,
+  radius: number,
+): OrthographicPoint {
+  const phi = (lat * Math.PI) / 180;
+  const lambda = ((lon + rotationDeg) * Math.PI) / 180;
+  const depth = Math.cos(phi) * Math.cos(lambda);
+  return {
+    x: radius * Math.cos(phi) * Math.sin(lambda),
+    y: -radius * Math.sin(phi),
+    depth,
+    visible: depth > 0,
+  };
+}
