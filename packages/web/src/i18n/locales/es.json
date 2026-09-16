@@ -54,7 +54,7 @@
       "displayNamePlaceholder": "Nombre visible",
       "emailPlaceholder": "Correo electrónico",
       "passwordPlaceholder": "Contraseña",
-      "passwordHint": "Mínimo 12 caracteres, con mayúscula, minúscula, número y carácter especial.",
+      "passwordHint": "Mínimo 8 caracteres.",
       "submit": "Crear mi cuenta",
       "submitting": "Creando…",
       "alreadyRegistered": "¿Ya tienes una cuenta?",
@@ -784,7 +784,7 @@
     "title": "Restablecer la contraseña",
     "codePlaceholder": "Código recibido por correo electrónico",
     "newPasswordPlaceholder": "Nueva contraseña",
-    "passwordHint": "Mínimo 12 caracteres, con mayúscula, minúscula, número y carácter especial.",
+    "passwordHint": "Mínimo 8 caracteres.",
     "resetting": "Restableciendo…",
     "reset": "Restablecer",
     "requestNewCode": "Solicitar un nuevo código"

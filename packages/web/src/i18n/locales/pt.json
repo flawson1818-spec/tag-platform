@@ -54,7 +54,7 @@
       "displayNamePlaceholder": "Nome de exibição",
       "emailPlaceholder": "Endereço de e-mail",
       "passwordPlaceholder": "Senha",
-      "passwordHint": "Mínimo de 12 caracteres, com maiúscula, minúscula, número e caractere especial.",
+      "passwordHint": "Mínimo de 8 caracteres.",
       "submit": "Criar minha conta",
       "submitting": "Criando…",
       "alreadyRegistered": "Já tem uma conta?",
@@ -784,7 +784,7 @@
     "title": "Redefinir a senha",
     "codePlaceholder": "Código recebido por e-mail",
     "newPasswordPlaceholder": "Nova senha",
-    "passwordHint": "Mínimo de 12 caracteres, com maiúscula, minúscula, número e caractere especial.",
+    "passwordHint": "Mínimo de 8 caracteres.",
     "resetting": "Redefinindo…",
     "reset": "Redefinir",
     "requestNewCode": "Solicitar um novo código"

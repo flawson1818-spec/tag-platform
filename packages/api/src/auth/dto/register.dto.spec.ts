@@ -24,19 +24,13 @@ describe('RegisterDto', () => {
     expect(errors.some((e) => e.property === 'email')).toBe(true);
   });
 
-  it.each([
-    ['too short', 'Sh0rt!x'],
-    ['no uppercase', 'nouppercase1!aaaa'],
-    ['no lowercase', 'NOLOWERCASE1!AAAA'],
-    ['no digit', 'NoDigitsHere!!!!'],
-    ['no special char', 'NoSpecialChar1234'],
-  ])('rejects a password that is %s', async (_label, password) => {
-    const errors = await validateDto({ ...validPayload, password });
+  it('rejects a password under the 8-character minimum', async () => {
+    const errors = await validateDto({ ...validPayload, password: 'Sh0rt!x' });
     expect(errors.some((e) => e.property === 'password')).toBe(true);
   });
 
-  it('accepts a password right at the 12-character minimum', async () => {
-    const errors = await validateDto({ ...validPayload, password: 'Aa1!Aa1!Aa1!' });
+  it('accepts a password right at the 8-character minimum with no forced composition', async () => {
+    const errors = await validateDto({ ...validPayload, password: 'faithful' });
     expect(errors.some((e) => e.property === 'password')).toBe(false);
   });
 

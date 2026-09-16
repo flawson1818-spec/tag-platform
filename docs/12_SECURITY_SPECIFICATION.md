@@ -42,21 +42,15 @@ Trusted Devices
 
 # PASSWORD POLICY
 
-Minimum 12 caractères
+Minimum 8 caractères. Pas de règle de composition obligatoire (majuscule/minuscule/chiffre/caractère spécial) : TAG est une plateforme d'usage grand public, et ces règles sont une friction à l'inscription sans bénéfice de sécurité démontré (NIST 800-63B recommande la longueur plutôt que la composition depuis 2017).
 
-Majuscule
+Historique (dernier mots de passe non réutilisables)
 
-Minuscule
-
-Chiffre
-
-Caractère spécial
-
-Historique
-
-Blacklist
+Blacklist (mots de passe courants/compromis rejetés, y compris les variantes sans composition depuis ce changement)
 
 Argon2id
+
+MFA (TOTP/OTP) disponible en complément pour qui souhaite un niveau de protection plus élevé — voir section MFA.
 
 ---
 

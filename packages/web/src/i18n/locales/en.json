@@ -54,7 +54,7 @@
       "displayNamePlaceholder": "Display name",
       "emailPlaceholder": "Email address",
       "passwordPlaceholder": "Password",
-      "passwordHint": "At least 12 characters, with uppercase, lowercase, a number and a special character.",
+      "passwordHint": "At least 8 characters.",
       "submit": "Create my account",
       "submitting": "Creating…",
       "alreadyRegistered": "Already registered?",
@@ -784,7 +784,7 @@
     "title": "Reset your password",
     "codePlaceholder": "Code received by email",
     "newPasswordPlaceholder": "New password",
-    "passwordHint": "At least 12 characters, with uppercase, lowercase, a number and a special character.",
+    "passwordHint": "At least 8 characters.",
     "resetting": "Resetting…",
     "reset": "Reset",
     "requestNewCode": "Request a new code"

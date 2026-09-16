@@ -54,7 +54,7 @@
       "displayNamePlaceholder": "Nom affiché",
       "emailPlaceholder": "Adresse e-mail",
       "passwordPlaceholder": "Mot de passe",
-      "passwordHint": "Minimum 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial.",
+      "passwordHint": "Minimum 8 caractères.",
       "submit": "Créer mon compte",
       "submitting": "Création…",
       "alreadyRegistered": "Déjà inscrit ?",
@@ -784,7 +784,7 @@
     "title": "Réinitialiser le mot de passe",
     "codePlaceholder": "Code reçu par e-mail",
     "newPasswordPlaceholder": "Nouveau mot de passe",
-    "passwordHint": "Minimum 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial.",
+    "passwordHint": "Minimum 8 caractères.",
     "resetting": "Réinitialisation…",
     "reset": "Réinitialiser",
     "requestNewCode": "Redemander un code"
