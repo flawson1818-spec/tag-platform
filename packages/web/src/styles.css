@@ -43,6 +43,7 @@
   --color-globe-space-1: #14141d;
   --color-globe-space-2: #020204;
   --color-globe-light-core: #ffdca6;
+  --color-globe-star: #f4f6ff;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -1458,6 +1459,23 @@ nav button {
   height: 100%;
   display: block;
   overflow: visible;
+}
+
+.globe-star {
+  fill: var(--color-globe-star);
+  animation: globe-twinkle 3.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .globe-star {
+    animation: none;
+  }
+}
+
+@keyframes globe-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
 
 .worldmap-point-group {
