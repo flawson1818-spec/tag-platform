@@ -17,8 +17,6 @@ import { RotatingGlobe } from '../world-map/RotatingGlobe';
 
 const UPCOMING_EVENT_STATUSES = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
 
-const MEDIA_TYPE_ICONS: Record<string, string> = { TEXT: '📝', PHOTO: '📷', AUDIO: '🎧', VIDEO: '🎬' };
-
 function formatSchedule(iso: string): string {
   return new Date(iso).toLocaleString(i18n.language, {
     weekday: 'short',
@@ -63,12 +61,12 @@ export function HomePage() {
           res.data
             .filter((e) => UPCOMING_EVENT_STATUSES.has(e.status))
             .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-            .slice(0, 3),
+            .slice(0, 2),
         ),
       )
       .catch(() => undefined);
 
-    testimoniesApi.listRecentPublic(4).then(setTestimonies).catch(() => undefined);
+    testimoniesApi.listRecentPublic(2).then(setTestimonies).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -98,48 +96,26 @@ export function HomePage() {
       </section>
 
       {snapshot && (
-        <>
+        <section className="home-globe-section">
           <RotatingGlobe snapshot={snapshot} size={180} />
-          <section className="worldmap-kpis home-kpis">
-            <div className="worldmap-kpi">
-              <div className="worldmap-kpi-value">{snapshot.presence}</div>
-              <div className="worldmap-kpi-label">{t('home.presenceLabel')}</div>
-            </div>
-            <div className="worldmap-kpi">
-              <div className="worldmap-kpi-value">{snapshot.activeRooms}</div>
-              <div className="worldmap-kpi-label">{t('home.activeRooms', { count: snapshot.activeRooms })}</div>
-            </div>
-            <div className="worldmap-kpi">
-              <div className="worldmap-kpi-value">{snapshot.timezones.length}</div>
-              <div className="worldmap-kpi-label">{t('home.timezones', { count: snapshot.timezones.length })}</div>
-            </div>
-            <div className="worldmap-kpi">
-              <div className="worldmap-kpi-value">{snapshot.activeEvents}</div>
-              <div className="worldmap-kpi-label">
-                {t('home.eventsInProgress', { count: snapshot.activeEvents })}
-              </div>
-            </div>
-            <Link to="/world-map" className="home-kpis-link">
-              {t('home.viewMap')}
-            </Link>
-          </section>
-        </>
+          <p className="home-presence-line">
+            <strong>{snapshot.presence}</strong> {t('home.presenceLabel')}
+          </p>
+          <Link to="/world-map" className="home-kpis-link">
+            {t('home.viewMap')}
+          </Link>
+        </section>
       )}
 
       <div className="home-columns">
         <section>
           <h3>{t('home.upcomingEvents')}</h3>
           {events.length === 0 && <p className="hint">{t('home.noUpcomingEvents')}</p>}
-          <ul className="request-list">
+          <ul className="home-teaser-list">
             {events.map((event) => (
-              <li key={event.id} className="request-row">
-                <div className="request-meta">
-                  <span className="chip">{t(`eventTypes.${event.type}`, event.type)}</span>
-                  <span className="hint">{formatSchedule(event.scheduled_at)}</span>
-                </div>
-                <p>
-                  <strong>{event.title}</strong>
-                </p>
+              <li key={event.id} className="home-teaser-item">
+                <strong>{event.title}</strong>
+                <span className="hint"> · {formatSchedule(event.scheduled_at)}</span>
               </li>
             ))}
           </ul>
@@ -151,12 +127,10 @@ export function HomePage() {
         <section>
           <h3>{t('home.recentTestimonies')}</h3>
           {testimonies.length === 0 && <p className="hint">{t('home.noTestimonies')}</p>}
-          <ul className="request-list">
+          <ul className="home-teaser-list">
             {testimonies.map((testimony) => (
-              <li key={testimony.id} className="request-row">
-                <p>
-                  {MEDIA_TYPE_ICONS[testimony.media_type] ?? '📝'} {testimonyExcerpt(testimony, t)}
-                </p>
+              <li key={testimony.id} className="home-teaser-item">
+                {testimonyExcerpt(testimony, t)}
               </li>
             ))}
           </ul>
