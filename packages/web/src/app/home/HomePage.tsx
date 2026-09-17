@@ -77,7 +77,8 @@ export function HomePage() {
 
   return (
     <div className="home-page">
-      <section className="home-hero">
+      <section className="home-globe-hero">
+        <RotatingGlobe snapshot={snapshot} size={320} />
         <span className={roomLive ? 'live-badge' : 'home-hero-paused'}>
           {roomLive ? t('home.live') : t('home.paused')}
         </span>
@@ -93,19 +94,15 @@ export function HomePage() {
           {t('home.joinCta')}
         </Link>
         <p className="hint">{t('home.noSignup')}</p>
-      </section>
-
-      {snapshot && (
-        <section className="home-globe-section">
-          <RotatingGlobe snapshot={snapshot} size={180} />
+        {snapshot && (
           <p className="home-presence-line">
-            <strong>{snapshot.presence}</strong> {t('home.presenceLabel')}
+            <strong>{snapshot.presence}</strong> {t('home.presenceLabel')} ·{' '}
+            <Link to="/world-map" className="home-kpis-link">
+              {t('home.viewMap')}
+            </Link>
           </p>
-          <Link to="/world-map" className="home-kpis-link">
-            {t('home.viewMap')}
-          </Link>
-        </section>
-      )}
+        )}
+      </section>
 
       <div className="home-columns">
         <section>
