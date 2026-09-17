@@ -6,29 +6,54 @@ import { approxCoordsForTimezone, projectOrthographic } from '../../lib/timezone
 const ROTATION_SPEED_DEG_PER_SEC = 6;
 const STATIC_ROTATION_DEG = -20;
 
-/**
- * Coarse continent anchors (lat/lon + a silhouette size as a *fraction of the globe's radius*,
- * not an absolute pixel size, so the same data reads correctly at any rendered size) — several
- * small blobs per landmass rather than one big ellipse each, so continents read as a soft
- * textured shape instead of a single dominant circle. An impression of the world, not an atlas.
- */
-const GLOBE_LANDMASSES = [
-  { lat: 54, lon: 15, rx: 0.09, ry: 0.06 }, // Europe
-  { lat: 44, lon: 32, rx: 0.06, ry: 0.05 },
-  { lat: 15, lon: 20, rx: 0.13, ry: 0.14 }, // Afrique
-  { lat: -10, lon: 25, rx: 0.09, ry: 0.11 },
-  { lat: -30, lon: 24, rx: 0.06, ry: 0.05 },
-  { lat: 55, lon: 70, rx: 0.15, ry: 0.1 }, // Asie
-  { lat: 45, lon: 100, rx: 0.13, ry: 0.09 },
-  { lat: 25, lon: 112, rx: 0.1, ry: 0.08 },
-  { lat: 12, lon: 100, rx: 0.06, ry: 0.05 },
-  { lat: 55, lon: -105, rx: 0.14, ry: 0.1 }, // Amérique du Nord
-  { lat: 38, lon: -95, rx: 0.1, ry: 0.08 },
-  { lat: 20, lon: -100, rx: 0.06, ry: 0.05 },
-  { lat: -5, lon: -60, rx: 0.09, ry: 0.11 }, // Amérique du Sud
-  { lat: -25, lon: -65, rx: 0.07, ry: 0.09 },
-  { lat: -25, lon: 135, rx: 0.1, ry: 0.06 }, // Océanie
+/** Small, deterministic PRNG (mulberry32) — the country-point scatter must stay identical across
+ * every re-render (rotation changes state every frame), so it's generated once at module load
+ * from a fixed seed rather than with Math.random(). */
+function mulberry32(seed: number) {
+  let state = seed;
+  return () => {
+    state |= 0;
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+interface LandRegion {
+  lat: number;
+  lon: number;
+  latSpread: number;
+  lonSpread: number;
+  count: number;
+}
+
+// Coarse continent anchors — an impression of where nations are, not an atlas. Each region seeds
+// a scatter of small "country" light points rather than a filled silhouette.
+const GLOBE_REGIONS: LandRegion[] = [
+  { lat: 50, lon: 15, latSpread: 12, lonSpread: 22, count: 10 }, // Europe
+  { lat: 2, lon: 20, latSpread: 32, lonSpread: 22, count: 22 }, // Afrique
+  { lat: 42, lon: 90, latSpread: 26, lonSpread: 55, count: 26 }, // Asie
+  { lat: 45, lon: -100, latSpread: 20, lonSpread: 30, count: 18 }, // Amérique du Nord
+  { lat: -15, lon: -60, latSpread: 26, lonSpread: 18, count: 16 }, // Amérique du Sud
+  { lat: -25, lon: 135, latSpread: 12, lonSpread: 18, count: 8 }, // Océanie
 ];
+
+const random = mulberry32(1786429256);
+
+const COUNTRY_POINTS = GLOBE_REGIONS.flatMap((region, regionIndex) =>
+  Array.from({ length: region.count }, (_, i) => {
+    // Sum of two uniforms gives a softer, center-weighted falloff than a flat random spread.
+    const jitterLat = (random() + random() - 1) * region.latSpread;
+    const jitterLon = (random() + random() - 1) * region.lonSpread;
+    return {
+      key: `${regionIndex}-${i}`,
+      lat: Math.max(-85, Math.min(85, region.lat + jitterLat)),
+      lon: region.lon + jitterLon,
+      size: 0.55 + random() * 0.5,
+    };
+  }),
+);
 
 const GRATICULE_LATITUDES = [-60, -30, 0, 30, 60];
 
@@ -69,7 +94,7 @@ export function RotatingGlobe({ snapshot, size = 300 }: { snapshot: WorldMapSnap
   const timezones = snapshot?.timezones ?? [];
   const maxCount = Math.max(1, ...timezones.map((tz) => tz.count));
 
-  const points = timezones
+  const activePoints = timezones
     .map((tz) => {
       const { lat, lon } = approxCoordsForTimezone(tz.timezone);
       const projected = projectOrthographic(lat, lon, rotation, radius);
@@ -77,10 +102,10 @@ export function RotatingGlobe({ snapshot, size = 300 }: { snapshot: WorldMapSnap
     })
     .filter((p) => p.visible);
 
-  const landmasses = GLOBE_LANDMASSES.map((land, index) => {
-    const projected = projectOrthographic(land.lat, land.lon, rotation, radius);
-    return { ...land, ...projected, key: index };
-  }).filter((land) => land.visible);
+  const countryPoints = COUNTRY_POINTS.map((p) => ({
+    ...p,
+    ...projectOrthographic(p.lat, p.lon, rotation, radius),
+  })).filter((p) => p.visible);
 
   const sphereId = `${uid}-sphere`;
   const glowId = `${uid}-glow`;
@@ -97,17 +122,17 @@ export function RotatingGlobe({ snapshot, size = 300 }: { snapshot: WorldMapSnap
       >
         <defs>
           <radialGradient id={sphereId} cx="34%" cy="30%" r="80%">
-            <stop offset="0%" stopColor="var(--color-globe-ocean-highlight)" />
-            <stop offset="100%" stopColor="var(--color-globe-ocean-shadow)" />
+            <stop offset="0%" stopColor="var(--color-globe-space-1)" />
+            <stop offset="100%" stopColor="var(--color-globe-space-2)" />
           </radialGradient>
           <radialGradient id={vignetteId} cx="34%" cy="30%" r="72%">
-            <stop offset="55%" stopColor="var(--color-globe-ocean-shadow)" stopOpacity="0" />
-            <stop offset="100%" stopColor="var(--color-globe-ocean-shadow)" stopOpacity="0.55" />
+            <stop offset="55%" stopColor="var(--color-globe-space-2)" stopOpacity="0" />
+            <stop offset="100%" stopColor="var(--color-globe-space-2)" stopOpacity="0.6" />
           </radialGradient>
           <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(139, 150, 230, 0.85)" />
-            <stop offset="45%" stopColor="rgba(139, 150, 230, 0.35)" />
-            <stop offset="100%" stopColor="rgba(139, 150, 230, 0)" />
+            <stop offset="0%" stopColor="rgba(255, 176, 84, 0.85)" />
+            <stop offset="45%" stopColor="rgba(255, 176, 84, 0.35)" />
+            <stop offset="100%" stopColor="rgba(255, 176, 84, 0)" />
           </radialGradient>
           <clipPath id={clipId}>
             <circle r={radius} />
@@ -124,19 +149,18 @@ export function RotatingGlobe({ snapshot, size = 300 }: { snapshot: WorldMapSnap
             return <ellipse key={lat} cx={0} cy={y} rx={rx} ry={Math.max(1, rx * 0.05)} className="globe-graticule" />;
           })}
 
-          {landmasses.map((land) => (
-            <ellipse
-              key={land.key}
-              cx={land.x}
-              cy={land.y}
-              rx={land.rx * radius * Math.max(0.3, land.depth)}
-              ry={land.ry * radius * Math.max(0.3, land.depth)}
-              className="globe-land"
-              opacity={0.55 + 0.4 * land.depth}
+          {countryPoints.map((p) => (
+            <circle
+              key={p.key}
+              cx={p.x}
+              cy={p.y}
+              r={Math.max(0.6, p.size * (radius / 130)) * Math.max(0.3, p.depth)}
+              className="globe-country-point"
+              opacity={0.35 + 0.55 * p.depth}
             />
           ))}
 
-          {points.map((p) => {
+          {activePoints.map((p) => {
             const pointRadius = (3 + Math.sqrt(p.count / maxCount) * 8) * Math.max(0.4, p.depth);
             return (
               <g key={p.timezone} className="worldmap-point-group">
