@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: tag-platform-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npx nx build api
+    startCommand: node packages/api/dist/main.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Set this to the deployed frontend's real origin (e.g. https://dist-pi-lovat-44.vercel.app)
+      # once known — it's the CORS allow-list, see packages/api/src/main.ts.
+      - key: WEB_ORIGIN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN_SECONDS
+        value: "900"
+      - key: JWT_REFRESH_EXPIRES_IN_DAYS
+        value: "30"
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@example.com
