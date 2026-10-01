@@ -2,6 +2,22 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
+import { MfaOtpChannel, authApi } from '../../lib/api';
+
+/** What an older API (without /mfa/otp/channels) always offered. */
+const LEGACY_OTP_CHANNELS: MfaOtpChannel[] = ['EMAIL', 'WHATSAPP'];
+
+const CHANNEL_LABEL_KEYS: Record<MfaOtpChannel, string> = {
+  EMAIL: 'auth.mfa.channelEmail',
+  WHATSAPP: 'auth.mfa.channelWhatsapp',
+  SMS: 'auth.mfa.channelSms',
+};
+
+const CHANNEL_BUTTON_KEYS: Record<MfaOtpChannel, string> = {
+  EMAIL: 'auth.mfa.receiveByEmail',
+  WHATSAPP: 'auth.mfa.receiveByWhatsapp',
+  SMS: 'auth.mfa.receiveBySms',
+};
 
 type MfaMode = 'totp' | 'recovery' | 'otp';
 
@@ -15,7 +31,8 @@ export function LoginPage() {
   const [code, setCode] = useState('');
   const [mfaMode, setMfaMode] = useState<MfaMode>('totp');
   const [recoveryCode, setRecoveryCode] = useState('');
-  const [otpSent, setOtpSent] = useState<'EMAIL' | 'WHATSAPP' | null>(null);
+  const [otpSent, setOtpSent] = useState<MfaOtpChannel | null>(null);
+  const [otpChannels, setOtpChannels] = useState<MfaOtpChannel[] | null>(null);
   const [otpSending, setOtpSending] = useState(false);
   const [trustDevice, setTrustDevice] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +77,7 @@ export function LoginPage() {
     }
   };
 
-  const handleSendOtp = async (channel: 'EMAIL' | 'WHATSAPP') => {
+  const handleSendOtp = async (channel: MfaOtpChannel) => {
     if (!mfaToken) return;
     setError(null);
     setOtpSending(true);
@@ -76,6 +93,12 @@ export function LoginPage() {
 
   const switchMfaMode = (mode: MfaMode) => {
     setMfaMode(mode);
+    if (mode === 'otp' && mfaToken && otpChannels === null) {
+      authApi
+        .mfaOtpChannels(mfaToken)
+        .then((res) => setOtpChannels(res.channels))
+        .catch(() => setOtpChannels(LEGACY_OTP_CHANNELS));
+    }
     setOtpSent(null);
     setCode('');
     setRecoveryCode('');
@@ -92,7 +115,7 @@ export function LoginPage() {
           <p className="hint">
             {otpSent
               ? t('auth.mfa.otpHintSent', {
-                  channel: otpSent === 'EMAIL' ? t('auth.mfa.channelEmail') : t('auth.mfa.channelWhatsapp'),
+                  channel: t(CHANNEL_LABEL_KEYS[otpSent]),
                 })
               : t('auth.mfa.otpHintUnsent')}
           </p>
@@ -100,12 +123,15 @@ export function LoginPage() {
 
         {mfaMode === 'otp' && !otpSent && (
           <div className="request-form">
-            <button type="button" onClick={() => handleSendOtp('EMAIL')} disabled={otpSending}>
-              {otpSending ? t('auth.mfa.sending') : t('auth.mfa.receiveByEmail')}
-            </button>
-            <button type="button" onClick={() => handleSendOtp('WHATSAPP')} disabled={otpSending}>
-              {otpSending ? t('auth.mfa.sending') : t('auth.mfa.receiveByWhatsapp')}
-            </button>
+            {otpChannels === null ? (
+              <p className="hint">{t('auth.mfa.loadingChannels')}</p>
+            ) : (
+              otpChannels.map((channel) => (
+                <button key={channel} type="button" onClick={() => handleSendOtp(channel)} disabled={otpSending}>
+                  {otpSending ? t('auth.mfa.sending') : t(CHANNEL_BUTTON_KEYS[channel])}
+                </button>
+              ))
+            )}
           </div>
         )}
 

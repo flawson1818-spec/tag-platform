@@ -1,5 +1,5 @@
 import { IsIn, IsString, MinLength } from 'class-validator';
-import { MFA_OTP_CHANNELS } from '../mfa-otp.service';
+import { MFA_OTP_CHANNELS, MfaOtpChannel } from '../mfa-otp.service';
 
 export class RequestMfaOtpDto {
   @IsString()
@@ -7,5 +7,11 @@ export class RequestMfaOtpDto {
   mfaToken!: string;
 
   @IsIn(MFA_OTP_CHANNELS)
-  channel!: 'EMAIL' | 'WHATSAPP';
+  channel!: MfaOtpChannel;
+}
+
+export class MfaOtpChannelsDto {
+  @IsString()
+  @MinLength(1)
+  mfaToken!: string;
 }

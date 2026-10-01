@@ -198,6 +198,17 @@ export class AuthService {
     await this.mfaOtpService.request(user, channel);
   }
 
+  /** Which one-time-code channels the pending challenge's account can actually use. */
+  async getMfaOtpChannels(mfaToken: string): Promise<{ channels: MfaOtpChannel[] }> {
+    const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
+    if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    const user = await this.usersService.findById(userId).catch(() => null);
+    if (!user || user.status !== 'ACTIVE') throw new UnauthorizedException('Invalid or expired MFA challenge');
+
+    return { channels: this.mfaOtpService.availableChannels(user) };
+  }
+
   async mfaOtpChallenge(mfaToken: string, code: string, trustDevice = false): Promise<AuthResponseDto> {
     const userId = this.tokenService.verifyMfaPendingToken(mfaToken);
     if (!userId) throw new UnauthorizedException('Invalid or expired MFA challenge');

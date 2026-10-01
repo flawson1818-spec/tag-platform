@@ -28,8 +28,18 @@ function buildService(chain: ReturnType<typeof createQueryChain>, overrides: Par
   const passwordService = new PasswordService();
   const emailService = overrides.emailService ?? { send: vi.fn().mockResolvedValue(undefined) };
   const whatsAppService = overrides.whatsAppService ?? { send: vi.fn().mockResolvedValue(undefined) };
-  const service = new MfaOtpService(supabase as never, passwordService, emailService as never, whatsAppService as never);
-  return { service, emailService, whatsAppService };
+  const smsService = overrides.smsService ?? {
+    isConfigured: vi.fn().mockReturnValue(true),
+    send: vi.fn().mockResolvedValue(undefined),
+  };
+  const service = new MfaOtpService(
+    supabase as never,
+    passwordService,
+    emailService as never,
+    whatsAppService as never,
+    smsService as never,
+  );
+  return { service, emailService, whatsAppService, smsService };
 }
 
 describe('MfaOtpService', () => {
@@ -68,6 +78,59 @@ describe('MfaOtpService', () => {
     });
   });
 
+  describe('SMS', () => {
+    const E164 = '+2250701020304';
+
+    it('sends the code by SMS to an international number', async () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const { service, smsService } = buildService(chain);
+
+      await service.request(buildUser({ phone: E164 }), 'SMS');
+
+      expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ channel: 'SMS' }));
+      expect(smsService.send).toHaveBeenCalledWith(E164, expect.stringMatching(/\d{6}/));
+    });
+
+    it('refuses SMS when no provider is configured, before creating any challenge', async () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const { service } = buildService(chain, {
+        smsService: { isConfigured: vi.fn().mockReturnValue(false), send: vi.fn() },
+      });
+
+      await expect(service.request(buildUser({ phone: E164 }), 'SMS')).rejects.toThrow('pas configuré');
+      expect(chain.insert).not.toHaveBeenCalled();
+    });
+
+    it('accepts an international number typed with spaces and dashes', async () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const { service, smsService } = buildService(chain);
+
+      await service.request(buildUser({ phone: '+225 07 01-02 03 04' }), 'SMS');
+
+      expect(smsService.send).toHaveBeenCalledWith(E164, expect.any(String));
+    });
+
+    it('refuses SMS to a number not in international format', async () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const { service } = buildService(chain);
+
+      await expect(service.request(buildUser({ phone: '0701020304' }), 'SMS')).rejects.toThrow('format international');
+    });
+
+    it('offers SMS only when configured and the phone is E.164', () => {
+      const chain = createQueryChain({ data: null, error: null });
+      const configured = buildService(chain).service;
+      const unconfigured = buildService(chain, {
+        smsService: { isConfigured: vi.fn().mockReturnValue(false), send: vi.fn() },
+      }).service;
+
+      expect(configured.availableChannels({ phone: E164 })).toEqual(['EMAIL', 'WHATSAPP', 'SMS']);
+      expect(configured.availableChannels({ phone: '0701020304' })).toEqual(['EMAIL', 'WHATSAPP']);
+      expect(configured.availableChannels({ phone: null })).toEqual(['EMAIL']);
+      expect(unconfigured.availableChannels({ phone: E164 })).toEqual(['EMAIL', 'WHATSAPP']);
+    });
+  });
+
   describe('verify', () => {
     it('consumes a matching unused, unexpired code', async () => {
       const passwordService = new PasswordService();
@@ -79,6 +142,7 @@ describe('MfaOtpService', () => {
         passwordService,
         { send: vi.fn() } as never,
         { send: vi.fn() } as never,
+        { isConfigured: vi.fn(), send: vi.fn() } as never,
       );
 
       const result = await service.verify('user-1', '123456');

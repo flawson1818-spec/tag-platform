@@ -8,12 +8,13 @@ import { PushNotificationsController } from './push-notifications.controller';
 import { PushNotificationsService } from './push-notifications.service';
 import { SocialPublicationsController } from './social-publications.controller';
 import { SocialPublicationsService } from './social-publications.service';
+import { SmsService } from './sms.service';
 import { WhatsAppService } from './whatsapp.service';
 
 @Module({
   imports: [SupabaseModule, AccessModule],
   controllers: [NotificationsController, SocialPublicationsController, PushNotificationsController],
-  providers: [EmailService, NotificationsService, SocialPublicationsService, WhatsAppService, PushNotificationsService],
-  exports: [EmailService, NotificationsService, SocialPublicationsService, WhatsAppService, PushNotificationsService],
+  providers: [EmailService, NotificationsService, SocialPublicationsService, WhatsAppService, PushNotificationsService, SmsService],
+  exports: [EmailService, NotificationsService, SocialPublicationsService, WhatsAppService, PushNotificationsService, SmsService],
 })
 export class CommunicationModule {}

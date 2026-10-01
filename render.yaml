@@ -38,3 +38,14 @@ services:
         sync: false
       - key: VAPID_SUBJECT
         value: mailto:admin@example.com
+      # Optional — SMS one-time codes for MFA (Twilio). Leave unset and the login screen simply
+      # doesn't offer SMS. Set either TWILIO_FROM_NUMBER (E.164, e.g. +15005550006) or
+      # TWILIO_MESSAGING_SERVICE_SID (recommended for international sending).
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false

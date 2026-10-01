@@ -679,6 +679,8 @@ export function isMfaRequired(res: AuthResponse | MfaRequiredResponse): res is M
   return (res as MfaRequiredResponse).mfaRequired === true;
 }
 
+export type MfaOtpChannel = 'EMAIL' | 'WHATSAPP' | 'SMS';
+
 export const authApi = {
   register: (data: { email: string; password: string; displayName: string }) =>
     request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
@@ -695,8 +697,14 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ mfaToken, recoveryCode, trustDevice }),
     }),
-  /** Sends a fresh 6-digit code by email or WhatsApp for the pending MFA challenge. */
-  requestMfaOtp: (mfaToken: string, channel: 'EMAIL' | 'WHATSAPP') =>
+  /** Which code channels this account can use — SMS only when the server has a provider. */
+  mfaOtpChannels: (mfaToken: string) =>
+    request<{ channels: MfaOtpChannel[] }>('/auth/mfa/otp/channels', {
+      method: 'POST',
+      body: JSON.stringify({ mfaToken }),
+    }),
+  /** Sends a fresh 6-digit code by email, WhatsApp or SMS for the pending MFA challenge. */
+  requestMfaOtp: (mfaToken: string, channel: MfaOtpChannel) =>
     request<void>('/auth/mfa/otp/request', { method: 'POST', body: JSON.stringify({ mfaToken, channel }) }),
   mfaOtpVerify: (mfaToken: string, code: string, trustDevice = false) =>
     request<AuthResponse>('/auth/mfa/otp/verify', {

@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { AuthUser, authApi, isMfaRequired } from '../../lib/api';
+import { AuthUser, MfaOtpChannel, authApi, isMfaRequired } from '../../lib/api';
 import { getStoredLocale, changeLocale, isSupportedLocale } from '../../i18n/config';
 
 const ACCESS_TOKEN_KEY = 'tag.accessToken';
@@ -17,7 +17,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaToken: string, code: string, trustDevice?: boolean) => Promise<void>;
   completeMfaRecovery: (mfaToken: string, recoveryCode: string, trustDevice?: boolean) => Promise<void>;
-  requestMfaOtp: (mfaToken: string, channel: 'EMAIL' | 'WHATSAPP') => Promise<void>;
+  requestMfaOtp: (mfaToken: string, channel: MfaOtpChannel) => Promise<void>;
   completeMfaOtp: (mfaToken: string, code: string, trustDevice?: boolean) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persistSession],
   );
 
-  const requestMfaOtp = useCallback(async (mfaToken: string, channel: 'EMAIL' | 'WHATSAPP') => {
+  const requestMfaOtp = useCallback(async (mfaToken: string, channel: MfaOtpChannel) => {
     await authApi.requestMfaOtp(mfaToken, channel);
   }, []);
 
