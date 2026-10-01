@@ -4,12 +4,20 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm install && npx nx build api
+    # --include=dev is required here: NODE_ENV=production below makes a plain `npm install`
+    # skip devDependencies (nx, webpack-cli, typescript, @nx/webpack...) — exactly the tools
+    # this build needs. Without it, `npx nx build api` fails with "nx: command not found".
+    buildCommand: npm install --include=dev && npx nx build api
     startCommand: node packages/api/dist/main.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      # Nx tries to spawn a background daemon for faster repeat builds; that daemon process
+      # commonly fails to start in ephemeral/sandboxed cloud build containers (Render included),
+      # which can hang or error the build. Disabling it makes every build a clean one-shot run.
+      - key: NX_DAEMON
+        value: "false"
       # Set this to the deployed frontend's real origin (e.g. https://dist-pi-lovat-44.vercel.app)
       # once known — it's the CORS allow-list, see packages/api/src/main.ts.
       - key: WEB_ORIGIN
