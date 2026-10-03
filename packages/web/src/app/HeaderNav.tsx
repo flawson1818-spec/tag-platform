@@ -40,7 +40,6 @@ export function HeaderNav() {
         {status === 'authenticated' ? (
           <>
             <NavLink to="/notifications" className={navClass}>{t('nav.notifications')}</NavLink>
-            <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
             <button onClick={handleLogout}>{t('nav.logout')}</button>
           </>
         ) : (
