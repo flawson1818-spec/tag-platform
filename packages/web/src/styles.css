@@ -1801,6 +1801,43 @@ nav button {
   border-radius: var(--radius-sm);
 }
 
+.install-pwa {
+  position: relative;
+}
+
+.install-pwa-button {
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.install-pwa-button:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.install-pwa-ios-hint {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 30;
+  margin-top: 0.4rem;
+  width: 220px;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
 .home-teaser-list {
   list-style: none;
   padding: 0;

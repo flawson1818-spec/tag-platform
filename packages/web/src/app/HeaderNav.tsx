@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { InstallPwaButton } from './InstallPwaButton';
 
 function navClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'active' : '';
@@ -35,6 +36,7 @@ export function HeaderNav() {
       <div className="nav-account">
         <ThemeToggle />
         <LanguageSwitcher />
+        <InstallPwaButton />
         {status === 'authenticated' ? (
           <>
             <NavLink to="/notifications" className={navClass}>{t('nav.notifications')}</NavLink>

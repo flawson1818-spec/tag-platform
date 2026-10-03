@@ -850,5 +850,9 @@
     "switchToDark": "Cambiar al tema oscuro",
     "lightTheme": "Tema claro",
     "darkTheme": "Tema oscuro"
+  },
+  "installPwa": {
+    "button": "Instalar la aplicación",
+    "iosHint": "En iPhone/iPad: toca Compartir y luego \"Añadir a pantalla de inicio\"."
   }
 }

@@ -850,5 +850,9 @@
     "switchToDark": "Switch to dark theme",
     "lightTheme": "Light theme",
     "darkTheme": "Dark theme"
+  },
+  "installPwa": {
+    "button": "Install the app",
+    "iosHint": "On iPhone/iPad: tap Share, then \"Add to Home Screen\"."
   }
 }
