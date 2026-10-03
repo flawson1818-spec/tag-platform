@@ -610,7 +610,8 @@ export interface CommunityDocument {
 }
 
 export const communityDocumentsApi = {
-  list: (communityId: string) => request<CommunityDocument[]>(`/communities/${communityId}/documents`),
+  list: (token: string, communityId: string) =>
+    request<CommunityDocument[]>(`/communities/${communityId}/documents`, { headers: authHeaders(token) }),
   create: (token: string, communityId: string, data: { fileId: string; title: string }) =>
     request<CommunityDocument>(`/communities/${communityId}/documents`, {
       method: 'POST',

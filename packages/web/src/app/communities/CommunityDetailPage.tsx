@@ -87,9 +87,8 @@ export function CommunityDetailPage() {
       communitiesApi.getMembership(token, id),
       communitiesApi.list(token, 1, id),
       announcementsApi.list(id),
-      communityDocumentsApi.list(id),
     ])
-      .then(([c, m, p, membership, sub, ann, docs]) => {
+      .then(([c, m, p, membership, sub, ann]) => {
         setCommunity(c);
         setMembers(m.data);
         setPosts(p.data);
@@ -97,7 +96,6 @@ export function CommunityDetailPage() {
         setMembershipStatus(membership.status);
         setChildren(sub.data);
         setAnnouncements(ann.data);
-        setDocuments(docs);
         return fetchAncestors(token, c);
       })
       .then(setAncestors)
@@ -109,6 +107,12 @@ export function CommunityDetailPage() {
       .listPendingMembers(token, id)
       .then((res) => setPendingMembers(res.data))
       .catch(() => setPendingMembers(null));
+    // Isolated from the Promise.all above on purpose: a hiccup fetching documents shouldn't
+    // blank the whole page (it did, before this was split out — see the git history for this line).
+    communityDocumentsApi
+      .list(token, id)
+      .then(setDocuments)
+      .catch((err) => setDocError((err as Error).message));
   };
 
   useEffect(refresh, [id, postsPage]);
