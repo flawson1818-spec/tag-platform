@@ -107,15 +107,18 @@ export function HomePage() {
       <div className="home-columns">
         <section>
           <h3>{t('home.upcomingEvents')}</h3>
-          {events.length === 0 && <p className="hint">{t('home.noUpcomingEvents')}</p>}
-          <ul className="home-teaser-list">
-            {events.map((event) => (
-              <li key={event.id} className="home-teaser-item">
-                <strong>{event.title}</strong>
-                <span className="hint"> · {formatSchedule(event.scheduled_at)}</span>
-              </li>
-            ))}
-          </ul>
+          {events.length === 0 ? (
+            <p className="home-teaser-empty">{t('home.noUpcomingEvents')}</p>
+          ) : (
+            <ul className="home-teaser-list">
+              {events.map((event) => (
+                <li key={event.id} className="home-teaser-item">
+                  <strong>{event.title}</strong>
+                  <span className="hint"> · {formatSchedule(event.scheduled_at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           <Link to="/events" className="link-button">
             {t('home.viewAllEvents')}
           </Link>
@@ -123,14 +126,17 @@ export function HomePage() {
 
         <section>
           <h3>{t('home.recentTestimonies')}</h3>
-          {testimonies.length === 0 && <p className="hint">{t('home.noTestimonies')}</p>}
-          <ul className="home-teaser-list">
-            {testimonies.map((testimony) => (
-              <li key={testimony.id} className="home-teaser-item">
-                {testimonyExcerpt(testimony, t)}
-              </li>
-            ))}
-          </ul>
+          {testimonies.length === 0 ? (
+            <p className="home-teaser-empty">{t('home.noTestimonies')}</p>
+          ) : (
+            <ul className="home-teaser-list">
+              {testimonies.map((testimony) => (
+                <li key={testimony.id} className="home-teaser-item">
+                  {testimonyExcerpt(testimony, t)}
+                </li>
+              ))}
+            </ul>
+          )}
           <Link to="/testimonies" className="link-button">
             {t('home.viewAllTestimonies')}
           </Link>
