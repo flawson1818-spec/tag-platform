@@ -146,8 +146,8 @@ describe('PrayerSlotsService', () => {
       const result = await service.create('program-1', {
         title: 'Nouveau',
         category: 'Famille',
-        startAt: '2026-01-01T08:00:00.000Z',
-        endAt: '2026-01-01T08:10:00.000Z',
+        startTime: '08:00',
+        endTime: '08:10',
       } as never);
 
       expect(result.order_index).toBe(3);
@@ -166,8 +166,8 @@ describe('PrayerSlotsService', () => {
       const result = await service.create('program-1', {
         title: 'Premier',
         category: 'Famille',
-        startAt: '2026-01-01T08:00:00.000Z',
-        endAt: '2026-01-01T08:10:00.000Z',
+        startTime: '08:00',
+        endTime: '08:10',
       } as never);
 
       expect(result.order_index).toBe(0);
@@ -175,7 +175,7 @@ describe('PrayerSlotsService', () => {
 
     it('rejects a slot that overlaps an existing one in the same program', async () => {
       const chain = createQueryChain({
-        data: [{ title: 'Ouverture', start_at: '2026-01-01T08:05:00.000Z', end_at: '2026-01-01T08:10:00.000Z' }],
+        data: [{ title: 'Ouverture', start_at: '2000-01-01T08:05:00.000Z', end_at: '2000-01-01T08:10:00.000Z' }],
         error: null,
       });
       const supabase = createSupabaseServiceMock({ prayer_slots: chain });
@@ -185,14 +185,14 @@ describe('PrayerSlotsService', () => {
         service.create('program-1', {
           title: 'Nouveau',
           category: 'Famille',
-          startAt: '2026-01-01T08:08:00.000Z',
-          endAt: '2026-01-01T08:15:00.000Z',
+          startTime: '08:08',
+          endTime: '08:15',
         } as never),
       ).rejects.toThrow(/chevauche/);
       expect(chain.insert).not.toHaveBeenCalled();
     });
 
-    it('rejects a slot whose endAt is not after startAt', async () => {
+    it('rejects a slot whose endTime is not after startTime', async () => {
       const chain = createQueryChain({ data: [], error: null });
       const supabase = createSupabaseServiceMock({ prayer_slots: chain });
       const service = new PrayerSlotsService(supabase as never);
@@ -201,8 +201,8 @@ describe('PrayerSlotsService', () => {
         service.create('program-1', {
           title: 'Invalide',
           category: 'Famille',
-          startAt: '2026-01-01T08:10:00.000Z',
-          endAt: '2026-01-01T08:10:00.000Z',
+          startTime: '08:10',
+          endTime: '08:10',
         } as never),
       ).rejects.toThrow('endAt must be after startAt');
       expect(chain.select).not.toHaveBeenCalled();
@@ -221,11 +221,78 @@ describe('PrayerSlotsService', () => {
       const result = await service.create('program-1', {
         title: 'Suivant',
         category: 'Famille',
-        startAt: '2026-01-01T08:10:00.000Z',
-        endAt: '2026-01-01T08:20:00.000Z',
+        startTime: '08:10',
+        endTime: '08:20',
       } as never);
 
       expect(result).toBeDefined();
+    });
+
+    it('rolls an overnight slot (end before start) onto the next reference day', async () => {
+      const chains = [
+        createQueryChain({ data: [], error: null }), // assertNoOverlap: no conflicts
+        createQueryChain({ data: null, error: null }), // nextOrderIndex
+        createQueryChain({ data: { ...RUNNING_SLOT_A, order_index: 0 }, error: null }), // insert
+      ];
+      const supabase = createSupabaseServiceMock({ prayer_slots: chains });
+      const service = new PrayerSlotsService(supabase as never);
+
+      await service.create('program-1', {
+        title: 'Veille de nuit',
+        category: 'Famille',
+        startTime: '23:30',
+        endTime: '00:15',
+      } as never);
+
+      expect(chains[2].insert).toHaveBeenCalledWith(
+        expect.objectContaining({ start_at: '2000-01-01T23:30:00.000Z', end_at: '2000-01-02T00:15:00.000Z' }),
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('refuses to change the time of a slot that is no longer SCHEDULED', async () => {
+      const chain = createQueryChain({ data: { ...RUNNING_SLOT_A, status: 'RUNNING' }, error: null });
+      const supabase = createSupabaseServiceMock({ prayer_slots: chain });
+      const service = new PrayerSlotsService(supabase as never);
+
+      await expect(service.update('slot-a', { startTime: '09:00' } as never)).rejects.toThrow(
+        /can be changed/,
+      );
+    });
+
+    it('allows changing the time of a SCHEDULED slot, excluding itself from the overlap check', async () => {
+      const scheduled = { ...RUNNING_SLOT_A, status: 'SCHEDULED', start_at: '2000-01-01T08:00:00.000Z', end_at: '2000-01-01T08:10:00.000Z' };
+      const chains = [
+        createQueryChain({ data: scheduled, error: null }), // findById
+        createQueryChain({ data: [], error: null }), // assertNoOverlap: no conflicts
+        createQueryChain({ data: { ...scheduled, start_at: '2000-01-01T09:00:00.000Z', end_at: '2000-01-01T09:10:00.000Z' }, error: null }), // update
+      ];
+      const supabase = createSupabaseServiceMock({ prayer_slots: chains });
+      const service = new PrayerSlotsService(supabase as never);
+
+      await service.update('slot-a', { startTime: '09:00', endTime: '09:10' } as never);
+
+      expect(chains[1].neq).toHaveBeenCalledWith('id', 'slot-a');
+      expect(chains[2].update).toHaveBeenCalledWith(
+        expect.objectContaining({ start_at: '2000-01-01T09:00:00.000Z', end_at: '2000-01-01T09:10:00.000Z' }),
+      );
+    });
+
+    it('leaves the time untouched when neither startTime nor endTime is given', async () => {
+      const scheduled = { ...RUNNING_SLOT_A, status: 'SCHEDULED' };
+      const chains = [
+        createQueryChain({ data: scheduled, error: null }), // findById
+        createQueryChain({ data: { ...scheduled, title: 'Renommé' }, error: null }), // update
+      ];
+      const supabase = createSupabaseServiceMock({ prayer_slots: chains });
+      const service = new PrayerSlotsService(supabase as never);
+
+      await service.update('slot-a', { title: 'Renommé' } as never);
+
+      expect(chains[1].update).toHaveBeenCalledWith(
+        expect.not.objectContaining({ start_at: expect.anything() }),
+      );
     });
   });
 

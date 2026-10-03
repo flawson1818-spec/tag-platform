@@ -9,6 +9,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
 import { UpdateSlotDto } from './dto/update-slot.dto';
 import { PrayerSlot } from './prayer-slot.entity';
+import { toDailySlotRange } from './daily-slot-time';
 
 const SLOT_COLUMNS =
   'id, program_id, order_index, title, category, importance, start_at, end_at, guided_text, bible_references, recommended_songs, leader_user_id, status, created_at, updated_at, leader:leader_user_id(display_name)';
@@ -29,21 +30,53 @@ export class PrayerSlotsService {
   }
 
   async create(programId: string, dto: CreateSlotDto): Promise<PrayerSlot> {
-    await this.assertNoOverlap(programId, dto.startAt, dto.endAt);
-    const orderIndex = dto.orderIndex ?? (await this.nextOrderIndex(programId));
+    const { startAt, endAt } = toDailySlotRange(dto.startTime, dto.endTime);
+    return this.insertSlot(programId, {
+      title: dto.title,
+      startAt,
+      endAt,
+      guidedText: dto.guidedText,
+      bibleReferences: dto.bibleReferences,
+      recommendedSongs: dto.recommendedSongs,
+      leaderUserId: dto.leaderUserId,
+      orderIndex: dto.orderIndex,
+    });
+  }
+
+  /**
+   * Shared by create() (daily "HH:mm" input, converted above) and injectUrgent() (a real "now"
+   * window, built directly — an urgent slot isn't part of the recurring daily schedule).
+   */
+  private async insertSlot(
+    programId: string,
+    input: {
+      title: string;
+      category?: string;
+      importance?: string;
+      startAt: string;
+      endAt: string;
+      guidedText?: string;
+      bibleReferences?: string[];
+      recommendedSongs?: string[];
+      leaderUserId?: string;
+      orderIndex?: number;
+    },
+  ): Promise<PrayerSlot> {
+    await this.assertNoOverlap(programId, input.startAt, input.endAt);
+    const orderIndex = input.orderIndex ?? (await this.nextOrderIndex(programId));
     const { data, error } = await this.db
       .insert({
         program_id: programId,
         order_index: orderIndex,
-        title: dto.title,
-        category: dto.category,
-        importance: dto.importance ?? 'Normal',
-        start_at: dto.startAt,
-        end_at: dto.endAt,
-        guided_text: dto.guidedText,
-        bible_references: dto.bibleReferences ?? [],
-        recommended_songs: dto.recommendedSongs ?? [],
-        leader_user_id: dto.leaderUserId ?? null,
+        title: input.title,
+        category: input.category,
+        importance: input.importance ?? 'Normal',
+        start_at: input.startAt,
+        end_at: input.endAt,
+        guided_text: input.guidedText,
+        bible_references: input.bibleReferences ?? [],
+        recommended_songs: input.recommendedSongs ?? [],
+        leader_user_id: input.leaderUserId ?? null,
         status: 'SCHEDULED',
       })
       .select(SLOT_COLUMNS)
@@ -69,17 +102,27 @@ export class PrayerSlotsService {
   }
 
   async update(id: string, dto: UpdateSlotDto): Promise<PrayerSlot> {
-    await this.findById(id);
+    const existing = await this.findById(id);
+    let startAt: string | undefined;
+    let endAt: string | undefined;
+    if (dto.startTime || dto.endTime) {
+      if (existing.status !== 'SCHEDULED') {
+        throw new ConflictException('Only a SCHEDULED slot\'s time can be changed — this one has already run or is running');
+      }
+      const range = toDailySlotRange(dto.startTime ?? existing.start_at.slice(11, 16), dto.endTime ?? existing.end_at.slice(11, 16));
+      await this.assertNoOverlap(existing.program_id, range.startAt, range.endAt, id);
+      startAt = range.startAt;
+      endAt = range.endAt;
+    }
     const { data, error } = await this.db
       .update({
         title: dto.title,
-        category: dto.category,
-        importance: dto.importance,
         guided_text: dto.guidedText,
         bible_references: dto.bibleReferences,
         recommended_songs: dto.recommendedSongs,
         leader_user_id: dto.leaderUserId,
         order_index: dto.orderIndex,
+        ...(startAt && endAt ? { start_at: startAt, end_at: endAt } : {}),
       })
       .eq('id', id)
       .select(SLOT_COLUMNS)
@@ -193,7 +236,7 @@ export class PrayerSlotsService {
     const running = await this.findRunningSlotByProgram(programId);
     if (running) await this.cutShort(running.id);
 
-    const created = await this.create(programId, {
+    const created = await this.insertSlot(programId, {
       title: input.title,
       category: input.category,
       importance: 'Urgent',
@@ -247,15 +290,22 @@ export class PrayerSlotsService {
    * fight over that assumption. Rejected up front, at create time, with the conflicting
    * slot(s) named — never silently accepted.
    */
-  private async assertNoOverlap(programId: string, startAt: string, endAt: string): Promise<void> {
+  private async assertNoOverlap(
+    programId: string,
+    startAt: string,
+    endAt: string,
+    excludeSlotId?: string,
+  ): Promise<void> {
     if (new Date(startAt).getTime() >= new Date(endAt).getTime()) {
       throw new BadRequestException('endAt must be after startAt');
     }
-    const { data, error } = await this.db
+    let query = this.db
       .select('title, start_at, end_at')
       .eq('program_id', programId)
       .lt('start_at', endAt)
       .gt('end_at', startAt);
+    if (excludeSlotId) query = query.neq('id', excludeSlotId);
+    const { data, error } = await query;
     if (error) throw new InternalServerErrorException(error.message);
     const conflicts = (data ?? []) as { title: string; start_at: string; end_at: string }[];
     if (conflicts.length > 0) {

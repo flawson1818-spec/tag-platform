@@ -587,22 +587,19 @@
     "delete": "Supprimer",
     "needLoginCreate": "Connecte-toi avec un compte modérateur pour créer un programme.",
     "slotsTitle": "Créneaux — {{title}}",
-    "previous": "← Précédent",
-    "today": "Aujourd'hui",
-    "next": "Suivant →",
+    "dailyScheduleHint": "Horaire quotidien — chaque créneau se répète tous les jours à la même heure, pas besoin de date.",
     "tableTime": "Heure",
     "tableTitle": "Titre",
-    "tableCategory": "Catégorie",
-    "tableImportance": "Importance",
     "tableLeader": "Animé par",
     "liveBadge": "En direct",
     "leaderAi": "IA Intercession",
     "edit": "Modifier",
     "noSlots": "Aucun créneau pour ce programme.",
-    "noSlotsInPeriod": "Aucun créneau sur cette période — essaie une autre semaine/mois.",
     "editSlotTitle": "Modifier le créneau",
     "addSlotTitle": "Ajouter un créneau",
     "slotTitlePlaceholder": "Titre du créneau",
+    "startTimeLabel": "Heure de début",
+    "endTimeLabel": "Heure de fin",
     "guidedTextPlaceholder": "Texte guidé (facultatif)",
     "bibleRefsPlaceholder": "Références bibliques, séparées par des virgules",
     "songsPlaceholder": "Chants recommandés, séparés par des virgules",
@@ -610,17 +607,7 @@
     "saving": "Enregistrement…",
     "save": "Enregistrer",
     "addSlot": "Ajouter le créneau",
-    "cancel": "Annuler",
-    "calendarViews": {
-      "day": "Jour",
-      "week": "Semaine",
-      "month": "Mois"
-    }
-  },
-  "prayerImportance": {
-    "Normal": "Normal",
-    "Important": "Important",
-    "Urgent": "Urgent"
+    "cancel": "Annuler"
   },
   "adminUsers": {
     "title": "Gestion des utilisateurs",

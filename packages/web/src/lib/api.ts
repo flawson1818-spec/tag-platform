@@ -194,10 +194,9 @@ export interface PrayerProgram {
 
 export interface CreateSlotPayload {
   title: string;
-  category: string;
-  importance?: string;
-  startAt: string;
-  endAt: string;
+  /** "HH:mm" — slots are a daily-recurring schedule, no calendar date to pick. */
+  startTime: string;
+  endTime: string;
   guidedText?: string;
   bibleReferences?: string[];
   recommendedSongs?: string[];
@@ -260,7 +259,7 @@ export const prayerApi = {
       headers: authHeaders(token),
       body: JSON.stringify(data),
     }),
-  updateSlot: (token: string, slotId: string, data: Partial<Omit<CreateSlotPayload, 'startAt' | 'endAt'>>) =>
+  updateSlot: (token: string, slotId: string, data: Partial<CreateSlotPayload>) =>
     request<PrayerSlot>(`/prayer-slots/${slotId}`, {
       method: 'PATCH',
       headers: authHeaders(token),

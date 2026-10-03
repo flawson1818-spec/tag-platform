@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsIn, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min, MinLength } from 'class-validator';
-import { PRAYER_CATEGORIES, PRAYER_IMPORTANCE_LEVELS } from '../prayer-constants';
+import { IsArray, IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min, MinLength } from 'class-validator';
+import { TIME_OF_DAY_PATTERN } from '../daily-slot-time';
 
 export class CreateSlotDto {
   @IsString()
@@ -8,18 +8,12 @@ export class CreateSlotDto {
   @MaxLength(150)
   title!: string;
 
-  @IsIn(PRAYER_CATEGORIES)
-  category!: string;
+  /** "HH:mm", daily-recurring — see daily-slot-time.ts. No date: every slot repeats every day. */
+  @Matches(TIME_OF_DAY_PATTERN, { message: 'startTime must be in HH:mm format' })
+  startTime!: string;
 
-  @IsOptional()
-  @IsIn(PRAYER_IMPORTANCE_LEVELS)
-  importance?: string;
-
-  @IsDateString()
-  startAt!: string;
-
-  @IsDateString()
-  endAt!: string;
+  @Matches(TIME_OF_DAY_PATTERN, { message: 'endTime must be in HH:mm format' })
+  endTime!: string;
 
   @IsOptional()
   @IsString()

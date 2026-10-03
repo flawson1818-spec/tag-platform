@@ -587,22 +587,19 @@
     "delete": "Delete",
     "needLoginCreate": "Log in with a moderator account to create a program.",
     "slotsTitle": "Slots — {{title}}",
-    "previous": "← Previous",
-    "today": "Today",
-    "next": "Next →",
+    "dailyScheduleHint": "Daily schedule — every slot repeats each day at the same time, no date needed.",
     "tableTime": "Time",
     "tableTitle": "Title",
-    "tableCategory": "Category",
-    "tableImportance": "Importance",
     "tableLeader": "Led by",
     "liveBadge": "Live",
     "leaderAi": "AI Intercessor",
     "edit": "Edit",
     "noSlots": "No slots for this program.",
-    "noSlotsInPeriod": "No slots in this period — try another week/month.",
     "editSlotTitle": "Edit the slot",
     "addSlotTitle": "Add a slot",
     "slotTitlePlaceholder": "Slot title",
+    "startTimeLabel": "Start time",
+    "endTimeLabel": "End time",
     "guidedTextPlaceholder": "Guided text (optional)",
     "bibleRefsPlaceholder": "Bible references, comma-separated",
     "songsPlaceholder": "Recommended songs, comma-separated",
@@ -610,17 +607,7 @@
     "saving": "Saving…",
     "save": "Save",
     "addSlot": "Add the slot",
-    "cancel": "Cancel",
-    "calendarViews": {
-      "day": "Day",
-      "week": "Week",
-      "month": "Month"
-    }
-  },
-  "prayerImportance": {
-    "Normal": "Normal",
-    "Important": "Important",
-    "Urgent": "Urgent"
+    "cancel": "Cancel"
   },
   "adminUsers": {
     "title": "User management",

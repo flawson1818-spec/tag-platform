@@ -587,22 +587,19 @@
     "delete": "Excluir",
     "needLoginCreate": "Entre com uma conta de moderador para criar um programa.",
     "slotsTitle": "Turnos — {{title}}",
-    "previous": "← Anterior",
-    "today": "Hoje",
-    "next": "Próximo →",
+    "dailyScheduleHint": "Horário diário — cada turno se repete todos os dias no mesmo horário, sem necessidade de data.",
     "tableTime": "Horário",
     "tableTitle": "Título",
-    "tableCategory": "Categoria",
-    "tableImportance": "Importância",
     "tableLeader": "Conduzido por",
     "liveBadge": "Ao vivo",
     "leaderAi": "IA Intercessora",
     "edit": "Editar",
     "noSlots": "Nenhum turno para este programa.",
-    "noSlotsInPeriod": "Nenhum turno neste período — tente outra semana/mês.",
     "editSlotTitle": "Editar o turno",
     "addSlotTitle": "Adicionar um turno",
     "slotTitlePlaceholder": "Título do turno",
+    "startTimeLabel": "Horário de início",
+    "endTimeLabel": "Horário de término",
     "guidedTextPlaceholder": "Texto guiado (opcional)",
     "bibleRefsPlaceholder": "Referências bíblicas, separadas por vírgulas",
     "songsPlaceholder": "Músicas recomendadas, separadas por vírgulas",
@@ -610,17 +607,7 @@
     "saving": "Salvando…",
     "save": "Salvar",
     "addSlot": "Adicionar o turno",
-    "cancel": "Cancelar",
-    "calendarViews": {
-      "day": "Dia",
-      "week": "Semana",
-      "month": "Mês"
-    }
-  },
-  "prayerImportance": {
-    "Normal": "Normal",
-    "Important": "Importante",
-    "Urgent": "Urgente"
+    "cancel": "Cancelar"
   },
   "adminUsers": {
     "title": "Gestão de usuários",

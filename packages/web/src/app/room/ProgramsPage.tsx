@@ -1,26 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
-import {
-  CreateSlotPayload,
-  PRAYER_CATEGORIES,
-  PRAYER_IMPORTANCE_LEVELS,
-  PRAYER_PROGRAM_STATUSES,
-  PrayerProgram,
-  PrayerSlot,
-  prayerApi,
-} from '../../lib/api';
-import { CalendarView, formatViewRangeLabel, isWithinView, shiftReferenceDate } from '../../lib/calendar';
-import i18n from '../../i18n/config';
+import { CreateSlotPayload, PRAYER_PROGRAM_STATUSES, PrayerProgram, PrayerSlot, prayerApi } from '../../lib/api';
 
-const CALENDAR_VIEWS: { value: CalendarView; key: string }[] = [
-  { value: 'day', key: 'day' },
-  { value: 'week', key: 'week' },
-  { value: 'month', key: 'month' },
-];
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(i18n.language, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+function toTimeOfDay(iso: string): string {
+  return iso.slice(11, 16);
 }
 
 function toCsv(list: string[]): string {
@@ -37,10 +21,8 @@ function fromCsv(value: string): string[] | undefined {
 
 const EMPTY_SLOT_FORM = {
   title: '',
-  category: PRAYER_CATEGORIES[0] as string,
-  importance: PRAYER_IMPORTANCE_LEVELS[0] as string,
-  startAt: '',
-  endAt: '',
+  startTime: '',
+  endTime: '',
   guidedText: '',
   bibleReferences: '',
   recommendedSongs: '',
@@ -63,8 +45,6 @@ export function ProgramsPage() {
   const [slotForm, setSlotForm] = useState(EMPTY_SLOT_FORM);
   const [slotSaving, setSlotSaving] = useState(false);
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
-  const [calendarView, setCalendarView] = useState<CalendarView>('week');
-  const [referenceDate, setReferenceDate] = useState(() => new Date());
 
   const refreshPrograms = () => {
     setLoading(true);
@@ -137,10 +117,8 @@ export function ProgramsPage() {
 
   const buildSlotPayload = (): CreateSlotPayload => ({
     title: slotForm.title,
-    category: slotForm.category,
-    importance: slotForm.importance,
-    startAt: slotForm.startAt,
-    endAt: slotForm.endAt,
+    startTime: slotForm.startTime,
+    endTime: slotForm.endTime,
     guidedText: slotForm.guidedText || undefined,
     bibleReferences: fromCsv(slotForm.bibleReferences),
     recommendedSongs: fromCsv(slotForm.recommendedSongs),
@@ -168,10 +146,8 @@ export function ProgramsPage() {
     setEditingSlotId(slot.id);
     setSlotForm({
       title: slot.title,
-      category: slot.category,
-      importance: slot.importance,
-      startAt: '',
-      endAt: '',
+      startTime: toTimeOfDay(slot.start_at),
+      endTime: toTimeOfDay(slot.end_at),
       guidedText: slot.guided_text ?? '',
       bibleReferences: toCsv(slot.bible_references ?? []),
       recommendedSongs: toCsv(slot.recommended_songs ?? []),
@@ -186,8 +162,7 @@ export function ProgramsPage() {
     setSlotSaving(true);
     setError(null);
     try {
-      const { startAt: _startAt, endAt: _endAt, ...rest } = buildSlotPayload();
-      await prayerApi.updateSlot(token, editingSlotId, rest);
+      await prayerApi.updateSlot(token, editingSlotId, buildSlotPayload());
       setEditingSlotId(null);
       setSlotForm(EMPTY_SLOT_FORM);
       refreshSlots(selectedId);
@@ -208,7 +183,6 @@ export function ProgramsPage() {
   };
 
   const selectedProgram = programs.find((p) => p.id === selectedId) ?? null;
-  const visibleSlots = slots.filter((slot) => isWithinView(slot.start_at, calendarView, referenceDate));
 
   return (
     <div className="communities-page">
@@ -269,56 +243,26 @@ export function ProgramsPage() {
       {selectedProgram && (
         <>
           <h3>{t('programs.slotsTitle', { title: selectedProgram.title })}</h3>
+          <p className="hint">{t('programs.dailyScheduleHint')}</p>
           {slotsLoading && <p>{t('programs.loading')}</p>}
-
-          <div className="calendar-toolbar">
-            <div className="calendar-view-switch">
-              {CALENDAR_VIEWS.map((v) => (
-                <button
-                  key={v.value}
-                  type="button"
-                  className={calendarView === v.value ? 'active' : ''}
-                  onClick={() => setCalendarView(v.value)}
-                >
-                  {t(`programs.calendarViews.${v.key}`)}
-                </button>
-              ))}
-            </div>
-            <div className="calendar-nav">
-              <button type="button" onClick={() => setReferenceDate((d) => shiftReferenceDate(calendarView, d, -1))}>
-                {t('programs.previous')}
-              </button>
-              <span className="calendar-range-label">{formatViewRangeLabel(calendarView, referenceDate)}</span>
-              <button type="button" onClick={() => setReferenceDate(new Date())}>
-                {t('programs.today')}
-              </button>
-              <button type="button" onClick={() => setReferenceDate((d) => shiftReferenceDate(calendarView, d, 1))}>
-                {t('programs.next')}
-              </button>
-            </div>
-          </div>
 
           <table className="slot-table">
             <thead>
               <tr>
                 <th>{t('programs.tableTime')}</th>
                 <th>{t('programs.tableTitle')}</th>
-                <th>{t('programs.tableCategory')}</th>
-                <th>{t('programs.tableImportance')}</th>
                 <th>{t('programs.tableLeader')}</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {visibleSlots.map((slot) => (
+              {slots.map((slot) => (
                 <tr key={slot.id} className={slot.status === 'RUNNING' ? 'slot-row-live' : ''}>
                   <td>
-                    {formatDateTime(slot.start_at)}–{formatDateTime(slot.end_at)}
+                    {toTimeOfDay(slot.start_at)}–{toTimeOfDay(slot.end_at)}
                     {slot.status === 'RUNNING' && <span className="live-badge"> {t('programs.liveBadge')}</span>}
                   </td>
                   <td>{slot.title}</td>
-                  <td>{t(`prayerTopicCategories.${slot.category}`, slot.category)}</td>
-                  <td>{t(`prayerImportance.${slot.importance}`, slot.importance)}</td>
                   <td>{slot.leader_display_name ?? t('programs.leaderAi')}</td>
                   <td>
                     <button type="button" onClick={() => startEditSlot(slot)}>
@@ -333,9 +277,6 @@ export function ProgramsPage() {
             </tbody>
           </table>
           {!slotsLoading && slots.length === 0 && <p className="hint">{t('programs.noSlots')}</p>}
-          {!slotsLoading && slots.length > 0 && visibleSlots.length === 0 && (
-            <p className="hint">{t('programs.noSlotsInPeriod')}</p>
-          )}
 
           <h4>{editingSlotId ? t('programs.editSlotTitle') : t('programs.addSlotTitle')}</h4>
           <form onSubmit={editingSlotId ? handleUpdateSlot : handleCreateSlot} className="request-form">
@@ -346,36 +287,20 @@ export function ProgramsPage() {
               onChange={(e) => setSlotForm({ ...slotForm, title: e.target.value })}
               required
             />
-            <select value={slotForm.category} onChange={(e) => setSlotForm({ ...slotForm, category: e.target.value })}>
-              {PRAYER_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {t(`prayerTopicCategories.${c}`, c)}
-                </option>
-              ))}
-            </select>
-            <select value={slotForm.importance} onChange={(e) => setSlotForm({ ...slotForm, importance: e.target.value })}>
-              {PRAYER_IMPORTANCE_LEVELS.map((i) => (
-                <option key={i} value={i}>
-                  {t(`prayerImportance.${i}`, i)}
-                </option>
-              ))}
-            </select>
-            {!editingSlotId && (
-              <>
-                <input
-                  type="datetime-local"
-                  value={slotForm.startAt}
-                  onChange={(e) => setSlotForm({ ...slotForm, startAt: e.target.value })}
-                  required
-                />
-                <input
-                  type="datetime-local"
-                  value={slotForm.endAt}
-                  onChange={(e) => setSlotForm({ ...slotForm, endAt: e.target.value })}
-                  required
-                />
-              </>
-            )}
+            <input
+              type="time"
+              aria-label={t('programs.startTimeLabel')}
+              value={slotForm.startTime}
+              onChange={(e) => setSlotForm({ ...slotForm, startTime: e.target.value })}
+              required
+            />
+            <input
+              type="time"
+              aria-label={t('programs.endTimeLabel')}
+              value={slotForm.endTime}
+              onChange={(e) => setSlotForm({ ...slotForm, endTime: e.target.value })}
+              required
+            />
             <textarea
               placeholder={t('programs.guidedTextPlaceholder')}
               value={slotForm.guidedText}
