@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { buildPaginationMeta, PaginatedResult, paginationRange } from '../common/pagination';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
@@ -9,6 +9,15 @@ import { PrayerSlotsService } from './prayer-slots.service';
 import { assertProgramTransition } from './prayer-state-machines';
 
 const PROGRAM_COLUMNS = 'id, community_id, title, recurrence_rule, status, created_at, updated_at, deleted_at';
+
+/**
+ * "La prière ne doit jamais être en pause ou s'arrêter" — explicit product decision: the official
+ * world room (community_id IS NULL, see prayer-constants.ts's WORLD_ROOM_ID) must stay a genuinely
+ * continuous 24/7 room. A community-specific program may still be paused/archived freely; only the
+ * single global one is protected. DRAFT/PLANNED stay reachable so the room can still be set up
+ * before its first activation.
+ */
+const WORLD_ROOM_STOPPING_STATUSES: PrayerProgramStatus[] = ['PAUSED', 'COMPLETED', 'ARCHIVED'];
 
 @Injectable()
 export class PrayerProgramsService {
@@ -71,6 +80,9 @@ export class PrayerProgramsService {
   async update(id: string, dto: UpdateProgramDto, actorId: string): Promise<PrayerProgram> {
     const program = await this.findById(id);
     const nextStatus = (dto.status as PrayerProgramStatus | undefined) ?? program.status;
+    if (program.community_id === null && WORLD_ROOM_STOPPING_STATUSES.includes(nextStatus)) {
+      throw new ConflictException('La salle mondiale est continue — elle ne peut pas être mise en pause ni arrêtée.');
+    }
     assertProgramTransition(program.status, nextStatus);
 
     const { data, error } = await this.db
@@ -112,7 +124,10 @@ export class PrayerProgramsService {
   }
 
   async softDelete(id: string): Promise<void> {
-    await this.findById(id);
+    const program = await this.findById(id);
+    if (program.community_id === null) {
+      throw new ConflictException('La salle mondiale est continue — elle ne peut pas être supprimée.');
+    }
     const { error } = await this.db.update({ deleted_at: new Date().toISOString() }).eq('id', id);
     if (error) throw new InternalServerErrorException(error.message);
   }

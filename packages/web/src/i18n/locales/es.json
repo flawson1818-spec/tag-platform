@@ -585,6 +585,7 @@
     "viewSlotsSelected": "Turnos seleccionados ▾",
     "viewSlots": "Ver los turnos",
     "delete": "Eliminar",
+    "worldRoomProtected": "Sala mundial — continua, no se puede detener",
     "needLoginCreate": "Inicia sesión con una cuenta de moderador para crear un programa.",
     "slotsTitle": "Turnos — {{title}}",
     "dailyScheduleHint": "Horario diario — cada turno se repite todos los días a la misma hora, sin necesidad de fecha.",

@@ -7,6 +7,10 @@ function toTimeOfDay(iso: string): string {
   return iso.slice(11, 16);
 }
 
+/** Mirrors the backend guard in PrayerProgramsService — the world room (community_id null) is
+ * continuous by product decision and can't be paused, archived, completed, or deleted. */
+const WORLD_ROOM_STOPPING_STATUSES = new Set(['PAUSED', 'COMPLETED', 'ARCHIVED']);
+
 function toCsv(list: string[]): string {
   return list.join(', ');
 }
@@ -226,14 +230,20 @@ export function ProgramsPage() {
               <button type="button" onClick={() => selectProgram(program.id)}>
                 {selectedId === program.id ? t('programs.viewSlotsSelected') : t('programs.viewSlots')}
               </button>
-              {PRAYER_PROGRAM_STATUSES.filter((s) => s !== program.status).map((s) => (
+              {PRAYER_PROGRAM_STATUSES.filter(
+                (s) => s !== program.status && !(program.community_id === null && WORLD_ROOM_STOPPING_STATUSES.has(s)),
+              ).map((s) => (
                 <button key={s} type="button" onClick={() => handleStatusChange(program.id, s)}>
                   {t(`campaignStatuses.${s}`, s)}
                 </button>
               ))}
-              <button type="button" onClick={() => handleDeleteProgram(program.id)}>
-                {t('programs.delete')}
-              </button>
+              {program.community_id === null ? (
+                <span className="hint">{t('programs.worldRoomProtected')}</span>
+              ) : (
+                <button type="button" onClick={() => handleDeleteProgram(program.id)}>
+                  {t('programs.delete')}
+                </button>
+              )}
             </div>
           </li>
         ))}

@@ -147,6 +147,65 @@ describe('PrayerProgramsService', () => {
     });
   });
 
+  describe('update — world room protection ("la prière ne doit jamais être en pause ou s\'arrêter")', () => {
+    it('refuses to pause the world room (community_id null)', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_programs: createQueryChain({ data: { ...DRAFT_PROGRAM, status: 'ACTIVE' }, error: null }),
+      });
+      const { service } = buildDeps({ supabase });
+
+      await expect(service.update('program-1', { status: 'PAUSED' } as never, 'actor-1')).rejects.toThrow(
+        /continue/,
+      );
+    });
+
+    it('refuses to archive or complete the world room too', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_programs: createQueryChain({ data: { ...DRAFT_PROGRAM, status: 'ACTIVE' }, error: null }),
+      });
+      const { service } = buildDeps({ supabase });
+
+      await expect(service.update('program-1', { status: 'ARCHIVED' } as never, 'actor-1')).rejects.toThrow(/continue/);
+      await expect(service.update('program-1', { status: 'COMPLETED' } as never, 'actor-1')).rejects.toThrow(/continue/);
+    });
+
+    it('still allows pausing a community-specific program (community_id set)', async () => {
+      const communityProgram = { ...DRAFT_PROGRAM, community_id: 'community-1', status: 'ACTIVE' };
+      const supabase = createSupabaseServiceMock({
+        prayer_programs: [
+          createQueryChain({ data: communityProgram, error: null }), // findById
+          createQueryChain({ data: { ...communityProgram, status: 'PAUSED' }, error: null }), // update
+        ],
+      });
+      const { service } = buildDeps({ supabase });
+
+      const result = await service.update('program-1', { status: 'PAUSED' } as never, 'actor-1');
+
+      expect(result.status).toBe('PAUSED');
+    });
+  });
+
+  describe('softDelete — world room protection', () => {
+    it('refuses to delete the world room', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_programs: createQueryChain({ data: DRAFT_PROGRAM, error: null }),
+      });
+      const { service } = buildDeps({ supabase });
+
+      await expect(service.softDelete('program-1')).rejects.toThrow(/continue/);
+    });
+
+    it('still allows deleting a community-specific program', async () => {
+      const chain = createQueryChain({ data: { ...DRAFT_PROGRAM, community_id: 'community-1' }, error: null });
+      const supabase = createSupabaseServiceMock({ prayer_programs: chain });
+      const { service } = buildDeps({ supabase });
+
+      await service.softDelete('program-1');
+
+      expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ deleted_at: expect.any(String) }));
+    });
+  });
+
   describe('findActiveByCommunity', () => {
     it('queries community_id IS NULL for the world room', async () => {
       const chain = createQueryChain({ data: null, error: null });

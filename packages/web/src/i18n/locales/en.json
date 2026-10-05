@@ -585,6 +585,7 @@
     "viewSlotsSelected": "Selected slots ▾",
     "viewSlots": "View slots",
     "delete": "Delete",
+    "worldRoomProtected": "World room — continuous, cannot be stopped",
     "needLoginCreate": "Log in with a moderator account to create a program.",
     "slotsTitle": "Slots — {{title}}",
     "dailyScheduleHint": "Daily schedule — every slot repeats each day at the same time, no date needed.",

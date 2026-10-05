@@ -585,6 +585,7 @@
     "viewSlotsSelected": "Créneaux sélectionnés ▾",
     "viewSlots": "Voir les créneaux",
     "delete": "Supprimer",
+    "worldRoomProtected": "Salle mondiale — continue, ne peut pas être arrêtée",
     "needLoginCreate": "Connecte-toi avec un compte modérateur pour créer un programme.",
     "slotsTitle": "Créneaux — {{title}}",
     "dailyScheduleHint": "Horaire quotidien — chaque créneau se répète tous les jours à la même heure, pas besoin de date.",
