@@ -53,6 +53,7 @@ export function PrayerRoomPage() {
   const [musicLinkInput, setMusicLinkInput] = useState('');
   const [musicLinkError, setMusicLinkError] = useState<string | null>(null);
   const [nowPlaying, setNowPlaying] = useState<{ videoId: string; title: string } | null>(null);
+  const [roomLeader, setRoomLeader] = useState<{ userId: string; displayName: string } | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
   // The room:join effect below only runs once on mount, so its socket handlers close over
@@ -162,6 +163,13 @@ export function PrayerRoomPage() {
 
     socket.on('music:update', (payload: { playing: boolean; videoId?: string; title?: string }) => {
       setNowPlaying(payload.playing && payload.videoId ? { videoId: payload.videoId, title: payload.title ?? '' } : null);
+    });
+
+    // The 13 topic slots of a program are one continuous prayer — led by whichever Intercesseur+
+    // is actually connected (first one in, stays leader until they leave), not a different named
+    // leader per slot. See PrayerRealtimeGateway's roomLeaders tracking.
+    socket.on('room:leader', (payload: { leader: { userId: string; displayName: string } | null }) => {
+      setRoomLeader(payload.leader);
     });
 
     return () => {
@@ -315,7 +323,7 @@ export function PrayerRoomPage() {
           )}
 
           <p className="room-leader">
-            {slot.leader_display_name ? t('room.leaderNamed', { name: slot.leader_display_name }) : t('room.leaderAi')}
+            {roomLeader ? t('room.leaderNamed', { name: roomLeader.displayName }) : t('room.leaderAi')}
           </p>
 
           <div className="room-reactions-overlay">

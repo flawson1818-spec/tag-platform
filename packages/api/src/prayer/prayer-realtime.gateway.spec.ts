@@ -22,6 +22,7 @@ function buildGateway(overrides: Partial<Record<string, unknown>> = {}) {
     overrides.permissionsService ?? {
       listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
       getUserPermissionCodes: vi.fn().mockResolvedValue(new Set<string>()),
+      getUserRoleCodes: vi.fn().mockResolvedValue(new Set<string>()),
     };
   const notificationsService = overrides.notificationsService ?? { create: vi.fn().mockResolvedValue(undefined) };
   const pushNotificationsService = overrides.pushNotificationsService ?? { send: vi.fn().mockResolvedValue([]) };
@@ -424,5 +425,158 @@ describe('PrayerRealtimeGateway — event chat & reactions', () => {
     gateway.handleEventReactionSend(client as never, { eventId: 'event-1', emoji: '💩' });
 
     expect(emit).toHaveBeenCalledWith('event:reaction:new', { eventId: 'event-1', emoji: '🙏' });
+  });
+});
+
+/** roomLeaders tracking is private — same access pattern already used for moderateChatMessage. */
+function joinAsLeader(gateway: PrayerRealtimeGateway, client: unknown, roomId: string) {
+  return (gateway as unknown as { joinAsLeaderIfEligible(c: unknown, r: string): Promise<void> }).joinAsLeaderIfEligible(
+    client,
+    roomId,
+  );
+}
+
+function currentLeader(gateway: PrayerRealtimeGateway, roomId: string) {
+  return (gateway as unknown as { currentLeader(r: string): { userId: string; displayName: string } | null }).currentLeader(
+    roomId,
+  );
+}
+
+function supabaseWithDisplayNames(names: Record<string, string>) {
+  return {
+    client: {
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn((_col: string, id: string) => ({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { display_name: names[id] ?? 'Anonyme' }, error: null }),
+        })),
+      })),
+    },
+  };
+}
+
+describe('PrayerRealtimeGateway — connected-leader tracking', () => {
+  it('makes the first Intercesseur+ to join the leader, and broadcasts it', async () => {
+    const { server, emit } = fakeServer();
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn((t: string) => ({ sub: t.replace('token-for-', '') })) },
+      permissionsService: {
+        getUserPermissionCodes: vi.fn().mockResolvedValue(new Set()),
+        listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
+        getUserRoleCodes: vi.fn().mockResolvedValue(new Set(['INTERCESSEUR'])),
+      },
+      supabase: supabaseWithDisplayNames({ 'user-1': 'Fidèle Un' }),
+    });
+    (gateway as unknown as { server: unknown }).server = server;
+
+    await joinAsLeader(gateway, fakeSocket('user-1'), 'world');
+
+    expect(currentLeader(gateway, 'world')).toEqual({ userId: 'user-1', displayName: 'Fidèle Un' });
+    expect(emit).toHaveBeenCalledWith('room:leader', { roomId: 'world', leader: { userId: 'user-1', displayName: 'Fidèle Un' } });
+  });
+
+  it('does not touch leadership for a user with no eligible role', async () => {
+    const { server, emit } = fakeServer();
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn((t: string) => ({ sub: t.replace('token-for-', '') })) },
+      permissionsService: {
+        getUserPermissionCodes: vi.fn().mockResolvedValue(new Set()),
+        listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
+        getUserRoleCodes: vi.fn().mockResolvedValue(new Set(['NOUVEAU_CONVERTI'])),
+      },
+      supabase: supabaseWithDisplayNames({}),
+    });
+    (gateway as unknown as { server: unknown }).server = server;
+
+    await joinAsLeader(gateway, fakeSocket('user-1'), 'world');
+
+    expect(currentLeader(gateway, 'world')).toBeNull();
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('a second eligible joiner is queued behind the existing leader without a new broadcast', async () => {
+    const { server, emit } = fakeServer();
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn((t: string) => ({ sub: t.replace('token-for-', '') })) },
+      permissionsService: {
+        getUserPermissionCodes: vi.fn().mockResolvedValue(new Set()),
+        listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
+        getUserRoleCodes: vi.fn().mockResolvedValue(new Set(['MODERATEUR'])),
+      },
+      supabase: supabaseWithDisplayNames({ 'user-1': 'Fidèle Un', 'user-2': 'Fidèle Deux' }),
+    });
+    (gateway as unknown as { server: unknown }).server = server;
+
+    await joinAsLeader(gateway, fakeSocket('user-1'), 'world');
+    emit.mockClear();
+    await joinAsLeader(gateway, fakeSocket('user-2'), 'world');
+
+    expect(currentLeader(gateway, 'world')).toEqual({ userId: 'user-1', displayName: 'Fidèle Un' });
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('promotes the next connected eligible user when the leader disconnects', async () => {
+    const { server, emit } = fakeServer();
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn((t: string) => ({ sub: t.replace('token-for-', '') })) },
+      permissionsService: {
+        getUserPermissionCodes: vi.fn().mockResolvedValue(new Set()),
+        listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
+        getUserRoleCodes: vi.fn().mockResolvedValue(new Set(['MODERATEUR'])),
+      },
+      supabase: supabaseWithDisplayNames({ 'user-1': 'Fidèle Un', 'user-2': 'Fidèle Deux' }),
+    });
+    (gateway as unknown as { server: unknown }).server = server;
+    await joinAsLeader(gateway, fakeSocket('user-1'), 'world');
+    await joinAsLeader(gateway, fakeSocket('user-2'), 'world');
+    emit.mockClear();
+
+    gateway.handleDisconnect(fakeSocket('user-1') as never);
+
+    expect(currentLeader(gateway, 'world')).toEqual({ userId: 'user-2', displayName: 'Fidèle Deux' });
+    expect(emit).toHaveBeenCalledWith('room:leader', { roomId: 'world', leader: { userId: 'user-2', displayName: 'Fidèle Deux' } });
+  });
+
+  it('falls back to the AI Intercessor (null leader) once the last eligible user disconnects', async () => {
+    const { server, emit } = fakeServer();
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn((t: string) => ({ sub: t.replace('token-for-', '') })) },
+      permissionsService: {
+        getUserPermissionCodes: vi.fn().mockResolvedValue(new Set()),
+        listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
+        getUserRoleCodes: vi.fn().mockResolvedValue(new Set(['INTERCESSEUR'])),
+      },
+      supabase: supabaseWithDisplayNames({ 'user-1': 'Fidèle Un' }),
+    });
+    (gateway as unknown as { server: unknown }).server = server;
+    await joinAsLeader(gateway, fakeSocket('user-1'), 'world');
+    emit.mockClear();
+
+    gateway.handleDisconnect(fakeSocket('user-1') as never);
+
+    expect(currentLeader(gateway, 'world')).toBeNull();
+    expect(emit).toHaveBeenCalledWith('room:leader', { roomId: 'world', leader: null });
+  });
+
+  it('a non-leader disconnecting does not change or re-broadcast the current leader', async () => {
+    const { server, emit } = fakeServer();
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn((t: string) => ({ sub: t.replace('token-for-', '') })) },
+      permissionsService: {
+        getUserPermissionCodes: vi.fn().mockResolvedValue(new Set()),
+        listUserIdsWithAnyRole: vi.fn().mockResolvedValue([]),
+        getUserRoleCodes: vi.fn().mockResolvedValue(new Set(['MODERATEUR'])),
+      },
+      supabase: supabaseWithDisplayNames({ 'user-1': 'Fidèle Un', 'user-2': 'Fidèle Deux' }),
+    });
+    (gateway as unknown as { server: unknown }).server = server;
+    await joinAsLeader(gateway, fakeSocket('user-1'), 'world');
+    await joinAsLeader(gateway, fakeSocket('user-2'), 'world');
+    emit.mockClear();
+
+    gateway.handleDisconnect(fakeSocket('user-2') as never);
+
+    expect(currentLeader(gateway, 'world')).toEqual({ userId: 'user-1', displayName: 'Fidèle Un' });
+    expect(emit).not.toHaveBeenCalled();
   });
 });

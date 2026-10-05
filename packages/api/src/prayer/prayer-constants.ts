@@ -37,6 +37,21 @@ export const CONFIDENTIALITY_LEVELS = ['ANONYMOUS', 'PRIVATE', 'PUBLIC'] as cons
 
 export type Confidentiality = (typeof CONFIDENTIALITY_LEVELS)[number];
 
+/**
+ * Roles eligible to lead a live prayer slot — shared by PrayerSlotsService.listLeaderCandidates()
+ * (the moderator's pick-a-leader dropdown) and PrayerRealtimeGateway's connected-leader tracking
+ * (the first one of these roles to join the room becomes its displayed leader, see
+ * docs/01_FUNCTIONAL_SPECIFICATION.md section 4).
+ */
+export const PRAYER_LEADER_ELIGIBLE_ROLES = [
+  'INTERCESSEUR',
+  'MODERATEUR',
+  'RESPONSABLE_EQUIPE',
+  'PASTEUR',
+  'ADMINISTRATEUR',
+  'SUPER_ADMINISTRATEUR',
+] as const;
+
 /** The official world room: prayer_programs.community_id IS NULL. */
 export const WORLD_ROOM_ID = 'world';
 

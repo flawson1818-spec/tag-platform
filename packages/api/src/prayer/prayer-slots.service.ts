@@ -10,6 +10,7 @@ import { CreateSlotDto } from './dto/create-slot.dto';
 import { UpdateSlotDto } from './dto/update-slot.dto';
 import { PrayerSlot } from './prayer-slot.entity';
 import { toDailySlotRange } from './daily-slot-time';
+import { PRAYER_LEADER_ELIGIBLE_ROLES } from './prayer-constants';
 
 const SLOT_COLUMNS =
   'id, program_id, order_index, title, category, importance, start_at, end_at, guided_text, bible_references, recommended_songs, leader_user_id, status, created_at, updated_at, leader:leader_user_id(display_name)';
@@ -265,11 +266,10 @@ export class PrayerSlotsService {
 
   /** Users eligible to lead a slot (Intercesseur and above), for the moderator's assignment UI. */
   async listLeaderCandidates(search?: string): Promise<{ id: string; display_name: string }[]> {
-    const eligibleRoles = ['INTERCESSEUR', 'MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'];
     const { data, error } = await this.supabase.client
       .from('role_assignments')
       .select('users(id, display_name), roles!inner(code)')
-      .in('roles.code', eligibleRoles);
+      .in('roles.code', PRAYER_LEADER_ELIGIBLE_ROLES);
     if (error) throw new InternalServerErrorException(error.message);
 
     const needle = search?.toLowerCase();

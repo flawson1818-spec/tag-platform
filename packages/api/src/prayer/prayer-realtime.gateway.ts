@@ -19,7 +19,7 @@ import { ChatMessagesService } from './chat-messages.service';
 import { ChatMessage } from './chat-message.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
 import { PrayerProgramsService } from './prayer-programs.service';
-import { fromRoomId } from './prayer-constants';
+import { fromRoomId, PRAYER_LEADER_ELIGIBLE_ROLES } from './prayer-constants';
 import { PrayerSlot } from './prayer-slot.entity';
 
 interface RoomJoinPayload {
@@ -144,6 +144,15 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   private readonly activeSpeakers = new Map<string, Map<string, string>>();
   private readonly nowPlaying = new Map<string, { videoId: string; title: string }>();
   private readonly eventChatHistory = new Map<string, EventChatEntry[]>(); // eventId -> recent messages
+  /**
+   * docs/01_FUNCTIONAL_SPECIFICATION.md section 4: the 13 topic créneaux of a program are one
+   * continuous prayer, led by whichever Intercesseur+ is actually present — not a different
+   * named leader pre-assigned per slot. roomId -> userId -> displayName, insertion-ordered (a JS
+   * Map preserves it), so the FIRST entry is always "the current leader": first eligible user to
+   * join leads until they disconnect, at which point the next-still-connected one (if any) takes
+   * over, falling back to the AI Intercessor only once this map is empty for that room.
+   */
+  private readonly roomLeaders = new Map<string, Map<string, string>>();
 
   constructor(
     private readonly slotsService: PrayerSlotsService,
@@ -184,6 +193,9 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
 
     const playing = this.nowPlaying.get(payload.roomId);
     client.emit('music:update', playing ? { roomId: payload.roomId, playing: true, ...playing } : { roomId: payload.roomId, playing: false });
+
+    await this.joinAsLeaderIfEligible(client, payload.roomId);
+    client.emit('room:leader', { roomId: payload.roomId, leader: this.currentLeader(payload.roomId) });
 
     const program = await this.programsService.findActiveByCommunity(fromRoomId(payload.roomId));
     if (!program) return;
@@ -575,6 +587,35 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     for (const roomId of this.pendingSpeakers.keys()) {
       if (this.pendingSpeakers.get(roomId)?.delete(userId)) this.broadcastSpeakUpdate(roomId);
     }
+    for (const roomId of this.roomLeaders.keys()) {
+      const leaders = this.roomLeaders.get(roomId);
+      if (!leaders?.has(userId)) continue;
+      const wasLeader = leaders.keys().next().value === userId;
+      leaders.delete(userId);
+      if (wasLeader) this.server?.to(roomId).emit('room:leader', { roomId, leader: this.currentLeader(roomId) });
+    }
+  }
+
+  /** Adds an Intercesseur+ to the room's leader-candidacy order; a no-op for anyone else or a
+   * user already present (e.g. a reconnect shouldn't bump them to the back of the line). */
+  private async joinAsLeaderIfEligible(client: Socket, roomId: string): Promise<void> {
+    const userId = extractUserId(client, this.tokenService);
+    if (!userId) return;
+    const roleCodes = await this.permissionsService.getUserRoleCodes(userId);
+    const eligible = PRAYER_LEADER_ELIGIBLE_ROLES.some((role) => roleCodes.has(role));
+    if (!eligible) return;
+    const leaders = this.roomMap(this.roomLeaders, roomId);
+    const wasEmpty = leaders.size === 0;
+    if (leaders.has(userId)) return;
+    leaders.set(userId, await this.displayNameFor(userId));
+    if (wasEmpty) this.server?.to(roomId).emit('room:leader', { roomId, leader: this.currentLeader(roomId) });
+  }
+
+  private currentLeader(roomId: string): { userId: string; displayName: string } | null {
+    const leaders = this.roomLeaders.get(roomId);
+    if (!leaders || leaders.size === 0) return null;
+    const [userId, displayName] = leaders.entries().next().value as [string, string];
+    return { userId, displayName };
   }
 
   private async isModerator(client: Socket, roomId: string): Promise<boolean> {
