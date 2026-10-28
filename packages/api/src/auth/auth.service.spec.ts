@@ -613,6 +613,7 @@ describe('AuthService', () => {
         expect.any(String),
         expect.stringContaining('raw-refresh-token'),
         'user-1',
+        { secret: 'raw-refresh-token' },
       );
     });
   });

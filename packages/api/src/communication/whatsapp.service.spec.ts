@@ -48,5 +48,17 @@ describe('WhatsAppService', () => {
 
       await expect(service.send('+225000', 'x')).rejects.toThrow('db down');
     });
-  });
+      it('stores a redacted copy when the message carries a secret, and never logs the body', async () => {
+      const chain = createQueryChain({ data: { id: 'wa-1', status: 'CREATED' }, error: null });
+      const supabase = createSupabaseServiceMock({ whatsapp_messages: chain });
+      const service = new WhatsAppService(supabase as never);
+      const warn = vi.spyOn((service as unknown as { logger: { warn: (m: string) => void } }).logger, 'warn');
+
+      await service.send('+2250701020304', 'Ton code TAG : 482913', 'user-1', { secret: '482913' });
+
+      expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ body: 'Ton code TAG : [masqué]' }));
+      expect(warn.mock.calls.flat().join(' ')).not.toContain('482913');
+      expect(warn.mock.calls.flat().join(' ')).not.toContain('+2250701020304');
+    });
+});
 });

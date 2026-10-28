@@ -92,6 +92,7 @@ export class AuthService {
       "Vérifie ton adresse e-mail Tour d'avant-garde",
       `Voici ton code de vérification : ${raw} (valable 24 heures).`,
       user.id,
+      { secret: raw },
     );
   }
 
@@ -345,6 +346,7 @@ export class AuthService {
         "Réinitialisation de votre mot de passe Tour d'avant-garde",
         `Voici votre code de réinitialisation : ${raw} (valable 1 heure).`,
         user.id,
+        { secret: raw },
       );
     }
     // Always resolve the same way regardless of whether the email exists.

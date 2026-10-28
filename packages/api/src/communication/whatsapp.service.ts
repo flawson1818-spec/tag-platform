@@ -1,5 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { redact, SendOptions } from './redact';
+import { maskPhone } from './sms.service';
 import { WhatsAppMessage } from './whatsapp-message.entity';
 
 const WHATSAPP_COLUMNS = 'id, user_id, to_phone, body, status, sent_at, created_at';
@@ -19,14 +21,14 @@ export class WhatsAppService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  async send(toPhone: string, body: string, userId?: string): Promise<WhatsAppMessage> {
-    this.logger.warn(
-      `WhatsApp message to ${toPhone} recorded but NOT sent — no provider configured: ${body.slice(0, 80)}`,
-    );
+  /** Pass `options.secret` for a message carrying a code: the stored copy is redacted. */
+  async send(toPhone: string, body: string, userId?: string, options: SendOptions = {}): Promise<WhatsAppMessage> {
+    // Never the body: for MFA it is the code itself.
+    this.logger.warn(`WhatsApp message to ${maskPhone(toPhone)} recorded but NOT sent — no provider configured`);
 
     const { data, error } = await this.supabase.client
       .from('whatsapp_messages')
-      .insert({ user_id: userId ?? null, to_phone: toPhone, body, status: 'CREATED' })
+      .insert({ user_id: userId ?? null, to_phone: toPhone, body: redact(body, options.secret), status: 'CREATED' })
       .select(WHATSAPP_COLUMNS)
       .single();
     if (error) throw new InternalServerErrorException(error.message);

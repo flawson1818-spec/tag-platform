@@ -78,11 +78,11 @@ export class MfaOtpService {
 
     const body = `Ton code de vérification Tour d'avant-garde : ${code} (valable ${OTP_TTL_MINUTES} minutes).`;
     if (channel === 'EMAIL') {
-      await this.emailService.send(user.email, 'Ton code de vérification Tour d\'avant-garde', body, user.id);
+      await this.emailService.send(user.email, 'Ton code de vérification Tour d\'avant-garde', body, user.id, { secret: code });
     } else if (channel === 'SMS') {
       await this.smsService.send(toE164(user.phone) as string, body);
     } else {
-      await this.whatsAppService.send(user.phone as string, body, user.id);
+      await this.whatsAppService.send(user.phone as string, body, user.id, { secret: code });
     }
   }
 

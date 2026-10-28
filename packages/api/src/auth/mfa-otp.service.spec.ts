@@ -55,8 +55,10 @@ describe('MfaOtpService', () => {
       expect(chain.insert).toHaveBeenCalledWith(
         expect.objectContaining({ user_id: 'user-1', channel: 'EMAIL' }),
       );
-      const [, , body] = emailService.send.mock.calls[0];
+      const [, , body, , options] = emailService.send.mock.calls[0];
       expect(body).toMatch(/\d{6}/);
+      // The code is flagged as a secret so the stored audit copy is redacted.
+      expect(body).toContain(options.secret);
     });
 
     it('sends via WhatsApp when requested', async () => {
@@ -65,7 +67,9 @@ describe('MfaOtpService', () => {
 
       await service.request(buildUser(), 'WHATSAPP');
 
-      expect(whatsAppService.send).toHaveBeenCalledWith('+225000', expect.stringMatching(/\d{6}/), 'user-1');
+      expect(whatsAppService.send).toHaveBeenCalledWith('+225000', expect.stringMatching(/\d{6}/), 'user-1', {
+        secret: expect.stringMatching(/^\d{6}$/),
+      });
     });
 
     it('rejects WhatsApp OTP when the user has no phone on file', async () => {
