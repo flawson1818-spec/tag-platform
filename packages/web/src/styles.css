@@ -1471,58 +1471,21 @@ nav button {
   align-items: center;
   justify-content: center;
   margin: 0.5rem auto 1.5rem;
-  /* No drawn border on the sphere itself — this soft halo is what reads as "floating in
-     space" instead, a diffuse atmosphere glow rather than a hard edge. */
-  filter: drop-shadow(0 0 22px rgba(130, 155, 255, 0.3)) drop-shadow(0 0 46px rgba(255, 176, 84, 0.1));
+  max-width: 100%;
 }
 
+/* Canvas globe: the halo is drawn in the canvas itself (see RotatingGlobe.tsx). */
 .rotating-globe {
-  width: 100%;
-  height: 100%;
   display: block;
-  overflow: visible;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  touch-action: pan-y;
+  cursor: grab;
 }
 
-.globe-star {
-  fill: var(--color-globe-star);
-  animation: globe-twinkle 3.4s ease-in-out infinite;
-  transform-origin: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .globe-star {
-    animation: none;
-  }
-}
-
-@keyframes globe-twinkle {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
-}
-
-.worldmap-point-group {
-  animation: worldmap-point-pulse 5s ease-in-out infinite;
-  transform-origin: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .worldmap-point-group {
-    animation: none;
-  }
-}
-
-@keyframes worldmap-point-pulse {
-  0%, 100% { opacity: 0.75; }
-  50% { opacity: 1; }
-}
-
-.worldmap-point-glow {
-  transition: r 1.2s ease;
-}
-
-.worldmap-point-core {
-  fill: var(--color-globe-light-core);
-  opacity: 0.9;
+.rotating-globe:active {
+  cursor: grabbing;
 }
 
 .worldmap-timezones {

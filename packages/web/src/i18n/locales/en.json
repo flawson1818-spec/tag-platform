@@ -168,6 +168,8 @@
     "presenceActive": "people praying right now",
     "presenceEmpty": "the room is about to open",
     "mapAriaLabel": "World map showing, as soft glows, the time zones where people are praying",
+    "globeAriaLabel_one": "Turning globe: {{count}} person praying right now, with lights where prayer is rising ({{places}} regions)",
+    "globeAriaLabel_other": "Turning globe: {{count}} people praying right now, with lights where prayer is rising ({{places}} regions)",
     "roomOpening": "The room is about to open…",
     "pointTooltip_one": "{{timezone}} — {{count}} person",
     "pointTooltip_other": "{{timezone}} — {{count}} people"

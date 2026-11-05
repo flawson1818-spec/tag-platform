@@ -168,6 +168,8 @@
     "presenceActive": "personas orando en este momento",
     "presenceEmpty": "la sala está por abrir",
     "mapAriaLabel": "Mapa del mundo que muestra, con suaves resplandores, los husos horarios donde las personas están orando",
+    "globeAriaLabel_one": "Globo terráqueo que gira: {{count}} persona orando ahora, con luces donde se eleva la oración ({{places}} regiones)",
+    "globeAriaLabel_other": "Globo terráqueo que gira: {{count}} personas orando ahora, con luces donde se eleva la oración ({{places}} regiones)",
     "roomOpening": "La sala está por abrir…",
     "pointTooltip_one": "{{timezone}} — {{count}} persona",
     "pointTooltip_other": "{{timezone}} — {{count}} personas"

@@ -168,6 +168,8 @@
     "presenceActive": "personnes en prière en ce moment",
     "presenceEmpty": "la salle s'apprête à s'ouvrir",
     "mapAriaLabel": "Carte du monde présentant, par lueurs douces, les fuseaux horaires où des personnes prient",
+    "globeAriaLabel_one": "Globe terrestre qui tourne : {{count}} personne en prière en ce moment, des lumières là où la prière s'élève ({{places}} régions)",
+    "globeAriaLabel_other": "Globe terrestre qui tourne : {{count}} personnes en prière en ce moment, des lumières là où la prière s'élève ({{places}} régions)",
     "roomOpening": "La salle s'apprête à s'ouvrir…",
     "pointTooltip_one": "{{timezone}} — {{count}} personne",
     "pointTooltip_other": "{{timezone}} — {{count}} personnes"
