@@ -97,6 +97,7 @@ export class PrayerSlotsService {
     const { data, error } = await this.db
       .select(SLOT_COLUMNS)
       .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
       .order('order_index', { ascending: true });
     if (error) throw new InternalServerErrorException(error.message);
     return (data as unknown as SlotRow[]).map(mapSlot);
@@ -144,8 +145,140 @@ export class PrayerSlotsService {
   /** Preview of what the engine would activate next — does not change any state. */
   async findNext(id: string): Promise<PrayerSlot> {
     const slot = await this.findById(id);
-    const next = await this.findByOrderIndex(slot.program_id, slot.order_index + 1);
-    return next ?? this.findFirstByProgram(slot.program_id);
+    return (await this.nextAfter(slot)).slot;
+  }
+
+  /**
+   * The segment that follows `slot` in its créneau, skipping ARCHIVED ones (segments removed by
+   * replaceSchedule). `wraps` is true when `slot` was the créneau's last segment and the room
+   * starts over from the first one — that moment is the relay (see PrayerEngineService).
+   */
+  async nextAfter(slot: PrayerSlot): Promise<{ slot: PrayerSlot; wraps: boolean }> {
+    const { data, error } = await this.db
+      .select(SLOT_COLUMNS)
+      .eq('program_id', slot.program_id)
+      .neq('status', 'ARCHIVED')
+      .gt('order_index', slot.order_index)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    if (data) return { slot: mapSlot(data as unknown as SlotRow), wraps: false };
+    return { slot: await this.findFirstByProgram(slot.program_id), wraps: true };
+  }
+
+  /**
+   * How long a segment is meant to last. duration_seconds (migration 20261106) is the source of
+   * truth; read separately and fail-open so a database without that column still runs, falling
+   * back to the segment's own start/end window — never the previous segment's (the old bug).
+   */
+  async intendedDurationSeconds(slot: PrayerSlot): Promise<number> {
+    const fallback = Math.max(
+      1,
+      Math.round((new Date(slot.end_at).getTime() - new Date(slot.start_at).getTime()) / 1000),
+    );
+    const { data, error } = await this.db.select('duration_seconds').eq('id', slot.id).maybeSingle();
+    if (error || !data) return fallback;
+    const stored = (data as { duration_seconds: number | null }).duration_seconds;
+    return stored && stored > 0 ? stored : fallback;
+  }
+
+  /**
+   * Replaces a créneau's segments in one go — what a moderator does after pasting a new créneau
+   * (docs/01_FUNCTIONAL_SPECIFICATION.md §3: prayers are written in advance). Existing segment
+   * rows are REUSED by position rather than deleted: prayer_slot_attendance cascades on delete,
+   * and deleting would erase everyone's prayer hours. Extra old segments become ARCHIVED (the
+   * engine and the program list skip them). The RUNNING segment keeps its live window; its new
+   * text shows right away and its new duration applies from its next turn.
+   */
+  async replaceSchedule(
+    programId: string,
+    segments: { title: string; durationSeconds: number; guidedText?: string; bibleReferences?: string[] }[],
+  ): Promise<PrayerSlot[]> {
+    if (segments.length === 0) throw new BadRequestException('Un créneau doit contenir au moins un segment.');
+
+    const { data: rows, error } = await this.db
+      .select(SLOT_COLUMNS)
+      .eq('program_id', programId)
+      .order('order_index', { ascending: true });
+    if (error) throw new InternalServerErrorException(error.message);
+    const existing = ((rows ?? []) as unknown as SlotRow[]).map(mapSlot);
+    const reusable = existing.filter((slot) => slot.status !== 'ARCHIVED');
+    const archived = existing.filter((slot) => slot.status === 'ARCHIVED');
+
+    // Live segments keep their order; the reference-date chain keeps assertNoOverlap meaningful.
+    let cursor = Date.parse('2000-01-01T00:00:00.000Z');
+    const topOrder = existing.reduce((max, slot) => Math.max(max, slot.order_index), -1);
+
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      const startAt = new Date(cursor).toISOString();
+      const endAt = new Date(cursor + segment.durationSeconds * 1000).toISOString();
+      cursor += segment.durationSeconds * 1000;
+      const content = {
+        title: segment.title,
+        guided_text: segment.guidedText ?? null,
+        bible_references: segment.bibleReferences ?? [],
+        order_index: i,
+      };
+      const target = reusable[i] ?? archived.shift();
+      if (target) {
+        const window =
+          target.status === 'RUNNING' ? {} : { start_at: startAt, end_at: endAt, status: 'SCHEDULED' };
+        // Parked above every current position, then renumbered 0..n-1 below.
+        const { error: updateError } = await this.db
+          .update({ ...content, ...window, order_index: topOrder + 1 + i })
+          .eq('id', target.id);
+        if (updateError) throw new InternalServerErrorException(updateError.message);
+        await this.writeDuration(target.id, segment.durationSeconds);
+      } else {
+        const { data: created, error: insertError } = await this.db
+          .insert({
+            program_id: programId,
+            ...content,
+            order_index: topOrder + 1 + i,
+            importance: 'Normal',
+            start_at: startAt,
+            end_at: endAt,
+            recommended_songs: [],
+            status: 'SCHEDULED',
+          })
+          .select('id')
+          .single();
+        if (insertError) throw new InternalServerErrorException(insertError.message);
+        await this.writeDuration((created as { id: string }).id, segment.durationSeconds);
+      }
+    }
+
+    // Old segments beyond the new créneau's length: archived, never deleted (history stays).
+    for (const slot of reusable.slice(segments.length)) {
+      const { error: archiveError } = await this.db
+        .update({ status: 'ARCHIVED', order_index: topOrder + 1 + segments.length + slot.order_index })
+        .eq('id', slot.id);
+      if (archiveError) throw new InternalServerErrorException(archiveError.message);
+    }
+
+    // Final positions 0..n-1, now that nothing else occupies them.
+    const { data: placed, error: placedError } = await this.db
+      .select('id, order_index')
+      .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
+      .gt('order_index', topOrder)
+      .order('order_index', { ascending: true });
+    if (placedError) throw new InternalServerErrorException(placedError.message);
+    for (const row of (placed ?? []) as { id: string; order_index: number }[]) {
+      const { error: orderError } = await this.db
+        .update({ order_index: row.order_index - topOrder - 1 })
+        .eq('id', row.id);
+      if (orderError) throw new InternalServerErrorException(orderError.message);
+    }
+
+    return this.listForProgram(programId);
+  }
+
+  /** Fail-open: without migration 20261106 the duration simply isn't stored. */
+  private async writeDuration(id: string, durationSeconds: number): Promise<void> {
+    await this.db.update({ duration_seconds: durationSeconds }).eq('id', id);
   }
 
   async findByOrderIndex(programId: string, orderIndex: number): Promise<PrayerSlot | null> {
@@ -162,6 +295,7 @@ export class PrayerSlotsService {
     const { data, error } = await this.db
       .select(SLOT_COLUMNS)
       .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
       .order('order_index', { ascending: true })
       .limit(1)
       .maybeSingle();

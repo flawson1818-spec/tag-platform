@@ -253,6 +253,17 @@ export const prayerApi = {
     }),
   removeProgram: (token: string, id: string) =>
     request<void>(`/prayer-programs/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+  /** Replaces a créneau's segments, in order — e.g. after pasting a new one. */
+  replaceSchedule: (
+    token: string,
+    programId: string,
+    segments: { title: string; durationSeconds: number; guidedText?: string; bibleReferences?: string[] }[],
+  ) =>
+    request<PrayerSlot[]>(`/prayer-programs/${programId}/schedule`, {
+      method: 'PUT',
+      headers: authHeaders(token),
+      body: JSON.stringify({ segments }),
+    }),
   createSlot: (token: string, programId: string, data: CreateSlotPayload) =>
     request<PrayerSlot>(`/prayer-programs/${programId}/slots`, {
       method: 'POST',

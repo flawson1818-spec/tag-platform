@@ -132,6 +132,24 @@ function eventRoomId(eventId: string): string {
  * SPECIFICATION.md §7.2 — namespaced by eventId (see eventRoomId()), never persisted (a live
  * event's chat is ephemeral, same philosophy as reaction:send's confetti, not a durable record).
  */
+export interface RoomSharer {
+  kind: 'MODERATOR' | 'AI';
+  userId?: string;
+  displayName: string | null;
+}
+
+export const AI_SHARER: RoomSharer = { kind: 'AI', displayName: null };
+
+export interface PendingRelay {
+  /** The créneau's last segment, kept RUNNING so the prayer never stops during the relay. */
+  fromSlotId: string;
+  nextSlotId: string;
+  nextTitle: string;
+  programId: string;
+  /** Epoch ms after which the AI shares the créneau itself. */
+  deadline: number;
+}
+
 @WebSocketGateway({ namespace: '/realtime', cors: { origin: process.env.WEB_ORIGIN || 'http://localhost:4200' } })
 export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   @WebSocketServer()
@@ -153,6 +171,17 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
    * over, falling back to the AI Intercessor only once this map is empty for that room.
    */
   private readonly roomLeaders = new Map<string, Map<string, string>>();
+
+  /**
+   * Relay between créneaux (docs/01_FUNCTIONAL_SPECIFICATION.md §2.3): moderators present in a
+   * room (room.moderate), who shared the créneau now running, and the relay waiting for a
+   * moderator to share the next one. In memory like the rest of the live room state; after a
+   * restart the engine simply opens a fresh relay when the créneau next ends.
+   */
+  private readonly roomModerators = new Map<string, Map<string, string>>();
+  private readonly roomSharers = new Map<string, RoomSharer>();
+  private readonly pendingRelays = new Map<string, PendingRelay>();
+  private relayShareHandler?: (roomId: string, sharer: RoomSharer) => Promise<void>;
 
   constructor(
     private readonly slotsService: PrayerSlotsService,
@@ -197,6 +226,15 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     await this.joinAsLeaderIfEligible(client, payload.roomId);
     client.emit('room:leader', { roomId: payload.roomId, leader: this.currentLeader(payload.roomId) });
 
+    const canShare = await this.isModerator(client, payload.roomId);
+    const joinedUserId = extractUserId(client, this.tokenService);
+    if (canShare && joinedUserId) {
+      this.roomMap(this.roomModerators, payload.roomId).set(joinedUserId, await this.displayNameFor(joinedUserId));
+    }
+    client.emit('room:role', { roomId: payload.roomId, canShare });
+    const relay = this.pendingRelays.get(payload.roomId);
+    if (relay) client.emit('relay:pending', this.relayPayload(payload.roomId, relay));
+
     const program = await this.programsService.findActiveByCommunity(fromRoomId(payload.roomId));
     if (!program) return;
     const slot = await this.slotsService.findRunningSlotByProgram(program.id);
@@ -206,12 +244,39 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     if (userId) await this.slotsService.recordAttendance(slot.id, userId);
 
     const remainingSeconds = Math.max(0, Math.round((new Date(slot.end_at).getTime() - Date.now()) / 1000));
-    client.emit('slot:started', { roomId: payload.roomId, slot, remainingSeconds });
+    const next = await this.slotsService.nextAfter(slot).catch(() => null);
+    client.emit('slot:started', {
+      roomId: payload.roomId,
+      slot,
+      remainingSeconds,
+      sharedBy: this.sharerOf(payload.roomId),
+      next: next ? { title: next.slot.title, startsNewCreneau: next.wraps } : null,
+    });
   }
 
   @SubscribeMessage('room:leave')
   handleLeave(@ConnectedSocket() client: Socket, @MessageBody() payload: RoomJoinPayload): void {
-    if (payload?.roomId) client.leave(payload.roomId);
+    if (!payload?.roomId) return;
+    client.leave(payload.roomId);
+    const userId = extractUserId(client, this.tokenService);
+    if (userId) this.roomModerators.get(payload.roomId)?.delete(userId);
+  }
+
+  /** A moderator present in the room shares the prepared créneau now, ending the relay. */
+  @SubscribeMessage('relay:share')
+  async handleRelayShare(@ConnectedSocket() client: Socket, @MessageBody() payload: RoomJoinPayload): Promise<void> {
+    if (!payload?.roomId || !this.pendingRelays.has(payload.roomId)) return;
+    if (!(await this.isModerator(client, payload.roomId))) {
+      client.emit('room:error', { roomId: payload.roomId, message: 'Seul un modérateur peut partager le créneau.' });
+      return;
+    }
+    const userId = extractUserId(client, this.tokenService);
+    if (!userId || !this.relayShareHandler) return;
+    await this.relayShareHandler(payload.roomId, {
+      kind: 'MODERATOR',
+      userId,
+      displayName: await this.displayNameFor(userId),
+    });
   }
 
   @SubscribeMessage('chat:send')
@@ -587,6 +652,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     for (const roomId of this.pendingSpeakers.keys()) {
       if (this.pendingSpeakers.get(roomId)?.delete(userId)) this.broadcastSpeakUpdate(roomId);
     }
+    for (const moderators of this.roomModerators.values()) moderators.delete(userId);
     for (const roomId of this.roomLeaders.keys()) {
       const leaders = this.roomLeaders.get(roomId);
       if (!leaders?.has(userId)) continue;
@@ -660,8 +726,56 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     this.server?.to(roomId).emit('speak:update', { roomId, pending, active });
   }
 
-  emitSlotStarted(roomId: string, slot: PrayerSlot, remainingSeconds: number): void {
-    this.server?.to(roomId).emit('slot:started', { roomId, slot, remainingSeconds });
+  emitSlotStarted(
+    roomId: string,
+    slot: PrayerSlot,
+    remainingSeconds: number,
+    next?: { title: string; startsNewCreneau: boolean } | null,
+  ): void {
+    this.server
+      ?.to(roomId)
+      .emit('slot:started', { roomId, slot, remainingSeconds, sharedBy: this.sharerOf(roomId), next: next ?? null });
+  }
+
+  // ---- Relay between créneaux (engine-driven) ----
+
+  /** The engine calls back here when a moderator clicks "Partager maintenant". */
+  onRelayShare(handler: (roomId: string, sharer: RoomSharer) => Promise<void>): void {
+    this.relayShareHandler = handler;
+  }
+
+  hasModerator(roomId: string): boolean {
+    return (this.roomModerators.get(roomId)?.size ?? 0) > 0;
+  }
+
+  getPendingRelay(roomId: string): PendingRelay | undefined {
+    return this.pendingRelays.get(roomId);
+  }
+
+  openRelay(roomId: string, relay: PendingRelay): void {
+    this.pendingRelays.set(roomId, relay);
+    this.server?.to(roomId).emit('relay:pending', this.relayPayload(roomId, relay));
+  }
+
+  closeRelay(roomId: string): void {
+    if (this.pendingRelays.delete(roomId)) this.server?.to(roomId).emit('relay:cleared', { roomId });
+  }
+
+  setSharer(roomId: string, sharer: RoomSharer): void {
+    this.roomSharers.set(roomId, sharer);
+  }
+
+  private sharerOf(roomId: string): RoomSharer {
+    return this.roomSharers.get(roomId) ?? AI_SHARER;
+  }
+
+  private relayPayload(roomId: string, relay: PendingRelay) {
+    return {
+      roomId,
+      nextTitle: relay.nextTitle,
+      deadline: new Date(relay.deadline).toISOString(),
+      moderators: Array.from(this.roomModerators.get(roomId)?.values() ?? []),
+    };
   }
 
   emitSlotTick(roomId: string, remainingSeconds: number): void {

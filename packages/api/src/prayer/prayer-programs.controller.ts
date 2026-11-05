@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { roleRank } from '../roles/role-hierarchy';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { CreateSlotDto } from './dto/create-slot.dto';
+import { ReplaceScheduleDto } from './dto/replace-schedule.dto';
 import { UpdateProgramDto } from './dto/update-program.dto';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { PrayerSlotsService } from './prayer-slots.service';
@@ -53,6 +55,19 @@ export class PrayerProgramsController {
       return;
     }
     const permissions = await this.permissionsService.getUserPermissionCodes(userId, communityId);
+    if (!permissions.has(PROGRAM_PERMISSION)) {
+      throw new ForbiddenException(`Missing permission: ${PROGRAM_PERMISSION}`);
+    }
+  }
+
+  /**
+   * Moderators write and post the créneaux (docs/01_FUNCTIONAL_SPECIFICATION.md §1.2 Modérateur:
+   * "Crée et édite des programmes de prière"). Replacing a créneau's content therefore needs
+   * prayer_program.create — globally for the world room, or for the community — while creating or
+   * deleting a whole program stays reserved as before (assertCanManage).
+   */
+  private async assertCanEditSchedule(userId: string, communityId: string | null): Promise<void> {
+    const permissions = await this.permissionsService.getUserPermissionCodes(userId, communityId ?? undefined);
     if (!permissions.has(PROGRAM_PERMISSION)) {
       throw new ForbiddenException(`Missing permission: ${PROGRAM_PERMISSION}`);
     }
@@ -115,5 +130,19 @@ export class PrayerProgramsController {
     const program = await this.programsService.findById(id);
     await this.assertCanManage(currentUser.id, program.community_id);
     return this.slotsService.create(id, dto);
+  }
+
+  /** Replaces the créneau (all its segments, in order) — e.g. after pasting a new one. */
+  @Put(':id/schedule')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async replaceSchedule(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReplaceScheduleDto,
+  ) {
+    const program = await this.programsService.findById(id);
+    await this.assertCanEditSchedule(currentUser.id, program.community_id);
+    return this.slotsService.replaceSchedule(id, dto.segments);
   }
 }

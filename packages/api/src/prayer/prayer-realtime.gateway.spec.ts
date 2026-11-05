@@ -580,3 +580,71 @@ describe('PrayerRealtimeGateway — connected-leader tracking', () => {
     expect(emit).not.toHaveBeenCalled();
   });
 });
+
+describe('PrayerRealtimeGateway — relay between créneaux', () => {
+  const relay = { fromSlotId: 's-13', nextSlotId: 's-1', nextTitle: "Prière d'ouverture", programId: 'p', deadline: Date.now() + 60_000 };
+
+  it('ignores "Partager maintenant" from someone who is not a moderator', async () => {
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'user-1' }) },
+      permissionsService: { getUserPermissionCodes: vi.fn().mockResolvedValue(new Set(['room.chat.send'])) },
+    });
+    const handler = vi.fn().mockResolvedValue(undefined);
+    gateway.onRelayShare(handler);
+    gateway.openRelay('world', relay);
+    const client = fakeSocket('user-1');
+
+    await gateway.handleRelayShare(client as never, { roomId: 'world' });
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(client.emit).toHaveBeenCalledWith('room:error', expect.objectContaining({ roomId: 'world' }));
+  });
+
+  it('hands a moderator\'s click to the engine, signed with their name', async () => {
+    const supabase = {
+      client: {
+        from: vi.fn(() => ({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { display_name: 'Pasteur Paul' }, error: null }),
+        })),
+      },
+    };
+    const { gateway } = buildGateway({
+      supabase,
+      tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'moderator-1' }) },
+      permissionsService: { getUserPermissionCodes: vi.fn().mockResolvedValue(new Set(['room.moderate'])) },
+    });
+    const handler = vi.fn().mockResolvedValue(undefined);
+    gateway.onRelayShare(handler);
+    gateway.openRelay('world', relay);
+
+    await gateway.handleRelayShare(fakeSocket('moderator-1') as never, { roomId: 'world' });
+
+    expect(handler).toHaveBeenCalledWith('world', { kind: 'MODERATOR', userId: 'moderator-1', displayName: 'Pasteur Paul' });
+  });
+
+  it('does nothing when no relay is open', async () => {
+    const { gateway } = buildGateway({
+      tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'moderator-1' }) },
+      permissionsService: { getUserPermissionCodes: vi.fn().mockResolvedValue(new Set(['room.moderate'])) },
+    });
+    const handler = vi.fn();
+    gateway.onRelayShare(handler);
+    await gateway.handleRelayShare(fakeSocket('moderator-1') as never, { roomId: 'world' });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('forgets a moderator when they disconnect', () => {
+    const { gateway } = buildGateway({ tokenService: { verifyAccessToken: vi.fn().mockReturnValue({ sub: 'moderator-1' }) } });
+    (gateway as unknown as { roomModerators: Map<string, Map<string, string>> }).roomModerators.set(
+      'world',
+      new Map([['moderator-1', 'Pasteur Paul']]),
+    );
+    expect(gateway.hasModerator('world')).toBe(true);
+
+    gateway.handleDisconnect(fakeSocket('moderator-1') as never);
+
+    expect(gateway.hasModerator('world')).toBe(false);
+  });
+});

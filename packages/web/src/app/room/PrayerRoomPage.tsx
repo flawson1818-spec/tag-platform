@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { ChatMessage, PrayerSlot, RoomPerson, WS_URL, prayerApi } from '../../lib/api';
 import { formatRemaining } from '../../lib/format';
+import { splitVerse } from '../../lib/creneau-parser';
 import i18n from '../../i18n/config';
 
 const ROOM_ID = 'world';
@@ -29,6 +30,9 @@ function extractYouTubeId(url: string): string | null {
 }
 
 type ConnectionState = 'connecting' | 'live' | 'empty';
+type Sharer = { kind: 'MODERATOR' | 'AI'; displayName: string | null };
+type NextUp = { title: string; startsNewCreneau: boolean };
+type Relay = { nextTitle: string; deadline: string; moderators: string[] };
 type FloatingReaction = { id: number; emoji: string };
 
 export function PrayerRoomPage() {
@@ -53,7 +57,12 @@ export function PrayerRoomPage() {
   const [musicLinkInput, setMusicLinkInput] = useState('');
   const [musicLinkError, setMusicLinkError] = useState<string | null>(null);
   const [nowPlaying, setNowPlaying] = useState<{ videoId: string; title: string } | null>(null);
-  const [roomLeader, setRoomLeader] = useState<{ userId: string; displayName: string } | null>(null);
+  const [sharedBy, setSharedBy] = useState<Sharer | null>(null);
+  const [nextUp, setNextUp] = useState<NextUp | null>(null);
+  const [relay, setRelay] = useState<Relay | null>(null);
+  const [canShare, setCanShare] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const socketRef = useRef<Socket | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
   // The room:join effect below only runs once on mount, so its socket handlers close over
@@ -90,8 +99,14 @@ export function PrayerRoomPage() {
 
     socket.on('connect', () => socket.emit('room:join', { roomId: ROOM_ID }));
 
-    socket.on('slot:started', (payload: { slot: PrayerSlot; remainingSeconds: number }) => {
+    socket.on(
+      'slot:started',
+      (payload: { slot: PrayerSlot; remainingSeconds: number; sharedBy?: Sharer; next?: NextUp | null }) => {
       setSlot(payload.slot);
+      if (payload.sharedBy) setSharedBy(payload.sharedBy);
+      setNextUp(payload.next ?? null);
+      setRelay(null);
+      setSharing(false);
       setRemainingSeconds(payload.remainingSeconds);
       setTotalSeconds(
         Math.round(
@@ -99,7 +114,8 @@ export function PrayerRoomPage() {
         ),
       );
       setConnectionState('live');
-    });
+    },
+    );
 
     socket.on('slot:tick', (payload: { remainingSeconds: number }) => {
       setRemainingSeconds(payload.remainingSeconds);
@@ -165,12 +181,11 @@ export function PrayerRoomPage() {
       setNowPlaying(payload.playing && payload.videoId ? { videoId: payload.videoId, title: payload.title ?? '' } : null);
     });
 
-    // The 13 topic slots of a program are one continuous prayer — led by whichever Intercesseur+
-    // is actually connected (first one in, stays leader until they leave), not a different named
-    // leader per slot. See PrayerRealtimeGateway's roomLeaders tracking.
-    socket.on('room:leader', (payload: { leader: { userId: string; displayName: string } | null }) => {
-      setRoomLeader(payload.leader);
-    });
+    // Relay between créneaux: a moderator present shares the next créneau, else the AI does
+    // (PrayerEngineService). The closing segment keeps running meanwhile — the prayer never stops.
+    socket.on('room:role', (payload: { canShare: boolean }) => setCanShare(payload.canShare));
+    socket.on('relay:pending', (payload: Relay) => setRelay(payload));
+    socket.on('relay:cleared', () => setRelay(null));
 
     return () => {
       socket.emit('room:leave', { roomId: ROOM_ID });
@@ -284,6 +299,19 @@ export function PrayerRoomPage() {
     socketRef.current?.emit('music:stop', { roomId: ROOM_ID });
   }
 
+  useEffect(() => {
+    if (!relay) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [relay]);
+
+  function shareCreneau() {
+    setSharing(true);
+    socketRef.current?.emit('relay:share', { roomId: ROOM_ID });
+  }
+
+  const relaySecondsLeft = relay ? Math.max(0, Math.round((new Date(relay.deadline).getTime() - now) / 1000)) : 0;
+
   const progressPct = totalSeconds > 0 ? Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100)) : 0;
 
   return (
@@ -296,17 +324,44 @@ export function PrayerRoomPage() {
         </p>
       )}
 
+      {relay && (
+        <section className="room-relay" aria-live="polite">
+          <span className="room-relay-eyebrow">{t('room.relay.title')}</span>
+          <p className="room-relay-next">{t('room.relay.next', { title: relay.nextTitle })}</p>
+          <p className="hint">
+            {relay.moderators.length > 0
+              ? t('room.relay.waitingModerator', { names: relay.moderators.join(', ') })
+              : t('room.relay.waitingAny')}{' '}
+            {t('room.relay.aiCountdown', { time: formatRemaining(relaySecondsLeft) })}
+          </p>
+          {canShare && (
+            <button type="button" className="room-relay-share" onClick={shareCreneau} disabled={sharing}>
+              {sharing ? t('room.relay.sharing') : t('room.relay.share')}
+            </button>
+          )}
+          <p className="hint room-relay-continues">{t('room.relay.continues')}</p>
+        </section>
+      )}
+
       {slot && connectionState === 'live' && (
         <div className="room-stage">
-          <div className="room-chips">
-            <span className="chip">{slot.category}</span>
-            {slot.importance === 'Urgent' && <span className="chip chip-urgent">{t('room.urgent')}</span>}
-          </div>
+          {slot.importance === 'Urgent' && (
+            <div className="room-chips">
+              <span className="chip chip-urgent">{t('room.urgent')}</span>
+            </div>
+          )}
 
-          <div className="room-timer">{formatRemaining(remainingSeconds)}</div>
-          <div className="room-progress">
-            <div className="room-progress-fill" style={{ width: `${progressPct}%` }} />
-          </div>
+          {relay ? (
+            // The closing segment carries on during the relay: no 00:00 that would read as "stopped".
+            <p className="room-timer-relay">{t('room.relay.inProgress')}</p>
+          ) : (
+            <>
+              <div className="room-timer">{formatRemaining(remainingSeconds)}</div>
+              <div className="room-progress">
+                <div className="room-progress-fill" style={{ width: `${progressPct}%` }} />
+              </div>
+            </>
+          )}
           {remainingSeconds > 0 && remainingSeconds <= 5 && (
             <p className="hint room-ending-soon">{t('room.endingSoon', { seconds: remainingSeconds })}</p>
           )}
@@ -315,16 +370,36 @@ export function PrayerRoomPage() {
           {slot.guided_text && <p className="room-guided-text">{slot.guided_text}</p>}
 
           {slot.bible_references.length > 0 && (
-            <blockquote className="room-verse">
-              {slot.bible_references.map((reference) => (
-                <div key={reference}>{reference}</div>
-              ))}
-            </blockquote>
+            <div className="room-verses">
+              {slot.bible_references.map((stored) => {
+                const verse = splitVerse(stored);
+                return (
+                  <blockquote key={stored} className="room-verse">
+                    {verse.text && <p className="room-verse-text">{verse.text}</p>}
+                    <cite className="room-verse-ref">{verse.reference}</cite>
+                  </blockquote>
+                );
+              })}
+            </div>
           )}
 
-          <p className="room-leader">
-            {roomLeader ? t('room.leaderNamed', { name: roomLeader.displayName }) : t('room.leaderAi')}
-          </p>
+          {nextUp && !relay && (
+            <p className="room-next">
+              {nextUp.startsNewCreneau
+                ? t('room.nextCreneau', { title: nextUp.title })
+                : t('room.nextUp', { title: nextUp.title })}
+            </p>
+          )}
+
+          <div className="room-credits">
+            <span>{t('room.ledByPrayers')}</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              {sharedBy?.kind === 'MODERATOR' && sharedBy.displayName
+                ? t('room.sharedByModerator', { name: sharedBy.displayName })
+                : t('room.sharedByAi')}
+            </span>
+          </div>
 
           <div className="room-reactions-overlay">
             {reactions.map((reaction) => (
