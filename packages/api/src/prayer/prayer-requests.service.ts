@@ -198,7 +198,7 @@ export class PrayerRequestsService {
       await this.pushNotificationsService.send(
         updated.author_id,
         'Ta demande a été exaucée',
-        'La communauté a prié pour toi — découvre la réponse sur TAG.',
+        'La communauté a prié pour toi — découvre la réponse sur Tour d\'avant-garde.',
       );
     }
 

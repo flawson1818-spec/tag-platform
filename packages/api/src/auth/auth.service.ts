@@ -89,7 +89,7 @@ export class AuthService {
     if (error) throw new InternalServerErrorException(error.message);
     await this.emailService.send(
       user.email,
-      'Vérifie ton adresse e-mail TAG',
+      "Vérifie ton adresse e-mail Tour d'avant-garde",
       `Voici ton code de vérification : ${raw} (valable 24 heures).`,
       user.id,
     );
@@ -331,7 +331,7 @@ export class AuthService {
       if (error) throw new InternalServerErrorException(error.message);
       await this.emailService.send(
         user.email,
-        'Réinitialisation de votre mot de passe TAG',
+        "Réinitialisation de votre mot de passe Tour d'avant-garde",
         `Voici votre code de réinitialisation : ${raw} (valable 1 heure).`,
         user.id,
       );

@@ -53,9 +53,9 @@ export class MfaOtpService {
     const { error } = await this.db.insert({ user_id: user.id, channel, code_hash: codeHash, expires_at: expiresAt });
     if (error) throw new InternalServerErrorException(error.message);
 
-    const body = `Ton code de vérification TAG : ${code} (valable ${OTP_TTL_MINUTES} minutes).`;
+    const body = `Ton code de vérification Tour d'avant-garde : ${code} (valable ${OTP_TTL_MINUTES} minutes).`;
     if (channel === 'EMAIL') {
-      await this.emailService.send(user.email, 'Ton code de vérification TAG', body, user.id);
+      await this.emailService.send(user.email, 'Ton code de vérification Tour d\'avant-garde', body, user.id);
     } else {
       await this.whatsAppService.send(user.phone as string, body, user.id);
     }

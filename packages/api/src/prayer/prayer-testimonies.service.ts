@@ -207,7 +207,7 @@ export class PrayerTestimoniesService {
     await this.pushNotificationsService.send(
       published.author_id,
       'Témoignage publié',
-      'Ton témoignage a été validé et publié sur TAG.',
+      "Ton témoignage a été validé et publié sur Tour d'avant-garde.",
     );
     await this.draftSocialPublications(published);
 
@@ -241,7 +241,7 @@ export class PrayerTestimoniesService {
    * fails (e.g. ANTHROPIC_API_KEY not configured) so testimony approval never breaks on this.
    */
   private async draftSocialPublications(testimony: Testimony): Promise<void> {
-    const content = testimony.content ?? 'Un témoignage a été partagé sur TAG.';
+    const content = testimony.content ?? "Un témoignage a été partagé sur Tour d'avant-garde.";
     await Promise.all(
       SOCIAL_CHANNELS.map(async (channel) => {
         const draftContent = await this.aiAgentsService

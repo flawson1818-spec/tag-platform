@@ -1,4 +1,7 @@
 {
+  "app": {
+    "tagline": "A prayer rises at every moment"
+  },
   "nav": {
     "home": "Home",
     "room": "Prayer room",
@@ -83,7 +86,7 @@
     "recentTestimonies": "Recent testimonies",
     "noTestimonies": "No testimonies published yet.",
     "viewAllTestimonies": "View all testimonies →",
-    "testimonyExcerpt": "{{type}} testimony shared on TAG.",
+    "testimonyExcerpt": "{{type}} testimony shared on Tour d'avant-garde.",
     "mediaType": {
       "TEXT": "Text",
       "PHOTO": "Photo",
@@ -735,7 +738,7 @@
   },
   "aiWelcome": {
     "title": "🙏 AI Welcome",
-    "intro": "Ask your questions about how TAG works — how to join a room, submit a prayer request, publish a testimony…",
+    "intro": "Ask your questions about how Tour d'avant-garde works — how to join a room, submit a prayer request, publish a testimony…",
     "placeholder": "How do I join the prayer room?"
   },
   "aiEvangelism": {
@@ -795,7 +798,7 @@
     "continue": "Continue",
     "skipForNow": "Skip for now",
     "discoveryTitle": "Meet the AI Welcome assistant",
-    "discoveryIntro": "Ask it a question about how TAG works — how to join the prayer room, submit a request, share a testimony…",
+    "discoveryIntro": "Ask it a question about how Tour d'avant-garde works — how to join the prayer room, submit a request, share a testimony…",
     "discoveryPlaceholder": "How does it work?",
     "communityTitle": "Join a community",
     "communityIntro": "Optional — you can always do this later from \"Communities\".",

@@ -1,4 +1,7 @@
 {
+  "app": {
+    "tagline": "Une prière s'élève à chaque instant"
+  },
   "nav": {
     "home": "Accueil",
     "room": "Salle de prière",
@@ -83,7 +86,7 @@
     "recentTestimonies": "Témoignages récents",
     "noTestimonies": "Aucun témoignage publié pour l'instant.",
     "viewAllTestimonies": "Voir tous les témoignages →",
-    "testimonyExcerpt": "Témoignage {{type}} partagé sur TAG.",
+    "testimonyExcerpt": "Témoignage {{type}} partagé sur Tour d'avant-garde.",
     "mediaType": {
       "TEXT": "texte",
       "PHOTO": "photo",
@@ -735,7 +738,7 @@
   },
   "aiWelcome": {
     "title": "🙏 IA Accueil",
-    "intro": "Pose tes questions sur le fonctionnement de TAG — comment rejoindre une salle, soumettre une demande de prière, publier un témoignage…",
+    "intro": "Pose tes questions sur le fonctionnement de Tour d'avant-garde — comment rejoindre une salle, soumettre une demande de prière, publier un témoignage…",
     "placeholder": "Comment rejoindre la salle de prière ?"
   },
   "aiEvangelism": {
@@ -795,7 +798,7 @@
     "continue": "Continuer",
     "skipForNow": "Passer pour l'instant",
     "discoveryTitle": "Fais connaissance avec l'IA Accueil",
-    "discoveryIntro": "Pose-lui une question sur le fonctionnement de TAG — comment rejoindre la salle de prière, déposer une demande, partager un témoignage…",
+    "discoveryIntro": "Pose-lui une question sur le fonctionnement de Tour d'avant-garde — comment rejoindre la salle de prière, déposer une demande, partager un témoignage…",
     "discoveryPlaceholder": "Comment ça marche ?",
     "communityTitle": "Rejoins une communauté",
     "communityIntro": "Optionnel — tu pourras toujours le faire plus tard depuis \"Communautés\".",

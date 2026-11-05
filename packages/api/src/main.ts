@@ -35,8 +35,8 @@ async function bootstrap() {
   app.setGlobalPrefix(globalPrefix);
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('TAG API')
-    .setDescription('Total Adoration & Global Intercession — API')
+    .setTitle("Tour d'avant-garde API")
+    .setDescription('Une prière s\'élève à chaque instant — API')
     .setVersion('0.1.0')
     .addBearerAuth()
     .build();

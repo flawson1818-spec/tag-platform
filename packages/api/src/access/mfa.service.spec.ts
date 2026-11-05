@@ -16,13 +16,13 @@ describe('MfaService', () => {
   });
 
   describe('keyUri', () => {
-    it('produces an otpauth:// URI naming TAG as the issuer and the account email', () => {
+    it('produces an otpauth:// URI naming Tour d\'avant-garde as the issuer and the account email', () => {
       const secret = service.generateSecret();
 
       const uri = service.keyUri('believer@example.com', secret);
 
       expect(uri).toMatch(/^otpauth:\/\/totp\//);
-      expect(uri).toContain('TAG');
+      expect(uri).toContain(encodeURIComponent("Tour d'avant-garde"));
       expect(uri).toContain(encodeURIComponent('believer@example.com'));
       expect(uri).toContain(secret);
     });

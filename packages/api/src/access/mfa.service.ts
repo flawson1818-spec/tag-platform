@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { authenticator } from 'otplib';
 
-const ISSUER = 'TAG';
+const ISSUER = "Tour d'avant-garde";
 
 /** Thin wrapper around otplib so AuthService/AuthController never touch the library directly. */
 @Injectable()

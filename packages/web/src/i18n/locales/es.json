@@ -1,4 +1,7 @@
 {
+  "app": {
+    "tagline": "Una oración se eleva en cada instante"
+  },
   "nav": {
     "home": "Inicio",
     "room": "Sala de oración",
@@ -83,7 +86,7 @@
     "recentTestimonies": "Testimonios recientes",
     "noTestimonies": "Aún no se ha publicado ningún testimonio.",
     "viewAllTestimonies": "Ver todos los testimonios →",
-    "testimonyExcerpt": "Testimonio de {{type}} compartido en TAG.",
+    "testimonyExcerpt": "Testimonio de {{type}} compartido en Tour d'avant-garde.",
     "mediaType": {
       "TEXT": "texto",
       "PHOTO": "foto",
@@ -735,7 +738,7 @@
   },
   "aiWelcome": {
     "title": "🙏 IA Bienvenida",
-    "intro": "Haz tus preguntas sobre el funcionamiento de TAG — cómo unirte a una sala, enviar una petición de oración, publicar un testimonio…",
+    "intro": "Haz tus preguntas sobre el funcionamiento de Tour d'avant-garde — cómo unirte a una sala, enviar una petición de oración, publicar un testimonio…",
     "placeholder": "¿Cómo me uno a la sala de oración?"
   },
   "aiEvangelism": {
@@ -795,7 +798,7 @@
     "continue": "Continuar",
     "skipForNow": "Omitir por ahora",
     "discoveryTitle": "Conoce a la IA Bienvenida",
-    "discoveryIntro": "Hazle una pregunta sobre cómo funciona TAG — cómo unirte a la sala de oración, enviar una petición, compartir un testimonio…",
+    "discoveryIntro": "Hazle una pregunta sobre cómo funciona Tour d'avant-garde — cómo unirte a la sala de oración, enviar una petición, compartir un testimonio…",
     "discoveryPlaceholder": "¿Cómo funciona?",
     "communityTitle": "Únete a una comunidad",
     "communityIntro": "Opcional — siempre podrás hacerlo más tarde desde \"Comunidades\".",

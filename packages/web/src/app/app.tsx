@@ -1,4 +1,5 @@
 import { Route, Routes, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { TagsPage } from './tags/TagsPage';
 import { ItemsPage } from './items/ItemsPage';
 import { AuthProvider } from './auth/AuthContext';
@@ -33,13 +34,14 @@ import { HeaderNav } from './HeaderNav';
 import { HomePage } from './home/HomePage';
 
 export function App() {
+  const { t } = useTranslation();
   return (
     <AuthProvider>
       <div className="app">
         <header>
           <Link to="/" className="brand">
-            <h1>TAG</h1>
-            <p className="brand-tagline">Total Adoration &amp; Global Intercession</p>
+            <h1>Tour d&apos;avant-garde</h1>
+            <p className="brand-tagline">{t('app.tagline')}</p>
           </Link>
           <HeaderNav />
         </header>

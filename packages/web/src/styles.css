@@ -263,12 +263,15 @@ header {
 
 .brand {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.6rem;
+  gap: 0.15rem 0.6rem;
 }
 
 header h1 {
   margin: 0;
+  /* "Tour d'avant-garde" must never break at its hyphen; the tagline wraps below instead. */
+  white-space: nowrap;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-primary);
