@@ -9,6 +9,7 @@
     "testimonies": "Testemunhos",
     "communities": "Comunidades",
     "feed": "Feed",
+    "messages": "Mensagens",
     "campaigns": "Campanhas",
     "events": "Eventos",
     "aiWelcome": "IA Boas-vindas",
@@ -919,5 +920,25 @@
     "postsTitle_one": "Publicação ({{count}})",
     "postsTitle_other": "Publicações ({{count}})",
     "noPosts": "Ainda não há publicações."
+  },
+  "messages": {
+    "title": "Mensagens",
+    "live": "Conectado ao vivo",
+    "offline": "Offline — reconectando…",
+    "emptyInbox": "Nenhuma conversa ainda. Abra o perfil de um membro e clique em “Enviar uma mensagem”.",
+    "pick": "Escolha uma conversa para ler.",
+    "you": "Você",
+    "back": "Voltar às conversas",
+    "block": "Bloquear",
+    "unblock": "Desbloquear",
+    "blockConfirm": "Bloquear {{name}}? Nenhum de vocês poderá escrever ao outro.",
+    "older": "Mensagens anteriores",
+    "firstMessage": "Escreva a primeira mensagem para {{name}}.",
+    "youBlocked": "Você bloqueou este membro. Desbloqueie para escrever.",
+    "cannotWrite": "Você não pode escrever a este membro.",
+    "placeholder": "Escreva sua mensagem…",
+    "write": "Enviar uma mensagem",
+    "unreadCount_one": "{{count}} mensagem não lida",
+    "unreadCount_other": "{{count}} mensagens não lidas"
   }
 }

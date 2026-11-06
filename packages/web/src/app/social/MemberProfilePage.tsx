@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { FeedPost, MemberProfile, socialApi } from '../../lib/api';
 import { Avatar, SocialPostCard } from './SocialPostCard';
+import { MessageMemberButton } from './MessagesPage';
 
 /** A member's public profile: name, church, city, communities and their publications.
  *  Never their e-mail or phone. */
@@ -87,6 +88,7 @@ export function MemberProfilePage() {
               ))}
             </div>
           )}
+          {!profile.isMe && <MessageMemberButton memberId={profile.id} />}
           {profile.isMe && !editing && (
             <button type="button" onClick={() => { setEditing(true); setSaved(false); }}>
               {t('social.editProfile')}

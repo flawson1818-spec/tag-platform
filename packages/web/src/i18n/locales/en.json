@@ -9,6 +9,7 @@
     "testimonies": "Testimonies",
     "communities": "Communities",
     "feed": "Feed",
+    "messages": "Messages",
     "campaigns": "Campaigns",
     "events": "Events",
     "aiWelcome": "AI Welcome",
@@ -919,5 +920,25 @@
     "postsTitle_one": "Post ({{count}})",
     "postsTitle_other": "Posts ({{count}})",
     "noPosts": "No posts yet."
+  },
+  "messages": {
+    "title": "Messages",
+    "live": "Live",
+    "offline": "Offline — reconnecting…",
+    "emptyInbox": "No conversations yet. Open a member's profile and click “Send a message”.",
+    "pick": "Pick a conversation to read it.",
+    "you": "You",
+    "back": "Back to conversations",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockConfirm": "Block {{name}}? Neither of you will be able to write to the other.",
+    "older": "Older messages",
+    "firstMessage": "Write the first message to {{name}}.",
+    "youBlocked": "You blocked this member. Unblock them to write.",
+    "cannotWrite": "You can't write to this member.",
+    "placeholder": "Write your message…",
+    "write": "Send a message",
+    "unreadCount_one": "{{count}} unread message",
+    "unreadCount_other": "{{count}} unread messages"
   }
 }

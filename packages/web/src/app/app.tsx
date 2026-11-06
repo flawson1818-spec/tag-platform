@@ -34,6 +34,7 @@ import { HeaderNav } from './HeaderNav';
 import { HomePage } from './home/HomePage';
 import { FeedPage } from './social/FeedPage';
 import { MemberProfilePage } from './social/MemberProfilePage';
+import { MessagesPage } from './social/MessagesPage';
 
 export function App() {
   const { t } = useTranslation();
@@ -89,6 +90,22 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <FeedPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <MessagesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages/:id"
+              element={
+                <ProtectedRoute>
+                  <MessagesPage />
                 </ProtectedRoute>
               }
             />

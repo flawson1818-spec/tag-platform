@@ -1234,3 +1234,53 @@ export const socialApi = {
   updateMyProfile: (token: string, data: { bio?: string; churchName?: string; city?: string }) =>
     request<MemberProfile>('/social/me/profile', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
 };
+
+// ---- Social network: private messages ----
+
+export interface ConversationSummary {
+  id: string;
+  peer: MemberSummary;
+  lastMessage: { content: string; createdAt: string; mine: boolean } | null;
+  unread: number;
+  blocked: boolean;
+  blockedByMe: boolean;
+}
+
+export interface DirectMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+}
+
+export const messagesApi = {
+  conversations: (token: string) => request<ConversationSummary[]>('/messages/conversations', { headers: authHeaders(token) }),
+  open: (token: string, memberId: string) =>
+    request<ConversationSummary>('/messages/conversations', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ memberId }),
+    }),
+  conversation: (token: string, id: string) =>
+    request<ConversationSummary>(`/messages/conversations/${id}`, { headers: authHeaders(token) }),
+  messages: (token: string, id: string, before?: string) =>
+    request<DirectMessage[]>(
+      `/messages/conversations/${id}/messages${before ? `?before=${encodeURIComponent(before)}` : ''}`,
+      { headers: authHeaders(token) },
+    ),
+  send: (token: string, id: string, content: string) =>
+    request<DirectMessage>(`/messages/conversations/${id}/messages`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ content }),
+    }),
+  markRead: (token: string, id: string) =>
+    request<{ ok: true }>(`/messages/conversations/${id}/read`, { method: 'POST', headers: authHeaders(token) }),
+  unread: (token: string) => request<{ unread: number }>('/messages/unread', { headers: authHeaders(token) }),
+  block: (token: string, memberId: string, blocked: boolean) =>
+    request<{ blocked: boolean }>(`/messages/blocks/${memberId}`, {
+      method: blocked ? 'POST' : 'DELETE',
+      headers: authHeaders(token),
+    }),
+};

@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { InstallPwaButton } from './InstallPwaButton';
+import { useUnreadMessages } from './social/useUnreadMessages';
 
 function navClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'active' : '';
@@ -13,6 +14,7 @@ export function HeaderNav() {
   const { status, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const unread = useUnreadMessages(status === 'authenticated');
 
   const handleLogout = async () => {
     await logout();
@@ -40,6 +42,10 @@ export function HeaderNav() {
         <InstallPwaButton />
         {status === 'authenticated' ? (
           <>
+            <NavLink to="/messages" className={navClass}>
+              {t('nav.messages')}
+              {unread > 0 && <span className="nav-badge" aria-label={t('messages.unreadCount', { count: unread })}>{unread > 99 ? '99+' : unread}</span>}
+            </NavLink>
             <NavLink to="/notifications" className={navClass}>{t('nav.notifications')}</NavLink>
             <button onClick={handleLogout}>{t('nav.logout')}</button>
           </>

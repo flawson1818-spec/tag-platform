@@ -2153,3 +2153,128 @@ nav button {
 .social-profile-form input,
 .social-profile-form textarea { font-weight: 400; }
 .social-section-title { margin: 0.5rem 0 0; }
+
+/* ---- Private messages ---- */
+.nav-badge {
+  display: inline-block;
+  min-width: 1.2rem;
+  margin-left: 0.3rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.2rem;
+  text-align: center;
+}
+.dm-page {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 1rem;
+  height: calc(100vh - 220px);
+  min-height: 460px;
+}
+.dm-list,
+.dm-thread {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  min-height: 0;
+  min-width: 0;
+}
+.dm-list { overflow-y: auto; padding: 0.75rem; }
+.dm-list-head { display: flex; align-items: center; justify-content: space-between; padding: 0 0.25rem 0.5rem; }
+.dm-list-head h2 { margin: 0; }
+.dm-live { width: 10px; height: 10px; border-radius: 50%; background: var(--color-text-faint); }
+.dm-live.is-on { background: var(--color-success); box-shadow: 0 0 0 3px var(--color-success-soft); }
+.dm-list ul { list-style: none; margin: 0; padding: 0; }
+.dm-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.dm-item:hover { background: var(--color-surface-tint); }
+.dm-item.is-active { background: var(--color-primary-soft); }
+.dm-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.dm-item-top { display: flex; justify-content: space-between; gap: 0.5rem; }
+.dm-item-top .hint { font-size: 0.75rem; margin: 0; white-space: nowrap; }
+.dm-preview {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dm-item.is-unread .dm-preview { color: var(--color-text); font-weight: 600; }
+.dm-badge {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  padding: 0 0.45rem;
+  line-height: 1.3rem;
+}
+.dm-empty { padding: 0.5rem; }
+.dm-thread { display: flex; flex-direction: column; overflow: hidden; }
+.dm-thread-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.dm-back { display: none; font-size: 1.2rem; }
+.dm-block { margin-left: auto; font-size: 0.85rem; }
+.dm-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--color-surface-tint);
+}
+.dm-older { align-self: center; }
+.dm-day {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  margin: 0.75rem 0 0.35rem;
+}
+.dm-day::first-letter { text-transform: uppercase; }
+.dm-bubble {
+  max-width: min(75%, 520px);
+  width: fit-content;
+  padding: 0.5rem 0.75rem;
+  border-radius: 16px 16px 16px 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dm-bubble.is-mine {
+  margin-left: auto;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.dm-bubble time { font-size: 0.68rem; opacity: 0.7; align-self: flex-end; margin-top: 0.15rem; }
+.dm-composer { display: flex; gap: 0.5rem; padding: 0.7rem; border-top: 1px solid var(--color-border); }
+.dm-composer textarea { flex: 1; min-width: 0; resize: none; max-height: 140px; border-radius: var(--radius-md); }
+.dm-placeholder { margin: auto; text-align: center; color: var(--color-text-muted); padding: 2rem 1rem; }
+.dm-blocked { padding: 0.9rem; margin: 0; text-align: center; color: var(--color-text-muted); border-top: 1px solid var(--color-border); }
+.dm-thread > .error { padding: 0 0.9rem; }
+@media (max-width: 720px) {
+  .dm-page { grid-template-columns: 1fr; height: calc(100vh - 260px); min-height: 420px; }
+  .dm-page.has-thread .dm-list { display: none; }
+  .dm-page:not(.has-thread) .dm-thread { display: none; }
+  .dm-back { display: inline-block; }
+}
