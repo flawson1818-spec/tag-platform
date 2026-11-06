@@ -96,6 +96,30 @@ export function MessagesPage() {
     };
   }, [loadConversations, user?.id]);
 
+  // Without the live connection (blocked network, proxy…), check for new messages every 15 s.
+  useEffect(() => {
+    if (live || !id) return;
+    const timer = window.setInterval(() => {
+      const token = getAccessToken();
+      if (!token) return;
+      messagesApi
+        .messages(token, id)
+        .then((latest) => {
+          setMessages((prev) => {
+            const fresh = latest.filter((m) => !prev.some((p) => p.id === m.id));
+            if (fresh.length === 0) return prev;
+            if (fresh.some((m) => m.senderId !== user?.id)) {
+              void messagesApi.markRead(token, id).then(notifyMessagesChanged).catch(() => undefined);
+            }
+            return [...prev, ...fresh];
+          });
+        })
+        .catch(() => undefined);
+      loadConversations();
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [live, id, loadConversations, user?.id]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length, id]);
