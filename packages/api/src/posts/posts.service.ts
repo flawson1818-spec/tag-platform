@@ -79,8 +79,12 @@ export class PostsService {
 
   async createComment(postId: string, authorId: string, dto: CreateCommentDto): Promise<Comment> {
     const post = await this.findPostById(postId);
-    const isMember = await this.isCommunityMember(post.community_id, authorId);
-    if (!isMember) throw new ForbiddenException('Only community members can comment');
+    // A personal post (no community) is open to every signed-in member; a community post
+    // stays reserved to that community's members, as before.
+    if (post.community_id) {
+      const isMember = await this.isCommunityMember(post.community_id, authorId);
+      if (!isMember) throw new ForbiddenException('Only community members can comment');
+    }
 
     const { data, error } = await this.supabase.client
       .from('comments')

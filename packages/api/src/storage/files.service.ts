@@ -112,6 +112,38 @@ export class FilesService {
   }
 
   /**
+   * Batched getPublicReadUrl for a page of content (feed photos, avatars): one database read
+   * and one signing call instead of one round-trip per file. Same contract — callers decide
+   * visibility first; files not yet AVAILABLE (or missing) are simply absent from the result.
+   */
+  async getPublicReadUrls(fileIds: string[], ttlSeconds = 3600): Promise<Map<string, string>> {
+    const urls = new Map<string, string>();
+    const ids = Array.from(new Set(fileIds.filter(Boolean)));
+    if (ids.length === 0) return urls;
+
+    const { data, error } = await this.db.select(FILE_COLUMNS).in('id', ids).is('deleted_at', null);
+    if (error) throw new InternalServerErrorException(error.message);
+    const files: StoredFile[] = [];
+    for (const row of (data ?? []) as unknown as StoredFile[]) {
+      files.push(row.status === 'UPLOADING' ? await this.reconcileUpload(row) : row);
+    }
+    const available = files.filter((f) => f.status === 'AVAILABLE');
+    if (available.length === 0) return urls;
+
+    const { data: signed, error: signError } = await this.bucket.createSignedUrls(
+      available.map((f) => f.bucket_key),
+      ttlSeconds,
+    );
+    if (signError || !signed) return urls;
+    const byKey = new Map(available.map((f) => [f.bucket_key, f.id]));
+    for (const entry of signed) {
+      const id = entry.path ? byKey.get(entry.path) : undefined;
+      if (id && entry.signedUrl) urls.set(id, entry.signedUrl);
+    }
+    return urls;
+  }
+
+  /**
    * No async scan/transcode Worker exists yet (see docs/03_ARCHITECTURE_SPECIFICATION.md
    * section 9) — this checks Supabase Storage directly and moves UPLOADING straight to
    * AVAILABLE once the object exists, collapsing the UPLOADED/SCANNED intermediate states.

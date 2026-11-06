@@ -26,6 +26,7 @@ export function HeaderNav() {
         <NavLink to="/room" className={navClass}>{t('nav.room')}</NavLink>
         <NavLink to="/prayer-requests" className={navClass}>{t('nav.prayerRequests')}</NavLink>
         <NavLink to="/testimonies" className={navClass}>{t('nav.testimonies')}</NavLink>
+        <NavLink to="/fil" className={navClass}>{t('nav.feed')}</NavLink>
         <NavLink to="/communities" className={navClass}>{t('nav.communities')}</NavLink>
         <NavLink to="/campaigns" className={navClass}>{t('nav.campaigns')}</NavLink>
         <NavLink to="/events" className={navClass}>{t('nav.events')}</NavLink>

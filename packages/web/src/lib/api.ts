@@ -1184,3 +1184,53 @@ export const gamificationApi = {
       body: JSON.stringify({ optIn }),
     }),
 };
+
+// ---- Social network: feed, Amen, member profiles ----
+
+export interface MemberSummary {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export interface FeedPost {
+  id: string;
+  content: string;
+  createdAt: string;
+  edited: boolean;
+  author: MemberSummary;
+  community: { id: string; name: string } | null;
+  photos: string[];
+  amenCount: number;
+  amenedByMe: boolean;
+  commentCount: number;
+  mine: boolean;
+}
+
+export interface MemberProfile extends MemberSummary {
+  bio: string | null;
+  churchName: string | null;
+  city: string | null;
+  memberSince: string;
+  communities: { id: string; name: string; type: string }[];
+  postCount: number;
+  isMe: boolean;
+}
+
+export const socialApi = {
+  feed: (token: string, page = 1) =>
+    request<PaginatedResult<FeedPost>>(`/social/feed?page=${page}&limit=20`, { headers: authHeaders(token) }),
+  createPost: (token: string, data: { content?: string; photoFileIds?: string[]; communityId?: string }) =>
+    request<FeedPost>('/social/posts', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+  amen: (token: string, postId: string, amen: boolean) =>
+    request<{ amenCount: number; amenedByMe: boolean }>(`/social/posts/${postId}/amen`, {
+      method: amen ? 'POST' : 'DELETE',
+      headers: authHeaders(token),
+    }),
+  profile: (token: string, memberId: string) =>
+    request<MemberProfile>(`/social/members/${memberId}`, { headers: authHeaders(token) }),
+  memberPosts: (token: string, memberId: string, page = 1) =>
+    request<PaginatedResult<FeedPost>>(`/social/members/${memberId}/posts?page=${page}`, { headers: authHeaders(token) }),
+  updateMyProfile: (token: string, data: { bio?: string; churchName?: string; city?: string }) =>
+    request<MemberProfile>('/social/me/profile', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
+};

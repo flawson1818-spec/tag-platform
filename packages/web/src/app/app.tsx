@@ -32,6 +32,8 @@ import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
 import { HeaderNav } from './HeaderNav';
 import { HomePage } from './home/HomePage';
+import { FeedPage } from './social/FeedPage';
+import { MemberProfilePage } from './social/MemberProfilePage';
 
 export function App() {
   const { t } = useTranslation();
@@ -79,6 +81,22 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <SocialPublicationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fil"
+              element={
+                <ProtectedRoute>
+                  <FeedPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/membres/:id"
+              element={
+                <ProtectedRoute>
+                  <MemberProfilePage />
                 </ProtectedRoute>
               }
             />

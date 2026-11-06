@@ -8,6 +8,7 @@ import { ItemsModule } from '../items/items.module';
 import { AccessModule } from '../access/access.module';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { SocialModule } from '../social/social.module';
 import { RolesModule } from '../roles/roles.module';
 import { CommunitiesModule } from '../communities/communities.module';
 import { PostsModule } from '../posts/posts.module';
@@ -35,6 +36,7 @@ import { HealthController } from './health.controller';
     AccessModule,
     AuthModule,
     UsersModule,
+    SocialModule,
     RolesModule,
     CommunitiesModule,
     PostsModule,

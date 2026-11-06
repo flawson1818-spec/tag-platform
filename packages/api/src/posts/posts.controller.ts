@@ -30,7 +30,7 @@ export class PostsController {
     @Body() dto: CreatePostDto,
   ) {
     const post = await this.postsService.findPostById(id);
-    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id, post.community_id)).has(
+    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id, post.community_id ?? undefined)).has(
       COMMUNITY_MANAGE_PERMISSION,
     );
     return this.postsService.updatePost(id, currentUser.id, dto.content, canManage);
@@ -40,7 +40,7 @@ export class PostsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async archivePost(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     const post = await this.postsService.findPostById(id);
-    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id, post.community_id)).has(
+    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id, post.community_id ?? undefined)).has(
       COMMUNITY_MANAGE_PERMISSION,
     );
     return this.postsService.archivePost(id, currentUser.id, canManage);
@@ -78,7 +78,7 @@ export class PostsController {
     @Param('commentId', ParseUUIDPipe) commentId: string,
   ) {
     const post = await this.postsService.findPostById(postId);
-    const canModerate = (await this.permissionsService.getUserPermissionCodes(currentUser.id, post.community_id)).has(
+    const canModerate = (await this.permissionsService.getUserPermissionCodes(currentUser.id, post.community_id ?? undefined)).has(
       POST_MODERATE_PERMISSION,
     );
     return this.postsService.deleteComment(commentId, currentUser.id, canModerate);
