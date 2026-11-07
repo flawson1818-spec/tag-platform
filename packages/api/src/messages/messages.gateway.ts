@@ -3,6 +3,7 @@ import { OnGatewayConnection, WebSocketGateway, WebSocketServer } from '@nestjs/
 import { Server, Socket } from 'socket.io';
 import { TokenService } from '../access/token.service';
 import type { DirectMessage } from './messages.service';
+import { webOrigins } from '../common/web-origin';
 
 function userRoom(userId: string): string {
   return `user:${userId}`;
@@ -16,7 +17,7 @@ function userRoom(userId: string): string {
  *   dm:message  { message }          a new message in one of my conversations
  *   dm:read     { conversationId }   I read a conversation in another tab — clear its badge
  */
-@WebSocketGateway({ namespace: '/messages', cors: { origin: process.env.WEB_ORIGIN || 'http://localhost:4200' } })
+@WebSocketGateway({ namespace: '/messages', cors: { origin: webOrigins() } })
 export class MessagesGateway implements OnGatewayConnection {
   private readonly logger = new Logger(MessagesGateway.name);
 

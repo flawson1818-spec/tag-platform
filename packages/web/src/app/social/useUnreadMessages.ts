@@ -9,10 +9,7 @@ export function useUnreadMessages(enabled: boolean): number {
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
-    if (!enabled) {
-      setUnread(0);
-      return;
-    }
+    if (!enabled) return;
     let cancelled = false;
     const refresh = () => {
       const token = getAccessToken();
@@ -34,5 +31,5 @@ export function useUnreadMessages(enabled: boolean): number {
     };
   }, [enabled]);
 
-  return unread;
+  return enabled ? unread : 0;
 }

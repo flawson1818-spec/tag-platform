@@ -21,6 +21,7 @@ import { PrayerSlotsService } from './prayer-slots.service';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { fromRoomId, PRAYER_LEADER_ELIGIBLE_ROLES } from './prayer-constants';
 import { PrayerSlot } from './prayer-slot.entity';
+import { webOrigins } from '../common/web-origin';
 
 interface RoomJoinPayload {
   roomId: string;
@@ -150,7 +151,7 @@ export interface PendingRelay {
   deadline: number;
 }
 
-@WebSocketGateway({ namespace: '/realtime', cors: { origin: process.env.WEB_ORIGIN || 'http://localhost:4200' } })
+@WebSocketGateway({ namespace: '/realtime', cors: { origin: webOrigins() } })
 export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;

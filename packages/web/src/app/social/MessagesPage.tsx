@@ -31,7 +31,9 @@ export function MessagesPage() {
   const [live, setLive] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const currentIdRef = useRef<string | undefined>(id);
-  currentIdRef.current = id;
+  useEffect(() => {
+    currentIdRef.current = id;
+  }, [id]);
 
   const loadConversations = useCallback(() => {
     const token = getAccessToken();
@@ -50,12 +52,10 @@ export function MessagesPage() {
   // Open conversation: header, last 50 messages, mark as read.
   useEffect(() => {
     const token = getAccessToken();
-    setCurrent(null);
-    setMessages([]);
-    setError(null);
     if (!token || !id) return;
     Promise.all([messagesApi.conversation(token, id), messagesApi.messages(token, id)])
       .then(([conv, msgs]) => {
+        setError(null);
         setCurrent(conv);
         setMessages(msgs);
         setHasOlder(msgs.length >= 50);
@@ -173,6 +173,10 @@ export function MessagesPage() {
     }
   };
 
+  // Until the newly opened conversation has loaded, don't show the previous one.
+  const shown = current && current.id === id ? current : null;
+  const shownMessages = shown ? messages.filter((m) => m.conversationId === shown.id) : [];
+
   return (
     <section className={`dm-page${id ? ' has-thread' : ''}`}>
       <aside className="dm-list">
@@ -205,19 +209,19 @@ export function MessagesPage() {
 
       <div className="dm-thread">
         {!id && <p className="dm-placeholder">{t('messages.pick')}</p>}
-        {id && !current && !error && <p className="hint dm-placeholder">{t('posts.loading')}</p>}
-        {id && current && (
+        {id && !shown && !error && <p className="hint dm-placeholder">{t('posts.loading')}</p>}
+        {id && shown && (
           <>
             <div className="dm-thread-head">
               <button type="button" className="link-button dm-back" onClick={() => navigate('/messages')} aria-label={t('messages.back')}>
                 ←
               </button>
-              <Link to={`/membres/${current.peer.id}`} className="social-author">
-                <Avatar name={current.peer.displayName} url={current.peer.avatarUrl} size={36} />
-                <strong>{current.peer.displayName}</strong>
+              <Link to={`/membres/${shown.peer.id}`} className="social-author">
+                <Avatar name={shown.peer.displayName} url={shown.peer.avatarUrl} size={36} />
+                <strong>{shown.peer.displayName}</strong>
               </Link>
               <button type="button" className="link-button dm-block" onClick={toggleBlock}>
-                {current.blockedByMe ? t('messages.unblock') : t('messages.block')}
+                {shown.blockedByMe ? t('messages.unblock') : t('messages.block')}
               </button>
             </div>
 
@@ -227,10 +231,10 @@ export function MessagesPage() {
                   {t('messages.older')}
                 </button>
               )}
-              {messages.length === 0 && <p className="hint dm-placeholder">{t('messages.firstMessage', { name: current.peer.displayName })}</p>}
-              {messages.map((m, i) => {
+              {shownMessages.length === 0 && <p className="hint dm-placeholder">{t('messages.firstMessage', { name: shown.peer.displayName })}</p>}
+              {shownMessages.map((m, i) => {
                 const mine = m.senderId === user?.id;
-                const newDay = i === 0 || !sameDay(messages[i - 1].createdAt, m.createdAt);
+                const newDay = i === 0 || !sameDay(shownMessages[i - 1].createdAt, m.createdAt);
                 return (
                   <div key={m.id}>
                     {newDay && (
@@ -250,8 +254,8 @@ export function MessagesPage() {
               <div ref={bottomRef} />
             </div>
 
-            {current.blocked ? (
-              <p className="dm-blocked">{current.blockedByMe ? t('messages.youBlocked') : t('messages.cannotWrite')}</p>
+            {shown.blocked ? (
+              <p className="dm-blocked">{shown.blockedByMe ? t('messages.youBlocked') : t('messages.cannotWrite')}</p>
             ) : (
               <form className="dm-composer" onSubmit={send}>
                 <textarea
@@ -294,7 +298,7 @@ export function MessageMemberButton({ memberId }: { memberId: string }) {
   return (
     <>
       <button type="button" onClick={open}>
-        ✉️ {t('messages.write')}
+        <span aria-hidden="true">✉️</span> {t('messages.write')}
       </button>
       {error && <p className="error">{error}</p>}
     </>

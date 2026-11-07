@@ -18,8 +18,8 @@ services:
       # which can hang or error the build. Disabling it makes every build a clean one-shot run.
       - key: NX_DAEMON
         value: "false"
-      # Set this to the deployed frontend's real origin (e.g. https://dist-pi-lovat-44.vercel.app)
-      # once known — it's the CORS allow-list, see packages/api/src/main.ts.
+      # The deployed site's address(es), e.g. https://tour-avant-garde.vercel.app — the CORS
+      # allow-list (several separated by commas), see packages/api/src/main.ts.
       - key: WEB_ORIGIN
         sync: false
       - key: SUPABASE_URL
@@ -38,6 +38,14 @@ services:
         sync: false
       - key: VAPID_SUBJECT
         value: mailto:admin@example.com
+      # E-mails (vérification, mot de passe oublié, codes) via Brevo — gratuit jusqu'à 300/jour.
+      # Sans ces deux valeurs, les e-mails sont seulement enregistrés, pas envoyés.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: "Tour d'avant-garde"
       # Optional — SMS one-time codes for MFA (Twilio). Leave unset and the login screen simply
       # doesn't offer SMS. Set either TWILIO_FROM_NUMBER (E.164, e.g. +15005550006) or
       # TWILIO_MESSAGING_SERVICE_SID (recommended for international sending).

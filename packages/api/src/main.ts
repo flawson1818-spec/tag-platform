@@ -8,6 +8,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app/app.module';
+import { webOrigins } from './common/web-origin';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,7 +28,7 @@ async function bootstrap() {
       },
     }),
   );
-  app.enableCors({ origin: process.env.WEB_ORIGIN || 'http://localhost:4200' });
+  app.enableCors({ origin: webOrigins() });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
   );

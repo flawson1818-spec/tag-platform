@@ -22,12 +22,10 @@ export function MemberProfilePage() {
   useEffect(() => {
     const token = getAccessToken();
     if (!token || !id) return;
-    setProfile(null);
-    setPosts([]);
-    setError(null);
     socialApi
       .profile(token, id)
       .then((p) => {
+        setError(null);
         setProfile(p);
         setForm({ bio: p.bio ?? '', churchName: p.churchName ?? '', city: p.city ?? '' });
       })
@@ -61,7 +59,8 @@ export function MemberProfilePage() {
   };
 
   if (error && !profile) return <p className="error">{error}</p>;
-  if (!profile) return <p className="hint">{t('posts.loading')}</p>;
+  // Another member's page was showing until this one loads.
+  if (!profile || profile.id !== id) return <p className="hint">{t('posts.loading')}</p>;
 
   const since = new Date(profile.memberSince).toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' });
 

@@ -20,7 +20,6 @@ export function FeedPage() {
   const load = useCallback((p: number) => {
     const token = getAccessToken();
     if (!token) return;
-    setLoading(true);
     socialApi
       .feed(token, p)
       .then((res) => {
@@ -66,7 +65,10 @@ export function FeedPage() {
       {!loading && posts.length === 0 && !error && <p className="social-empty">{t('social.empty')}</p>}
       {loading && <p className="hint">{t('posts.loading')}</p>}
       {hasMore && !loading && (
-        <button type="button" className="social-more" onClick={() => load(page + 1)}>
+        <button type="button" className="social-more" onClick={() => {
+            setLoading(true);
+            load(page + 1);
+          }}>
           {t('social.loadMore')}
         </button>
       )}

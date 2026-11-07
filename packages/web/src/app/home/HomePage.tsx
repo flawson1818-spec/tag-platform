@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +28,7 @@ function formatSchedule(iso: string): string {
   });
 }
 
-function testimonyExcerpt(testimony: PublicTestimony, t: (key: string, opts?: object) => string): string {
+function testimonyExcerpt(testimony: PublicTestimony, t: TFunction): string {
   if (testimony.content) return testimony.content;
   const type = t(`home.mediaType.${testimony.media_type ?? 'TEXT'}`);
   return t('home.testimonyExcerpt', { type });

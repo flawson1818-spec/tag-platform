@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install --include=dev",
+  "buildCommand": "NX_DAEMON=false npx nx build web --skip-nx-cache",
+  "outputDirectory": "packages/web/dist",
+  "framework": null,
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

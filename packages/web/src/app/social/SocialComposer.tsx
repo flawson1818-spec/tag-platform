@@ -98,7 +98,7 @@ export function SocialComposer({ communities, onPublished }: Props) {
 
       <div className="social-composer-bar">
         <label className={`social-photo-pick${photos.length >= MAX_PHOTOS ? ' is-disabled' : ''}`}>
-          📷 {t('social.addPhotos')}
+          <span aria-hidden="true">📷</span> {t('social.addPhotos')}
           <input type="file" accept="image/*" multiple onChange={addPhotos} disabled={busy || photos.length >= MAX_PHOTOS} hidden />
         </label>
         {communities.length > 0 && (

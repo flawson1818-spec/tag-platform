@@ -116,11 +116,11 @@ export function SocialPostCard({ post }: { post: FeedPost }) {
 
       <div className="social-post-actions">
         <button type="button" className={`social-amen${amen.mine ? ' is-on' : ''}`} onClick={toggleAmen} aria-pressed={amen.mine}>
-          🙏 {t('social.amen')}
+          <span aria-hidden="true">🙏</span> {t('social.amen')}
           {amen.count > 0 && <span className="social-count">{amen.count}</span>}
         </button>
         <button type="button" className="social-action" onClick={toggleComments} aria-expanded={open}>
-          💬 {t('social.comments', { count: commentCount })}
+          <span aria-hidden="true">💬</span> {t('social.comments', { count: commentCount })}
         </button>
       </div>
 
