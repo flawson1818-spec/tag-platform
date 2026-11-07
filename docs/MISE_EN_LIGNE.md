@@ -40,7 +40,7 @@ Puis, dans **Project Settings → API**, noter :
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | facultatif : notifications sur téléphone |
 | `TWILIO_*` | facultatif : codes de connexion par SMS |
 
-Vérification : `https://tag-platform-api.onrender.com/api/health` répond `{"status":"ok"…}`.
+Vérification : `https://tag-platform-api-7rdk.onrender.com/api/health` répond `{"status":"ok"…}`.
 Si Render a donné une autre adresse, la reporter dans Vercel (étape 3).
 
 Plan gratuit : le serveur s'endort après 15 minutes sans visite ; la première visite suivante
