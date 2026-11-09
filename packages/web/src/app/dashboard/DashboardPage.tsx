@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
+import { useAccess } from '../auth/AccessContext';
+import { ADMIN_SECTIONS } from '../admin/adminSections';
 
 const QUICK_LINK_KEYS = [
   { to: '/room', key: 'room' },
@@ -10,15 +12,6 @@ const QUICK_LINK_KEYS = [
   { to: '/world-map', key: 'worldMap' },
 ];
 
-const MANAGEMENT_LINK_KEYS = [
-  { to: '/programs', key: 'programs' },
-  { to: '/room/moderate', key: 'moderateRoom' },
-  { to: '/social-publications', key: 'socialPublications' },
-  { to: '/admin/moderation', key: 'moderationQueue' },
-  { to: '/admin/users', key: 'adminUsers' },
-  { to: '/admin/analytics', key: 'adminAnalytics' },
-  { to: '/admin/system', key: 'adminSystem' },
-];
 
 const SECURITY_LINK_KEYS = [
   { to: '/security/mfa', key: 'mfa' },
@@ -28,6 +21,8 @@ const SECURITY_LINK_KEYS = [
 export function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { canAny } = useAccess();
+  const adminSections = ADMIN_SECTIONS.filter((section) => canAny(section.permissions));
 
   if (!user) return null;
 
@@ -62,16 +57,26 @@ export function DashboardPage() {
         ))}
       </div>
 
-      <h3>{t('dashboard.managementTitle')}</h3>
-      <p className="hint">{t('dashboard.managementIntro')}</p>
-      <div className="quick-links">
-        {MANAGEMENT_LINK_KEYS.map((link) => (
-          <Link key={link.to} to={link.to} className="quick-link-card quick-link-card-muted">
-            <strong>{t(`dashboard.links.${link.key}.label`)}</strong>
-            <span>{t(`dashboard.links.${link.key}.description`)}</span>
+      {adminSections.length > 0 && (
+        <>
+          <h3>{t('dashboard.managementTitle')}</h3>
+          <Link to="/admin" className="admin-entry">
+            <span aria-hidden="true">🛡️</span>
+            <span>
+              <strong>{t('admin.title')}</strong>
+              <span className="hint">{t('dashboard.adminEntry')}</span>
+            </span>
           </Link>
-        ))}
-      </div>
+          <div className="quick-links">
+            {adminSections.map((section) => (
+              <Link key={section.to} to={section.to} className="quick-link-card">
+                <strong>{t(`admin.sections.${section.key}.label`)}</strong>
+                <span>{t(`admin.sections.${section.key}.description`)}</span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
 
       <h3>{t('dashboard.securityTitle')}</h3>
       <div className="quick-links">

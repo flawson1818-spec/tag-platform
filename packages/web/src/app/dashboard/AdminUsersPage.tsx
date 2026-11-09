@@ -1,130 +1,185 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAccessToken } from '../auth/AuthContext';
-import { AuthUser, ROLE_HIERARCHY, rolesApi, usersApi } from '../../lib/api';
+import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { useAccess } from '../auth/AccessContext';
+import { AdminUser, ROLE_HIERARCHY, rolesApi, usersApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
-import i18n from '../../i18n/config';
 
+type Status = 'ACTIVE' | 'LOCKED' | 'SUSPENDED';
+/** The role most often given: someone who joins the prayer watch. */
+const DEFAULT_ROLE = 'INTERCESSEUR';
+const rank = (code: string) => ROLE_HIERARCHY.indexOf(code as (typeof ROLE_HIERARCHY)[number]);
+
+/** Members and roles: find a member, see their roles, give or take away a role, change their status. */
 export function AdminUsersPage() {
   const { t } = useTranslation();
-  const [users, setUsers] = useState<AuthUser[]>([]);
-  const [loading, setLoading] = useState(() => Boolean(getAccessToken()));
-  const [error, setError] = useState<string | null>(() =>
-    getAccessToken() ? null : i18n.t('adminUsers.needLogin'),
-  );
+  const { user: me } = useAuth();
+  const { roles: myRoles, can } = useAccess();
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [roleCode, setRoleCode] = useState<string>(ROLE_HIERARCHY[0]);
-  const [targetUserId, setTargetUserId] = useState('');
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const [picked, setPicked] = useState<Record<string, string>>({});
 
-  const refresh = () => {
+  // Same rule as the server: up to Pasteur, up to Administrateur for a Super Administrateur.
+  const maxRank = myRoles.includes('SUPER_ADMINISTRATEUR') ? rank('ADMINISTRATEUR') : rank('PASTEUR');
+  const assignable = ROLE_HIERARCHY.filter((r) => rank(r) <= maxRank);
+  const canAssign = can('role.assign');
+  const canManage = can('user.manage');
+
+  const load = useCallback(() => {
     const token = getAccessToken();
     if (!token) return;
-    setLoading(true);
     usersApi
-      .list(token, page)
+      .list(token, page, undefined, query || undefined)
       .then((res) => {
         setUsers(res.data);
         setTotalPages(res.meta.totalPages);
+        setError(null);
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setLoading(false));
+  }, [page, query]);
+
+  useEffect(load, [load]);
+
+  const onSearch = (e: FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    setLoading(true);
+    setQuery(search.trim());
   };
 
-  useEffect(refresh, [page]);
+  const run = async (action: () => Promise<unknown>, done: string) => {
+    setError(null);
+    setNotice(null);
+    try {
+      await action();
+      setNotice(done);
+      load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
 
-  const handleStatusChange = (id: string, status: 'ACTIVE' | 'LOCKED' | 'SUSPENDED') => {
+  const addRole = (u: AdminUser) => {
+    const token = getAccessToken();
+    const role = picked[u.id] ?? DEFAULT_ROLE;
+    if (!token || !role) return;
+    void run(() => rolesApi.assign(token, u.id, role), t('adminUsers.roleGiven', { role: t(`roles.${role}`), name: u.display_name }));
+  };
+
+  const removeRole = (u: AdminUser, role: string) => {
     const token = getAccessToken();
     if (!token) return;
-    setActionError(null);
-    usersApi
-      .updateStatus(token, id, status)
-      .then(refresh)
-      .catch((err) => setActionError((err as Error).message));
+    if (!window.confirm(t('adminUsers.confirmRemove', { role: t(`roles.${role}`), name: u.display_name }))) return;
+    void run(() => rolesApi.revoke(token, u.id, role), t('adminUsers.roleRemoved', { role: t(`roles.${role}`), name: u.display_name }));
   };
 
-  const handleAssignRole = (e: FormEvent) => {
-    e.preventDefault();
+  const setStatus = (u: AdminUser, status: Status) => {
     const token = getAccessToken();
-    if (!token || !targetUserId) return;
-    setActionError(null);
-    rolesApi
-      .assign(token, targetUserId, roleCode)
-      .then(refresh)
-      .catch((err) => setActionError((err as Error).message));
-  };
-
-  const handleRevokeRole = () => {
-    const token = getAccessToken();
-    if (!token || !targetUserId) return;
-    setActionError(null);
-    rolesApi
-      .revoke(token, targetUserId, roleCode)
-      .then(refresh)
-      .catch((err) => setActionError((err as Error).message));
+    if (!token) return;
+    void run(() => usersApi.updateStatus(token, u.id, status), t('adminUsers.statusChanged', { name: u.display_name }));
   };
 
   return (
-    <div className="communities-page">
+    <section className="admin-users">
       <h2>{t('adminUsers.title')}</h2>
-      <p className="hint">
-        {t('adminUsers.introPrefix')} <code>user.manage</code> {t('adminUsers.introMiddle')}{' '}
-        <code>role.assign</code> {t('adminUsers.introSuffix')}
-      </p>
+      <p className="hint">{t('adminUsers.intro')}</p>
 
-      <form onSubmit={handleAssignRole} className="request-form">
+      <form className="admin-search" onSubmit={onSearch} role="search">
         <input
-          type="text"
-          placeholder={t('adminUsers.userIdPlaceholder')}
-          value={targetUserId}
-          onChange={(e) => setTargetUserId(e.target.value)}
-          required
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('adminUsers.searchPlaceholder')}
+          aria-label={t('adminUsers.searchPlaceholder')}
         />
-        <select value={roleCode} onChange={(e) => setRoleCode(e.target.value)}>
-          {ROLE_HIERARCHY.map((r) => (
-            <option key={r} value={r}>
-              {t(`roles.${r}`, r)}
-            </option>
-          ))}
-        </select>
-        <button type="submit">{t('adminUsers.assign')}</button>
-        <button type="button" onClick={handleRevokeRole}>
-          {t('adminUsers.revoke')}
-        </button>
+        <button type="submit">{t('adminUsers.search')}</button>
       </form>
-      {actionError && <p className="error">{actionError}</p>}
 
-      {loading && <p>{t('adminUsers.loading')}</p>}
+      {notice && <p className="admin-notice">{notice}</p>}
       {error && <p className="error">{error}</p>}
+      {loading && <p className="hint">{t('adminUsers.loading')}</p>}
 
-      <ul className="request-list">
-        {users.map((u) => (
-          <li key={u.id} className="request-row">
-            <div className="request-meta">
-              <span className="chip">{t(`userStatuses.${u.status}`, u.status)}</span>
-              <span className="hint">{u.id}</span>
-            </div>
-            <p>
-              <strong>{u.display_name}</strong> — {u.email}
-            </p>
-            <div className="request-form">
-              <button onClick={() => handleStatusChange(u.id, 'ACTIVE')} disabled={u.status === 'ACTIVE'}>
-                {t('adminUsers.activate')}
-              </button>
-              <button onClick={() => handleStatusChange(u.id, 'LOCKED')} disabled={u.status === 'LOCKED'}>
-                {t('adminUsers.lock')}
-              </button>
-              <button onClick={() => handleStatusChange(u.id, 'SUSPENDED')} disabled={u.status === 'SUSPENDED'}>
-                {t('adminUsers.suspend')}
-              </button>
-            </div>
-          </li>
-        ))}
+      <ul className="admin-member-list">
+        {users.map((u) => {
+          const isMe = u.id === me?.id;
+          const roles = [...(u.roles ?? [])].sort((a, b) => rank(b) - rank(a));
+          return (
+            <li key={u.id} className="admin-member">
+              <div className="admin-member-head">
+                <div>
+                  <strong>{u.display_name}</strong>
+                  {isMe && <span className="hint"> · {t('adminUsers.you')}</span>}
+                  <div className="hint">{u.email}</div>
+                </div>
+                <span className={`chip admin-status admin-status-${u.status.toLowerCase()}`}>
+                  {t(`userStatuses.${u.status}`, u.status)}
+                </span>
+              </div>
+
+              <div className="admin-roles">
+                {roles.length === 0 && <span className="hint">{t('adminUsers.noRole')}</span>}
+                {roles.map((role) => {
+                  const removable = canAssign && rank(role) <= maxRank && !(isMe && rank(role) >= rank('ADMINISTRATEUR'));
+                  return (
+                    <span key={role} className={`admin-role-chip${rank(role) >= rank('ADMINISTRATEUR') ? ' is-high' : ''}`}>
+                      {t(`roles.${role}`, role)}
+                      {removable && (
+                        <button
+                          type="button"
+                          onClick={() => removeRole(u, role)}
+                          aria-label={t('adminUsers.removeRole', { role: t(`roles.${role}`) })}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+
+              <div className="admin-member-actions">
+                {canAssign && (
+                  <span className="admin-add-role">
+                    <select
+                      value={picked[u.id] ?? DEFAULT_ROLE}
+                      onChange={(e) => setPicked({ ...picked, [u.id]: e.target.value })}
+                      aria-label={t('adminUsers.roleToGive', { name: u.display_name })}
+                    >
+                      {assignable.map((r) => (
+                        <option key={r} value={r}>
+                          {t(`roles.${r}`, r)}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={() => addRole(u)}>
+                      {t('adminUsers.give')}
+                    </button>
+                  </span>
+                )}
+                {canManage && !isMe && (
+                  <span className="admin-status-actions">
+                    {(['ACTIVE', 'LOCKED', 'SUSPENDED'] as Status[]).map((s) => (
+                      <button key={s} type="button" className="admin-status-button" disabled={u.status === s} onClick={() => setStatus(u, s)}>
+                        {t(`adminUsers.status.${s}`)}
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
       {!loading && users.length === 0 && !error && <p className="hint">{t('adminUsers.noUsers')}</p>}
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-    </div>
+    </section>
   );
 }
 

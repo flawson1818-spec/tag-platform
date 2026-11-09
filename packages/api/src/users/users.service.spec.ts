@@ -168,4 +168,48 @@ describe('UsersService', () => {
       expect(chain.update).toHaveBeenCalledWith({ mfa_enabled: false, mfa_secret: null });
     });
   });
+
+  describe('list for administrators', () => {
+    it('searches by name or e-mail and returns each member with their platform-wide roles', async () => {
+      const users = createQueryChain({ data: [USER_ROW], error: null, count: 1 });
+      const roles = createQueryChain({
+        data: [
+          { user_id: 'user-1', roles: { code: 'VISITEUR' } },
+          { user_id: 'user-1', roles: { code: 'MODERATEUR' } },
+        ],
+        error: null,
+      });
+      const supabase = createSupabaseServiceMock({ users, role_assignments: roles });
+      const { service } = buildDeps({ supabase });
+
+      const page = await service.list({ page: 1, limit: 20, search: 'beli,ever)' } as never);
+
+      expect(users.or).toHaveBeenCalledWith('display_name.ilike.%believer%,email.ilike.%believer%');
+      expect(roles.is).toHaveBeenCalledWith('community_id', null);
+      expect(page.data[0].roles).toEqual(['VISITEUR', 'MODERATEUR']);
+      expect(JSON.stringify(page.data[0])).not.toContain('hashed');
+    });
+  });
+
+  describe('adminOverview', () => {
+    it('counts each figure independently, 0 for a table that does not exist yet', async () => {
+      const supabase = createSupabaseServiceMock({
+        users: createQueryChain({ data: null, error: null, count: 12 }),
+        prayer_requests: createQueryChain({ data: null, error: null, count: 3 }),
+        prayer_programs: createQueryChain({ data: null, error: null, count: 1 }),
+        posts: createQueryChain({ data: null, error: { message: 'missing', code: '42P01' }, count: null }),
+        testimonies: createQueryChain({ data: null, error: null, count: 2 }),
+      });
+      const { service } = buildDeps({ supabase });
+
+      await expect(service.adminOverview()).resolves.toEqual({
+        members: 12,
+        newMembers: 12,
+        newRequests: 3,
+        activePrograms: 1,
+        postsThisWeek: 0,
+        testimoniesThisWeek: 2,
+      });
+    });
+  });
 });

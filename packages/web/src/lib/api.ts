@@ -799,7 +799,26 @@ export const filesApi = {
   },
 };
 
+/** A member as the administration sees them, with their platform-wide roles. */
+export type AdminUser = AuthUser & { roles?: string[] };
+
+export interface MyAccess {
+  roles: string[];
+  permissions: string[];
+}
+
+export interface AdminOverview {
+  members: number;
+  newMembers: number;
+  newRequests: number;
+  activePrograms: number;
+  postsThisWeek: number;
+  testimoniesThisWeek: number;
+}
+
 export const usersApi = {
+  myAccess: (token: string) => request<MyAccess>('/users/me/access', { headers: authHeaders(token) }),
+  adminOverview: (token: string) => request<AdminOverview>('/users/admin/overview', { headers: authHeaders(token) }),
   updateMe: (
     token: string,
     data: { displayName?: string; phone?: string; locale?: string; timezone?: string; avatarFileId?: string },
@@ -808,9 +827,9 @@ export const usersApi = {
   deleteMe: (token: string) => request<void>('/users/me', { method: 'DELETE', headers: authHeaders(token) }),
   deleteMyAiHistory: (token: string) =>
     request<void>('/users/me/ai-history', { method: 'DELETE', headers: authHeaders(token) }),
-  list: (token: string, page = 1, status?: string) =>
-    request<PaginatedResult<AuthUser>>(
-      `/users?page=${page}&limit=20${status ? `&status=${status}` : ''}`,
+  list: (token: string, page = 1, status?: string, search?: string) =>
+    request<PaginatedResult<AdminUser>>(
+      `/users?page=${page}&limit=20${status ? `&status=${status}` : ''}${search ? `&search=${encodeURIComponent(search)}` : ''}`,
       { headers: authHeaders(token) },
     ),
   updateStatus: (token: string, id: string, status: 'ACTIVE' | 'LOCKED' | 'SUSPENDED') =>

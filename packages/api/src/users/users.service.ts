@@ -212,7 +212,7 @@ export class UsersService {
     await this.auditLogService.record(userId, 'USER_SELF_DELETED', 'user', userId);
   }
 
-  async list(query: ListUsersQueryDto): Promise<PaginatedResult<UserResponseDto>> {
+  async list(query: ListUsersQueryDto): Promise<PaginatedResult<UserResponseDto & { roles: string[] }>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const { from, to } = paginationRange(page, limit);
@@ -225,13 +225,62 @@ export class UsersService {
     if (query.status) {
       request = request.eq('status', query.status);
     }
+    if (query.search) {
+      // PostgREST's or() is comma-separated: keep only characters that can't break the filter.
+      const term = query.search.replace(/[^\p{L}\p{N}@._\- ]/gu, '').trim();
+      if (term) request = request.or(`display_name.ilike.%${term}%,email.ilike.%${term}%`);
+    }
 
     const { data, error, count } = await request;
     if (error) throw new InternalServerErrorException(error.message);
+    const users = data as unknown as User[];
+    const roles = await this.globalRolesOf(users.map((u) => u.id));
 
     return {
-      data: (data as unknown as User[]).map(toUserResponse),
+      data: users.map((u) => ({ ...toUserResponse(u), roles: roles.get(u.id) ?? [] })),
       meta: buildPaginationMeta(page, limit, count ?? 0),
     };
+  }
+
+  /**
+   * Counts for the administration home page. Each figure is independent: a table that doesn't
+   * exist yet (migration not run) counts as 0 instead of failing the whole page.
+   */
+  async adminOverview(): Promise<Record<string, number>> {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- a filter chain over any table
+    type Filter = (q: any) => PromiseLike<{ count: number | null; error: unknown }>;
+    const count = async (table: string, filter: Filter): Promise<number> => {
+      const { count: n, error } = await filter(this.supabase.client.from(table).select('id', { count: 'exact', head: true }));
+      return error ? 0 : (n ?? 0);
+    };
+    const [members, newMembers, newRequests, activePrograms, postsThisWeek, testimoniesThisWeek] = await Promise.all([
+      count('users', (q) => q.is('deleted_at', null).eq('status', 'ACTIVE')),
+      count('users', (q) => q.is('deleted_at', null).gte('created_at', weekAgo)),
+      count('prayer_requests', (q) => q.eq('status', 'NEW')),
+      count('prayer_programs', (q) => q.eq('status', 'ACTIVE')),
+      count('posts', (q) => q.is('deleted_at', null).gte('created_at', weekAgo)),
+      count('testimonies', (q) => q.gte('created_at', weekAgo)),
+    ]);
+    return { members, newMembers, newRequests, activePrograms, postsThisWeek, testimoniesThisWeek };
+  }
+
+  /** Platform-wide role codes (not community-scoped) of a page of users, in one query. */
+  private async globalRolesOf(userIds: string[]): Promise<Map<string, string[]>> {
+    const out = new Map<string, string[]>();
+    if (userIds.length === 0) return out;
+    const { data, error } = await this.supabase.client
+      .from('role_assignments')
+      .select('user_id, roles(code)')
+      .in('user_id', userIds)
+      .is('community_id', null);
+    if (error) throw new InternalServerErrorException(error.message);
+    for (const row of (data ?? []) as unknown as { user_id: string; roles: { code: string } | null }[]) {
+      if (!row.roles) continue;
+      const list = out.get(row.user_id) ?? [];
+      if (!list.includes(row.roles.code)) list.push(row.roles.code);
+      out.set(row.user_id, list);
+    }
+    return out;
   }
 }

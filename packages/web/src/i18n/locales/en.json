@@ -12,6 +12,7 @@
     "communities": "Communities",
     "feed": "Feed",
     "messages": "Messages",
+    "admin": "Administration",
     "campaigns": "Campaigns",
     "events": "Events",
     "aiWelcome": "AI Welcome",
@@ -431,21 +432,64 @@
     "managementIntro": "Available depending on your role — a denied access here just means your account doesn't have the required permission yet.",
     "securityTitle": "Security",
     "links": {
-      "room": { "label": "Prayer room", "description": "Join the live prayer" },
-      "prayerRequests": { "label": "Prayer requests", "description": "Submit or browse a request" },
-      "testimonies": { "label": "Testimonies", "description": "Share or moderate a testimony" },
-      "communities": { "label": "Communities", "description": "Join a cell, a team, a church" },
-      "worldMap": { "label": "World map", "description": "See prayer happening across the world" },
-      "programs": { "label": "Prayer programs", "description": "Create and schedule slots" },
-      "moderateRoom": { "label": "Manage intercessors", "description": "Assign a leader to each section" },
-      "socialPublications": { "label": "Social media drafts", "description": "Approve generated posts" },
-      "moderationQueue": { "label": "Flagged content", "description": "Testimonies and requests flagged by the AI Moderator" },
-      "adminUsers": { "label": "Users & roles", "description": "Account status, role assignment" },
-      "adminAnalytics": { "label": "Dashboard", "description": "Growth, attendance, retention, export" },
-      "adminSystem": { "label": "System", "description": "Health, backups, audit logs" },
-      "mfa": { "label": "Two-step verification", "description": "Protect the account with a one-time code" },
-      "profile": { "label": "My profile", "description": "Name, phone, language, time zone" }
-    }
+      "room": {
+        "label": "Prayer room",
+        "description": "Join the live prayer"
+      },
+      "prayerRequests": {
+        "label": "Prayer requests",
+        "description": "Submit or browse a request"
+      },
+      "testimonies": {
+        "label": "Testimonies",
+        "description": "Share or moderate a testimony"
+      },
+      "communities": {
+        "label": "Communities",
+        "description": "Join a cell, a team, a church"
+      },
+      "worldMap": {
+        "label": "World map",
+        "description": "See prayer happening across the world"
+      },
+      "programs": {
+        "label": "Prayer programs",
+        "description": "Create and schedule slots"
+      },
+      "moderateRoom": {
+        "label": "Manage intercessors",
+        "description": "Assign a leader to each section"
+      },
+      "socialPublications": {
+        "label": "Social media drafts",
+        "description": "Approve generated posts"
+      },
+      "moderationQueue": {
+        "label": "Flagged content",
+        "description": "Testimonies and requests flagged by the AI Moderator"
+      },
+      "adminUsers": {
+        "label": "Users & roles",
+        "description": "Account status, role assignment"
+      },
+      "adminAnalytics": {
+        "label": "Dashboard",
+        "description": "Growth, attendance, retention, export"
+      },
+      "adminSystem": {
+        "label": "System",
+        "description": "Health, backups, audit logs"
+      },
+      "mfa": {
+        "label": "Two-step verification",
+        "description": "Protect the account with a one-time code"
+      },
+      "profile": {
+        "label": "My profile",
+        "description": "Name, phone, language, time zone"
+      }
+    },
+    "adminEntry": "Your control space: members, roles, prayer, moderation."
   },
   "moderation": {
     "title": "Flagged content",
@@ -656,7 +700,7 @@
     "cancel": "Cancel"
   },
   "adminUsers": {
-    "title": "User management",
+    "title": "Members and roles",
     "introPrefix": "Reserved for accounts with the",
     "introMiddle": "permission (list, status) and",
     "introSuffix": "(roles, up to and including Pastor).",
@@ -668,7 +712,24 @@
     "activate": "Activate",
     "lock": "Lock",
     "suspend": "Suspend",
-    "needLogin": "Log in to manage users."
+    "needLogin": "Log in to manage users.",
+    "intro": "Search a member by name or e-mail. Click × to remove a role; pick a role then “Give” to add one.",
+    "searchPlaceholder": "Name or e-mail address",
+    "search": "Search",
+    "you": "you",
+    "noRole": "No role",
+    "give": "Give",
+    "roleToGive": "Role to give to {{name}}",
+    "removeRole": "Remove the {{role}} role",
+    "confirmRemove": "Remove the “{{role}}” role from {{name}}?",
+    "roleGiven": "{{name}} is now {{role}}.",
+    "roleRemoved": "The {{role}} role was removed from {{name}}.",
+    "statusChanged": "{{name}}'s status was updated.",
+    "status": {
+      "ACTIVE": "Activate",
+      "LOCKED": "Lock",
+      "SUSPENDED": "Suspend"
+    }
   },
   "roles": {
     "VISITEUR": "Visitor",
@@ -942,5 +1003,55 @@
     "write": "Send a message",
     "unreadCount_one": "{{count}} unread message",
     "unreadCount_other": "{{count}} unread messages"
+  },
+  "admin": {
+    "eyebrow": "Restricted area",
+    "title": "Administration",
+    "intro": "Welcome {{name}}. Here is everything your role lets you lead.",
+    "deniedTitle": "Restricted access",
+    "deniedText": "This page is for leaders holding the required role. If you need it, ask an administrator.",
+    "backToDashboard": "Back to my dashboard",
+    "figures": {
+      "members": "active members",
+      "newMembers": "new (7 days)",
+      "newRequests": "prayer requests to handle",
+      "activePrograms": "active prayer programs",
+      "postsThisWeek": "posts (7 days)",
+      "testimoniesThisWeek": "testimonies (7 days)"
+    },
+    "sections": {
+      "members": {
+        "label": "Members and roles",
+        "description": "Find a member, give or remove a role, suspend an account"
+      },
+      "programs": {
+        "label": "Programs and slots",
+        "description": "Write the slots ahead with their verses"
+      },
+      "room": {
+        "label": "Prayer room",
+        "description": "Lead the room, give the floor, start the relay"
+      },
+      "moderation": {
+        "label": "Moderation",
+        "description": "Flagged testimonies and requests to review"
+      },
+      "publications": {
+        "label": "Official publications",
+        "description": "Approve what goes out on social media"
+      },
+      "campaigns": {
+        "label": "Campaigns",
+        "description": "Organise prayer campaigns"
+      },
+      "analytics": {
+        "label": "Statistics",
+        "description": "Growth, prayer hours, most carried topics"
+      },
+      "system": {
+        "label": "System",
+        "description": "Server health and backups"
+      }
+    }
   }
 }

@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { PermissionsService } from '../access/permissions.service';
 import { AuditLogService } from '../administration/audit-log.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AssignRoleDto } from './dto/assign-role.dto';
@@ -16,7 +17,28 @@ export class RolesService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly auditLogService: AuditLogService,
+    private readonly permissionsService: PermissionsService,
   ) {}
+
+  /**
+   * The highest role an actor may give or take away (docs/06_RBAC_SPECIFICATION.md §3): up to
+   * Pasteur for anyone holding role.assign, up to Administrateur for a Super Administrateur.
+   * Super Administrateur itself is never handed out or removed through the site.
+   */
+  private async maxManageableRank(actorId: string): Promise<number> {
+    const actorRoles = await this.permissionsService.getUserRoleCodes(actorId, { globalOnly: true });
+    return actorRoles.has('SUPER_ADMINISTRATEUR') ? roleRank('ADMINISTRATEUR') : roleRank(MAX_ASSIGNABLE_ROLE);
+  }
+
+  private async assertCanManage(roleCode: string, actorId: string, targetUserId: string): Promise<void> {
+    if (roleRank(roleCode) < 0) throw new NotFoundException(`Role ${roleCode} not found`);
+    if (targetUserId === actorId && roleRank(roleCode) >= roleRank('ADMINISTRATEUR')) {
+      throw new ForbiddenException('Tu ne peux pas modifier ton propre rôle d\u2019administration.');
+    }
+    if (roleRank(roleCode) > (await this.maxManageableRank(actorId))) {
+      throw new ForbiddenException('Ce rôle est au-dessus de ce que tu peux attribuer ou retirer.');
+    }
+  }
 
   async list(): Promise<Role[]> {
     const { data, error } = await this.supabase.client
@@ -28,10 +50,19 @@ export class RolesService {
   }
 
   async assign(dto: AssignRoleDto, actorId: string): Promise<void> {
-    if (roleRank(dto.roleCode) > roleRank(MAX_ASSIGNABLE_ROLE)) {
-      throw new ForbiddenException(`Roles above ${MAX_ASSIGNABLE_ROLE} cannot be assigned via this endpoint`);
-    }
+    await this.assertCanManage(dto.roleCode, actorId, dto.userId);
     const role = await this.getRoleByCode(dto.roleCode);
+
+    // The unique constraint can't catch duplicates when community_id is null (NULLs differ).
+    let existing = this.supabase.client
+      .from('role_assignments')
+      .select('id')
+      .eq('user_id', dto.userId)
+      .eq('role_id', role.id);
+    existing = dto.communityId ? existing.eq('community_id', dto.communityId) : existing.is('community_id', null);
+    const { data: found, error: findError } = await existing.limit(1);
+    if (findError) throw new InternalServerErrorException(findError.message);
+    if ((found ?? []).length > 0) return;
 
     const { error } = await this.supabase.client.from('role_assignments').insert({
       user_id: dto.userId,
@@ -47,6 +78,7 @@ export class RolesService {
   }
 
   async revoke(dto: RevokeRoleDto, actorId: string): Promise<void> {
+    await this.assertCanManage(dto.roleCode, actorId, dto.userId);
     const role = await this.getRoleByCode(dto.roleCode);
 
     let request = this.supabase.client

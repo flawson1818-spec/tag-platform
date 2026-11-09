@@ -27,6 +27,16 @@ export class UsersController {
     return toUserResponse(await this.usersService.findById(currentUser.id));
   }
 
+  /** What the signed-in member may do: decides which menus and admin pages the site shows them. */
+  @Get('me/access')
+  async getMyAccess(@CurrentUser() currentUser: AuthenticatedUser) {
+    const [roles, permissions] = await Promise.all([
+      this.permissionsService.getUserRoleCodes(currentUser.id, { globalOnly: true }),
+      this.permissionsService.getUserPermissionCodes(currentUser.id),
+    ]);
+    return { roles: Array.from(roles), permissions: Array.from(permissions).sort() };
+  }
+
   @Patch('me')
   async updateMe(@CurrentUser() currentUser: AuthenticatedUser, @Body() dto: UpdateUserDto) {
     return toUserResponse(await this.usersService.updateProfile(currentUser.id, dto));
@@ -56,6 +66,14 @@ export class UsersController {
   @RequirePermission('user.manage')
   list(@Query() query: ListUsersQueryDto) {
     return this.usersService.list(query);
+  }
+
+  /** Key figures for the administration home page. */
+  @Get('admin/overview')
+  @UseGuards(PermissionGuard)
+  @RequirePermission('user.manage')
+  adminOverview() {
+    return this.usersService.adminOverview();
   }
 
   @Get(':id')

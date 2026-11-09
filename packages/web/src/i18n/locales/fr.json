@@ -12,6 +12,7 @@
     "communities": "Communautés",
     "feed": "Fil d'actualité",
     "messages": "Messages",
+    "admin": "Administration",
     "campaigns": "Campagnes",
     "events": "Événements",
     "aiWelcome": "IA Accueil",
@@ -431,21 +432,64 @@
     "managementIntro": "Accessible selon ton rôle — un accès refusé ici signifie simplement que ton compte n'a pas encore la permission requise.",
     "securityTitle": "Sécurité",
     "links": {
-      "room": { "label": "Salle de prière", "description": "Rejoindre la prière en direct" },
-      "prayerRequests": { "label": "Demandes de prière", "description": "Déposer ou consulter une demande" },
-      "testimonies": { "label": "Témoignages", "description": "Partager ou modérer un témoignage" },
-      "communities": { "label": "Communautés", "description": "Rejoindre une cellule, une équipe, une église" },
-      "worldMap": { "label": "Carte mondiale", "description": "Voir la prière se vivre à travers le monde" },
-      "programs": { "label": "Programmes de prière", "description": "Créer et planifier les créneaux" },
-      "moderateRoom": { "label": "Gérer les intercesseurs", "description": "Assigner un animateur à chaque section" },
-      "socialPublications": { "label": "Brouillons réseaux sociaux", "description": "Valider les publications générées" },
-      "moderationQueue": { "label": "Contenus signalés", "description": "Témoignages et demandes signalés par l'IA Modératrice" },
-      "adminUsers": { "label": "Utilisateurs & rôles", "description": "Statut des comptes, attribution des rôles" },
-      "adminAnalytics": { "label": "Tableau de bord", "description": "Croissance, fréquentation, rétention, export" },
-      "adminSystem": { "label": "Système", "description": "Santé, sauvegardes, journaux d'audit" },
-      "mfa": { "label": "Vérification en deux étapes", "description": "Protéger le compte avec un code à usage unique" },
-      "profile": { "label": "Mon profil", "description": "Nom, téléphone, langue, fuseau horaire" }
-    }
+      "room": {
+        "label": "Salle de prière",
+        "description": "Rejoindre la prière en direct"
+      },
+      "prayerRequests": {
+        "label": "Demandes de prière",
+        "description": "Déposer ou consulter une demande"
+      },
+      "testimonies": {
+        "label": "Témoignages",
+        "description": "Partager ou modérer un témoignage"
+      },
+      "communities": {
+        "label": "Communautés",
+        "description": "Rejoindre une cellule, une équipe, une église"
+      },
+      "worldMap": {
+        "label": "Carte mondiale",
+        "description": "Voir la prière se vivre à travers le monde"
+      },
+      "programs": {
+        "label": "Programmes de prière",
+        "description": "Créer et planifier les créneaux"
+      },
+      "moderateRoom": {
+        "label": "Gérer les intercesseurs",
+        "description": "Assigner un animateur à chaque section"
+      },
+      "socialPublications": {
+        "label": "Brouillons réseaux sociaux",
+        "description": "Valider les publications générées"
+      },
+      "moderationQueue": {
+        "label": "Contenus signalés",
+        "description": "Témoignages et demandes signalés par l'IA Modératrice"
+      },
+      "adminUsers": {
+        "label": "Utilisateurs & rôles",
+        "description": "Statut des comptes, attribution des rôles"
+      },
+      "adminAnalytics": {
+        "label": "Tableau de bord",
+        "description": "Croissance, fréquentation, rétention, export"
+      },
+      "adminSystem": {
+        "label": "Système",
+        "description": "Santé, sauvegardes, journaux d'audit"
+      },
+      "mfa": {
+        "label": "Vérification en deux étapes",
+        "description": "Protéger le compte avec un code à usage unique"
+      },
+      "profile": {
+        "label": "Mon profil",
+        "description": "Nom, téléphone, langue, fuseau horaire"
+      }
+    },
+    "adminEntry": "Ton espace de contrôle : membres, rôles, prière, modération."
   },
   "moderation": {
     "title": "Contenus signalés",
@@ -656,7 +700,7 @@
     "cancel": "Annuler"
   },
   "adminUsers": {
-    "title": "Gestion des utilisateurs",
+    "title": "Membres et rôles",
     "introPrefix": "Réservé aux comptes disposant de la permission",
     "introMiddle": "(liste, statut) et",
     "introSuffix": "(rôles, jusqu'à Pasteur inclus).",
@@ -668,7 +712,24 @@
     "activate": "Activer",
     "lock": "Verrouiller",
     "suspend": "Suspendre",
-    "needLogin": "Connecte-toi pour gérer les utilisateurs."
+    "needLogin": "Connecte-toi pour gérer les utilisateurs.",
+    "intro": "Cherche un membre par son nom ou son e-mail. Clique sur × pour retirer un rôle, choisis un rôle puis « Donner » pour en ajouter un.",
+    "searchPlaceholder": "Nom ou adresse e-mail",
+    "search": "Chercher",
+    "you": "toi",
+    "noRole": "Aucun rôle",
+    "give": "Donner",
+    "roleToGive": "Rôle à donner à {{name}}",
+    "removeRole": "Retirer le rôle {{role}}",
+    "confirmRemove": "Retirer le rôle « {{role}} » à {{name}} ?",
+    "roleGiven": "{{name}} est maintenant {{role}}.",
+    "roleRemoved": "Le rôle {{role}} a été retiré à {{name}}.",
+    "statusChanged": "Le statut de {{name}} a été mis à jour.",
+    "status": {
+      "ACTIVE": "Activer",
+      "LOCKED": "Verrouiller",
+      "SUSPENDED": "Suspendre"
+    }
   },
   "roles": {
     "VISITEUR": "Visiteur",
@@ -942,5 +1003,55 @@
     "write": "Envoyer un message",
     "unreadCount_one": "{{count}} message non lu",
     "unreadCount_other": "{{count}} messages non lus"
+  },
+  "admin": {
+    "eyebrow": "Espace réservé",
+    "title": "Administration",
+    "intro": "Bienvenue {{name}}. Voici tout ce que ton rôle te permet de diriger.",
+    "deniedTitle": "Accès réservé",
+    "deniedText": "Cette page est réservée aux responsables qui ont le rôle nécessaire. Si tu penses en avoir besoin, demande-le à un administrateur.",
+    "backToDashboard": "Retour à mon tableau de bord",
+    "figures": {
+      "members": "membres actifs",
+      "newMembers": "nouveaux (7 jours)",
+      "newRequests": "demandes de prière à traiter",
+      "activePrograms": "programmes de prière actifs",
+      "postsThisWeek": "publications (7 jours)",
+      "testimoniesThisWeek": "témoignages (7 jours)"
+    },
+    "sections": {
+      "members": {
+        "label": "Membres et rôles",
+        "description": "Trouver un membre, donner ou retirer un rôle, suspendre un compte"
+      },
+      "programs": {
+        "label": "Programmes et créneaux",
+        "description": "Écrire les créneaux à l'avance avec leurs versets"
+      },
+      "room": {
+        "label": "Salle de prière",
+        "description": "Animer la salle, donner la parole, lancer le relais"
+      },
+      "moderation": {
+        "label": "Modération",
+        "description": "Témoignages et demandes signalés à vérifier"
+      },
+      "publications": {
+        "label": "Publications officielles",
+        "description": "Valider ce qui part sur les réseaux sociaux"
+      },
+      "campaigns": {
+        "label": "Campagnes",
+        "description": "Organiser les campagnes de prière"
+      },
+      "analytics": {
+        "label": "Statistiques",
+        "description": "Croissance, heures de prière, sujets les plus portés"
+      },
+      "system": {
+        "label": "Système",
+        "description": "État du serveur et sauvegardes"
+      }
+    }
   }
 }

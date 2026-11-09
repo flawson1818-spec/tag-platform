@@ -12,6 +12,7 @@
     "communities": "Comunidades",
     "feed": "Feed",
     "messages": "Mensagens",
+    "admin": "Administração",
     "campaigns": "Campanhas",
     "events": "Eventos",
     "aiWelcome": "IA Boas-vindas",
@@ -431,21 +432,64 @@
     "managementIntro": "Disponível de acordo com sua função — um acesso negado aqui só significa que sua conta ainda não tem a permissão necessária.",
     "securityTitle": "Segurança",
     "links": {
-      "room": { "label": "Sala de oração", "description": "Participar da oração ao vivo" },
-      "prayerRequests": { "label": "Pedidos de oração", "description": "Enviar ou consultar um pedido" },
-      "testimonies": { "label": "Testemunhos", "description": "Compartilhar ou moderar um testemunho" },
-      "communities": { "label": "Comunidades", "description": "Entrar em uma célula, uma equipe, uma igreja" },
-      "worldMap": { "label": "Mapa mundial", "description": "Ver a oração acontecendo pelo mundo" },
-      "programs": { "label": "Programas de oração", "description": "Criar e agendar os turnos" },
-      "moderateRoom": { "label": "Gerenciar intercessores", "description": "Atribuir um condutor a cada seção" },
-      "socialPublications": { "label": "Rascunhos de redes sociais", "description": "Validar as publicações geradas" },
-      "moderationQueue": { "label": "Conteúdo sinalizado", "description": "Testemunhos e pedidos sinalizados pela IA Moderadora" },
-      "adminUsers": { "label": "Usuários e funções", "description": "Status das contas, atribuição de funções" },
-      "adminAnalytics": { "label": "Painel", "description": "Crescimento, participação, retenção, exportação" },
-      "adminSystem": { "label": "Sistema", "description": "Saúde, backups, registros de auditoria" },
-      "mfa": { "label": "Verificação em duas etapas", "description": "Proteger a conta com um código de uso único" },
-      "profile": { "label": "Meu perfil", "description": "Nome, telefone, idioma, fuso horário" }
-    }
+      "room": {
+        "label": "Sala de oração",
+        "description": "Participar da oração ao vivo"
+      },
+      "prayerRequests": {
+        "label": "Pedidos de oração",
+        "description": "Enviar ou consultar um pedido"
+      },
+      "testimonies": {
+        "label": "Testemunhos",
+        "description": "Compartilhar ou moderar um testemunho"
+      },
+      "communities": {
+        "label": "Comunidades",
+        "description": "Entrar em uma célula, uma equipe, uma igreja"
+      },
+      "worldMap": {
+        "label": "Mapa mundial",
+        "description": "Ver a oração acontecendo pelo mundo"
+      },
+      "programs": {
+        "label": "Programas de oração",
+        "description": "Criar e agendar os turnos"
+      },
+      "moderateRoom": {
+        "label": "Gerenciar intercessores",
+        "description": "Atribuir um condutor a cada seção"
+      },
+      "socialPublications": {
+        "label": "Rascunhos de redes sociais",
+        "description": "Validar as publicações geradas"
+      },
+      "moderationQueue": {
+        "label": "Conteúdo sinalizado",
+        "description": "Testemunhos e pedidos sinalizados pela IA Moderadora"
+      },
+      "adminUsers": {
+        "label": "Usuários e funções",
+        "description": "Status das contas, atribuição de funções"
+      },
+      "adminAnalytics": {
+        "label": "Painel",
+        "description": "Crescimento, participação, retenção, exportação"
+      },
+      "adminSystem": {
+        "label": "Sistema",
+        "description": "Saúde, backups, registros de auditoria"
+      },
+      "mfa": {
+        "label": "Verificação em duas etapas",
+        "description": "Proteger a conta com um código de uso único"
+      },
+      "profile": {
+        "label": "Meu perfil",
+        "description": "Nome, telefone, idioma, fuso horário"
+      }
+    },
+    "adminEntry": "Seu espaço de controle: membros, funções, oração, moderação."
   },
   "moderation": {
     "title": "Conteúdo sinalizado",
@@ -656,7 +700,7 @@
     "cancel": "Cancelar"
   },
   "adminUsers": {
-    "title": "Gestão de usuários",
+    "title": "Membros e funções",
     "introPrefix": "Reservado às contas com a permissão",
     "introMiddle": "(lista, status) e",
     "introSuffix": "(funções, até Pastor incluído).",
@@ -668,7 +712,24 @@
     "activate": "Ativar",
     "lock": "Bloquear",
     "suspend": "Suspender",
-    "needLogin": "Entre para gerenciar usuários."
+    "needLogin": "Entre para gerenciar usuários.",
+    "intro": "Procure um membro pelo nome ou e-mail. Clique em × para remover uma função; escolha uma função e «Dar» para adicionar.",
+    "searchPlaceholder": "Nome ou e-mail",
+    "search": "Procurar",
+    "you": "você",
+    "noRole": "Sem função",
+    "give": "Dar",
+    "roleToGive": "Função para {{name}}",
+    "removeRole": "Remover a função {{role}}",
+    "confirmRemove": "Remover a função «{{role}}» de {{name}}?",
+    "roleGiven": "{{name}} agora é {{role}}.",
+    "roleRemoved": "A função {{role}} foi removida de {{name}}.",
+    "statusChanged": "O status de {{name}} foi atualizado.",
+    "status": {
+      "ACTIVE": "Ativar",
+      "LOCKED": "Bloquear",
+      "SUSPENDED": "Suspender"
+    }
   },
   "roles": {
     "VISITEUR": "Visitante",
@@ -942,5 +1003,55 @@
     "write": "Enviar uma mensagem",
     "unreadCount_one": "{{count}} mensagem não lida",
     "unreadCount_other": "{{count}} mensagens não lidas"
+  },
+  "admin": {
+    "eyebrow": "Área reservada",
+    "title": "Administração",
+    "intro": "Bem-vindo {{name}}. Aqui está tudo o que sua função permite dirigir.",
+    "deniedTitle": "Acesso reservado",
+    "deniedText": "Esta página é para líderes com a função necessária. Se precisar, peça a um administrador.",
+    "backToDashboard": "Voltar ao meu painel",
+    "figures": {
+      "members": "membros ativos",
+      "newMembers": "novos (7 dias)",
+      "newRequests": "pedidos de oração a tratar",
+      "activePrograms": "programas de oração ativos",
+      "postsThisWeek": "publicações (7 dias)",
+      "testimoniesThisWeek": "testemunhos (7 dias)"
+    },
+    "sections": {
+      "members": {
+        "label": "Membros e funções",
+        "description": "Encontrar um membro, dar ou remover uma função, suspender uma conta"
+      },
+      "programs": {
+        "label": "Programas e turnos",
+        "description": "Escrever os turnos com antecedência e seus versículos"
+      },
+      "room": {
+        "label": "Sala de oração",
+        "description": "Animar a sala, dar a palavra, iniciar o revezamento"
+      },
+      "moderation": {
+        "label": "Moderação",
+        "description": "Testemunhos e pedidos sinalizados a verificar"
+      },
+      "publications": {
+        "label": "Publicações oficiais",
+        "description": "Validar o que sai nas redes sociais"
+      },
+      "campaigns": {
+        "label": "Campanhas",
+        "description": "Organizar campanhas de oração"
+      },
+      "analytics": {
+        "label": "Estatísticas",
+        "description": "Crescimento, horas de oração, temas mais levados"
+      },
+      "system": {
+        "label": "Sistema",
+        "description": "Estado do servidor e backups"
+      }
+    }
   }
 }

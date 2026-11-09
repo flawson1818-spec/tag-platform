@@ -32,15 +32,25 @@ import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
 import { HeaderNav } from './HeaderNav';
 import { WatchtowerMark } from './WatchtowerMark';
+import { AccessProvider } from './auth/AccessContext';
+import { AdminHomePage } from './admin/AdminHomePage';
+import { RequireAccess } from './admin/RequireAccess';
+import { ADMIN_PERMISSIONS, ADMIN_SECTIONS } from './admin/adminSections';
 import { HomePage } from './home/HomePage';
 import { FeedPage } from './social/FeedPage';
 import { MemberProfilePage } from './social/MemberProfilePage';
 import { MessagesPage } from './social/MessagesPage';
 
+/** Permissions that open an administration page, from the same list the menus use. */
+function perms(path: string): string[] {
+  return ADMIN_SECTIONS.find((s) => s.to === path)?.permissions ?? ADMIN_PERMISSIONS;
+}
+
 export function App() {
   const { t } = useTranslation();
   return (
     <AuthProvider>
+      <AccessProvider>
       <div className="app">
         <header className="site-header">
           <div className="header-top">
@@ -65,7 +75,9 @@ export function App() {
               path="/room/moderate"
               element={
                 <ProtectedRoute>
-                  <ModeratorRoomPage />
+                  <RequireAccess permissions={perms('/room/moderate')}>
+                    <ModeratorRoomPage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -73,7 +85,9 @@ export function App() {
               path="/programs"
               element={
                 <ProtectedRoute>
-                  <ProgramsPage />
+                  <RequireAccess permissions={perms('/programs')}>
+                    <ProgramsPage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -90,7 +104,9 @@ export function App() {
               path="/social-publications"
               element={
                 <ProtectedRoute>
-                  <SocialPublicationsPage />
+                  <RequireAccess permissions={perms('/social-publications')}>
+                    <SocialPublicationsPage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -172,10 +188,22 @@ export function App() {
               }
             />
             <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <RequireAccess permissions={ADMIN_PERMISSIONS}>
+                    <AdminHomePage />
+                  </RequireAccess>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/users"
               element={
                 <ProtectedRoute>
-                  <AdminUsersPage />
+                  <RequireAccess permissions={perms('/admin/users')}>
+                    <AdminUsersPage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -183,7 +211,9 @@ export function App() {
               path="/admin/analytics"
               element={
                 <ProtectedRoute>
-                  <AnalyticsDashboardPage />
+                  <RequireAccess permissions={perms('/admin/analytics')}>
+                    <AnalyticsDashboardPage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -191,7 +221,9 @@ export function App() {
               path="/admin/system"
               element={
                 <ProtectedRoute>
-                  <AdminSystemPage />
+                  <RequireAccess permissions={perms('/admin/system')}>
+                    <AdminSystemPage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -199,7 +231,9 @@ export function App() {
               path="/admin/moderation"
               element={
                 <ProtectedRoute>
-                  <ModerationQueuePage />
+                  <RequireAccess permissions={perms('/admin/moderation')}>
+                    <ModerationQueuePage />
+                  </RequireAccess>
                 </ProtectedRoute>
               }
             />
@@ -228,6 +262,7 @@ export function App() {
           </Routes>
         </main>
       </div>
+      </AccessProvider>
     </AuthProvider>
   );
 }

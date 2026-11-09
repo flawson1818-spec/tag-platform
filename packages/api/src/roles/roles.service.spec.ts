@@ -8,7 +8,9 @@ const VISITEUR_ROLE = { id: 'role-visiteur', code: 'VISITEUR', label: 'Visiteur'
 function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
   const auditLogService = { record: vi.fn().mockResolvedValue(undefined) };
   const supabase = overrides.supabase ?? createSupabaseServiceMock({});
-  const service = new RolesService(supabase as never, auditLogService as never);
+  const actorRoles = (overrides.actorRoles as string[]) ?? ['ADMINISTRATEUR'];
+  const permissionsService = { getUserRoleCodes: vi.fn().mockResolvedValue(new Set(actorRoles)) };
+  const service = new RolesService(supabase as never, auditLogService as never, permissionsService as never);
   return { service, auditLogService, supabase };
 }
 
@@ -19,7 +21,7 @@ describe('RolesService', () => {
 
       await expect(
         service.assign({ userId: 'user-1', roleCode: 'ADMINISTRATEUR' } as never, 'actor-1'),
-      ).rejects.toThrow('Roles above PASTEUR cannot be assigned via this endpoint');
+      ).rejects.toThrow('au-dessus');
     });
 
     it('allows assigning exactly the max assignable role (PASTEUR)', async () => {
@@ -41,16 +43,38 @@ describe('RolesService', () => {
       );
     });
 
-    it('does not throw on a duplicate assignment (unique violation is swallowed)', async () => {
+    it('does nothing when the member already has the role', async () => {
+      const chain = createQueryChain({ data: [{ id: 'ra-1' }], error: null });
       const supabase = createSupabaseServiceMock({
         roles: createQueryChain({ data: PASTEUR_ROLE, error: null }),
-        role_assignments: createQueryChain({ data: null, error: { message: 'duplicate key', code: '23505' } }),
+        role_assignments: chain,
       });
       const { service } = buildDeps({ supabase });
 
       await expect(
         service.assign({ userId: 'user-1', roleCode: 'PASTEUR' } as never, 'actor-1'),
       ).resolves.toBeUndefined();
+      expect(chain.insert).not.toHaveBeenCalled();
+    });
+
+    it('lets a Super Administrateur name an Administrateur, never another Super Administrateur', async () => {
+      const supabase = createSupabaseServiceMock({
+        roles: createQueryChain({ data: ADMIN_ROLE, error: null }),
+        role_assignments: createQueryChain({ data: [], error: null }),
+      });
+      const { service } = buildDeps({ supabase, actorRoles: ['SUPER_ADMINISTRATEUR'] });
+
+      await expect(service.assign({ userId: 'user-1', roleCode: 'ADMINISTRATEUR' } as never, 'actor-1')).resolves.toBeUndefined();
+      await expect(
+        service.assign({ userId: 'user-1', roleCode: 'SUPER_ADMINISTRATEUR' } as never, 'actor-1'),
+      ).rejects.toThrow('au-dessus');
+    });
+
+    it('never lets anyone change their own administration role', async () => {
+      const { service } = buildDeps({ actorRoles: ['SUPER_ADMINISTRATEUR'] });
+      await expect(
+        service.revoke({ userId: 'actor-1', roleCode: 'ADMINISTRATEUR' } as never, 'actor-1'),
+      ).rejects.toThrow('propre rôle');
     });
 
     it('surfaces a non-duplicate database error', async () => {
@@ -84,7 +108,7 @@ describe('RolesService', () => {
         roles: createQueryChain({ data: ADMIN_ROLE, error: null }),
         role_assignments: chain,
       });
-      const { service } = buildDeps({ supabase });
+      const { service } = buildDeps({ supabase, actorRoles: ['SUPER_ADMINISTRATEUR'] });
 
       await service.revoke({ userId: 'user-1', roleCode: 'ADMINISTRATEUR' } as never, 'actor-1');
 
@@ -100,7 +124,7 @@ describe('RolesService', () => {
         roles: createQueryChain({ data: ADMIN_ROLE, error: null }),
         role_assignments: chain,
       });
-      const { service } = buildDeps({ supabase });
+      const { service } = buildDeps({ supabase, actorRoles: ['SUPER_ADMINISTRATEUR'] });
 
       await service.revoke({ userId: 'user-1', roleCode: 'ADMINISTRATEUR', communityId: 'community-1' } as never, 'actor-1');
 
@@ -108,7 +132,7 @@ describe('RolesService', () => {
       expect(chain.is).not.toHaveBeenCalled();
     });
 
-    it('allows revoking a role above PASTEUR (revoke has no rank ceiling)', async () => {
+    it('refuses to take away a role above what the actor may manage', async () => {
       const supabase = createSupabaseServiceMock({
         roles: createQueryChain({ data: { id: 'role-super', code: 'SUPER_ADMINISTRATEUR', label: 'Super Admin' }, error: null }),
         role_assignments: createQueryChain({ data: null, error: null }),
@@ -117,7 +141,7 @@ describe('RolesService', () => {
 
       await expect(
         service.revoke({ userId: 'user-1', roleCode: 'SUPER_ADMINISTRATEUR' } as never, 'actor-1'),
-      ).resolves.toBeUndefined();
+      ).rejects.toThrow('au-dessus');
     });
   });
 

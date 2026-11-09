@@ -5,6 +5,8 @@ import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { InstallPwaButton } from './InstallPwaButton';
 import { useUnreadMessages } from './social/useUnreadMessages';
+import { useAccess } from './auth/AccessContext';
+import { ADMIN_PERMISSIONS } from './admin/adminSections';
 
 function navClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'active' : '';
@@ -15,6 +17,8 @@ export function HeaderNav() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const unread = useUnreadMessages(status === 'authenticated');
+  const { canAny } = useAccess();
+  const isAdmin = status === 'authenticated' && canAny(ADMIN_PERMISSIONS);
 
   const handleLogout = async () => {
     await logout();
@@ -45,6 +49,11 @@ export function HeaderNav() {
         <InstallPwaButton />
         {status === 'authenticated' ? (
           <>
+            {isAdmin && (
+              <NavLink to="/admin" className={({ isActive }) => `nav-admin${isActive ? ' active' : ''}`}>
+                <span aria-hidden="true">🛡️</span> {t('nav.admin')}
+              </NavLink>
+            )}
             <NavLink to="/messages" className={navClass}>
               {t('nav.messages')}
               {unread > 0 && <span className="nav-badge" aria-label={t('messages.unreadCount', { count: unread })}>{unread > 99 ? '99+' : unread}</span>}
