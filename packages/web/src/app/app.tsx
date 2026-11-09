@@ -2,7 +2,7 @@ import { Route, Routes, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TagsPage } from './tags/TagsPage';
 import { ItemsPage } from './items/ItemsPage';
-import { AuthProvider } from './auth/AuthContext';
+import { AuthProvider, useAuth } from './auth/AuthContext';
 import { LoginPage } from './auth/LoginPage';
 import { RegisterPage } from './auth/RegisterPage';
 import { ForgotPasswordPage } from './auth/ForgotPasswordPage';
@@ -30,13 +30,14 @@ import { CampaignsPage } from './dashboard/CampaignsPage';
 import { EventsPage } from './events/EventsPage';
 import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
-import { HeaderNav } from './HeaderNav';
+import { HeaderNav, MemberTabBar } from './HeaderNav';
 import { WatchtowerMark } from './WatchtowerMark';
 import { AccessProvider } from './auth/AccessContext';
 import { AdminHomePage } from './admin/AdminHomePage';
 import { RequireAccess } from './admin/RequireAccess';
 import { ADMIN_PERMISSIONS, ADMIN_SECTIONS } from './admin/adminSections';
 import { HomePage } from './home/HomePage';
+import { MemberHomePage } from './home/MemberHomePage';
 import { FeedPage } from './social/FeedPage';
 import { MemberProfilePage } from './social/MemberProfilePage';
 import { MessagesPage } from './social/MessagesPage';
@@ -44,6 +45,12 @@ import { MessagesPage } from './social/MessagesPage';
 /** Permissions that open an administration page, from the same list the menus use. */
 function perms(path: string): string[] {
   return ADMIN_SECTIONS.find((s) => s.to === path)?.permissions ?? ADMIN_PERMISSIONS;
+}
+
+/** Members land on their prayer space; visitors on the presentation with the globe. */
+function Home() {
+  const { status } = useAuth();
+  return status === 'authenticated' ? <MemberHomePage /> : <HomePage />;
 }
 
 export function App() {
@@ -69,7 +76,7 @@ export function App() {
         </header>
         <main>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Home />} />
             <Route path="/room" element={<PrayerRoomPage />} />
             <Route
               path="/room/moderate"
@@ -261,6 +268,7 @@ export function App() {
             <Route path="/items" element={<ItemsPage />} />
           </Routes>
         </main>
+        <MemberTabBar />
       </div>
       </AccessProvider>
     </AuthProvider>

@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
@@ -12,62 +13,235 @@ function navClass({ isActive }: { isActive: boolean }): string {
   return isActive ? 'active' : '';
 }
 
+interface Item {
+  to: string;
+  key: string;
+  icon: string;
+}
+
+/** What a signed-in member uses every day — the rest waits behind "Plus". */
+const MEMBER_MAIN: Item[] = [
+  { to: '/', key: 'home', icon: '🏠' },
+  { to: '/room', key: 'room', icon: '🕯️' },
+  { to: '/fil', key: 'feed', icon: '📰' },
+  { to: '/prayer-requests', key: 'prayerRequests', icon: '🙏' },
+  { to: '/communities', key: 'communities', icon: '⛪' },
+];
+const MEMBER_MORE: Item[] = [
+  { to: '/testimonies', key: 'testimonies', icon: '✨' },
+  { to: '/events', key: 'events', icon: '📅' },
+  { to: '/campaigns', key: 'campaigns', icon: '🎯' },
+  { to: '/world-map', key: 'worldMap', icon: '🌍' },
+  { to: '/assistant', key: 'aiWelcome', icon: '💬' },
+  { to: '/foi', key: 'aiEvangelism', icon: '📖' },
+];
+/** A visitor discovers the watch: the room, the requests, the world map. */
+const VISITOR_MAIN: Item[] = [
+  { to: '/', key: 'home', icon: '🏠' },
+  { to: '/room', key: 'room', icon: '🕯️' },
+  { to: '/prayer-requests', key: 'prayerRequests', icon: '🙏' },
+  { to: '/world-map', key: 'worldMap', icon: '🌍' },
+];
+const VISITOR_MORE: Item[] = [
+  { to: '/events', key: 'events', icon: '📅' },
+  { to: '/campaigns', key: 'campaigns', icon: '🎯' },
+  { to: '/assistant', key: 'aiWelcome', icon: '💬' },
+  { to: '/foi', key: 'aiEvangelism', icon: '📖' },
+];
+
+/** A button that opens a small panel; closes on outside click, Escape, or navigation. */
+function Dropdown({
+  label,
+  className,
+  children,
+  align = 'left',
+}: {
+  label: ReactNode;
+  className?: string;
+  children: ReactNode;
+  align?: 'left' | 'right';
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const [openedAt, setOpenedAt] = useState(location.key);
+  // Following a link inside the panel closes it.
+  if (open && openedAt !== location.key) {
+    setOpen(false);
+    setOpenedAt(location.key);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={`nav-dropdown ${className ?? ''}`} ref={ref}>
+      <button
+        type="button"
+        className="nav-dropdown-toggle"
+        aria-expanded={open}
+        onClick={() => {
+          setOpenedAt(location.key);
+          setOpen((o) => !o);
+        }}
+      >
+        {label}
+      </button>
+      {open && <div className={`nav-dropdown-panel align-${align}`}>{children}</div>}
+    </div>
+  );
+}
+
 export function HeaderNav() {
-  const { status, logout } = useAuth();
+  const { status, user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const unread = useUnreadMessages(status === 'authenticated');
+  const signedIn = status === 'authenticated';
+  const unread = useUnreadMessages(signedIn);
   const { canAny } = useAccess();
-  const isAdmin = status === 'authenticated' && canAny(ADMIN_PERMISSIONS);
+  const isAdmin = signedIn && canAny(ADMIN_PERMISSIONS);
+  const main = signedIn ? MEMBER_MAIN : VISITOR_MAIN;
+  const more = signedIn ? MEMBER_MORE : VISITOR_MORE;
+  const initial = (user?.display_name ?? '?').trim().charAt(0).toUpperCase();
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const badge = unread > 0 && (
+    <span className="nav-badge" aria-label={t('messages.unreadCount', { count: unread })}>
+      {unread > 99 ? '99+' : unread}
+    </span>
+  );
+
   return (
-    <nav>
-      <div className="nav-primary">
-        <NavLink to="/" end className={navClass}>{t('nav.home')}</NavLink>
-        <NavLink to="/room" className={navClass}>{t('nav.room')}</NavLink>
-        <NavLink to="/prayer-requests" className={navClass}>{t('nav.prayerRequests')}</NavLink>
-        <NavLink to="/testimonies" className={navClass}>{t('nav.testimonies')}</NavLink>
-        <NavLink to="/fil" className={navClass}>{t('nav.feed')}</NavLink>
-        <NavLink to="/communities" className={navClass}>{t('nav.communities')}</NavLink>
-        <NavLink to="/campaigns" className={navClass}>{t('nav.campaigns')}</NavLink>
-        <NavLink to="/events" className={navClass}>{t('nav.events')}</NavLink>
-        <NavLink to="/assistant" className={navClass}>{t('nav.aiWelcome')}</NavLink>
-        <NavLink to="/foi" className={navClass}>{t('nav.aiEvangelism')}</NavLink>
-        <NavLink to="/world-map" className={navClass}>{t('nav.worldMap')}</NavLink>
-        {status === 'authenticated' && (
-          <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
-        )}
-      </div>
-      <div className="nav-account">
-        <ThemeToggle />
-        <LanguageSwitcher />
-        <InstallPwaButton />
-        {status === 'authenticated' ? (
-          <>
-            {isAdmin && (
-              <NavLink to="/admin" className={({ isActive }) => `nav-admin${isActive ? ' active' : ''}`}>
-                <span aria-hidden="true">🛡️</span> {t('nav.admin')}
-              </NavLink>
-            )}
-            <NavLink to="/messages" className={navClass}>
-              {t('nav.messages')}
-              {unread > 0 && <span className="nav-badge" aria-label={t('messages.unreadCount', { count: unread })}>{unread > 99 ? '99+' : unread}</span>}
+      <nav aria-label={t('nav.mainLabel')} className={signedIn ? 'signed-in' : undefined}>
+        <div className="nav-primary">
+          {main.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.to === '/'} className={navClass}>
+              {t(`nav.${item.key}`)}
             </NavLink>
-            <NavLink to="/notifications" className={navClass}>{t('nav.notifications')}</NavLink>
-            <button onClick={handleLogout}>{t('nav.logout')}</button>
-          </>
-        ) : (
-          <>
-            <NavLink to="/login" className={navClass}>{t('nav.login')}</NavLink>
-            <NavLink to="/register" className={navClass}>{t('nav.register')}</NavLink>
-          </>
-        )}
-      </div>
-    </nav>
+          ))}
+          <Dropdown label={<>{t('nav.more')} ▾</>} className="nav-more">
+            {more.map((item) => (
+              <NavLink key={item.to} to={item.to} className={navClass}>
+                <span aria-hidden="true">{item.icon}</span> {t(`nav.${item.key}`)}
+              </NavLink>
+            ))}
+          </Dropdown>
+        </div>
+
+        <div className="nav-account">
+          {signedIn ? (
+            <>
+              {isAdmin && (
+                <NavLink to="/admin" className={({ isActive }) => `nav-admin${isActive ? ' active' : ''}`}>
+                  <span aria-hidden="true">🛡️</span> <span className="nav-admin-label">{t('nav.admin')}</span>
+                </NavLink>
+              )}
+              <NavLink to="/messages" className={({ isActive }) => `nav-icon${isActive ? ' active' : ''}`} title={t('nav.messages')}>
+                <span aria-hidden="true">✉️</span>
+                <span className="sr-only">{t('nav.messages')}</span>
+                {badge}
+              </NavLink>
+              <NavLink to="/notifications" className={({ isActive }) => `nav-icon${isActive ? ' active' : ''}`} title={t('nav.notifications')}>
+                <span aria-hidden="true">🔔</span>
+                <span className="sr-only">{t('nav.notifications')}</span>
+              </NavLink>
+              <Dropdown
+                align="right"
+                className="nav-me"
+                label={
+                  <>
+                    <span className="nav-avatar" aria-hidden="true">
+                      {initial}
+                    </span>
+                    <span className="sr-only">{t('nav.myMenu')}</span>
+                  </>
+                }
+              >
+                <p className="nav-me-name">{user?.display_name}</p>
+                {user && (
+                  <NavLink to={`/membres/${user.id}`} className={navClass}>
+                    <span aria-hidden="true">👤</span> {t('nav.myProfile')}
+                  </NavLink>
+                )}
+                <NavLink to="/dashboard" className={navClass}>
+                  <span aria-hidden="true">🧭</span> {t('nav.dashboard')}
+                </NavLink>
+                <NavLink to="/profile" className={navClass}>
+                  <span aria-hidden="true">⚙️</span> {t('nav.settings')}
+                </NavLink>
+                <div className="nav-me-row">
+                  <LanguageSwitcher />
+                  <ThemeToggle />
+                </div>
+                <InstallPwaButton />
+                <button type="button" className="nav-logout" onClick={handleLogout}>
+                  {t('nav.logout')}
+                </button>
+              </Dropdown>
+            </>
+          ) : (
+            <>
+              <LanguageSwitcher />
+              <ThemeToggle />
+              <InstallPwaButton />
+              <NavLink to="/login" className={navClass}>
+                {t('nav.login')}
+              </NavLink>
+              <NavLink to="/register" className="nav-cta">
+                {t('nav.register')}
+              </NavLink>
+            </>
+          )}
+        </div>
+      </nav>
+  );
+}
+
+/** On phones, the everyday places at the thumb — like an app. Signed-in members only. */
+export function MemberTabBar() {
+  const { status } = useAuth();
+  const { t } = useTranslation();
+  if (status !== 'authenticated') return null;
+  return (
+
+        <nav className="tabbar" aria-label={t('nav.tabbarLabel')}>
+          <NavLink to="/" end className={navClass}>
+            <span aria-hidden="true">🏠</span>
+            {t('nav.home')}
+          </NavLink>
+          <NavLink to="/room" className={navClass}>
+            <span aria-hidden="true">🕯️</span>
+            {t('nav.prayerShort')}
+          </NavLink>
+          <NavLink to="/fil" className={navClass}>
+            <span aria-hidden="true">📰</span>
+            {t('nav.feedShort')}
+          </NavLink>
+          <NavLink to="/prayer-requests" className={navClass}>
+            <span aria-hidden="true">🙏</span>
+            {t('nav.requestsShort')}
+          </NavLink>
+          <NavLink to="/communities" className={navClass}>
+            <span aria-hidden="true">⛪</span>
+            {t('nav.communitiesShort')}
+          </NavLink>
+        </nav>
   );
 }

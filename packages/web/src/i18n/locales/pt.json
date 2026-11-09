@@ -23,7 +23,17 @@
     "logout": "Sair",
     "login": "Entrar",
     "register": "Criar uma conta",
-    "languageLabel": "Idioma"
+    "languageLabel": "Idioma",
+    "more": "Mais",
+    "mainLabel": "Menu principal",
+    "myMenu": "Meu menu",
+    "myProfile": "Meu perfil",
+    "settings": "Configurações da conta",
+    "tabbarLabel": "Navegação rápida",
+    "prayerShort": "Oração",
+    "feedShort": "Feed",
+    "requestsShort": "Pedidos",
+    "communitiesShort": "Igrejas"
   },
   "auth": {
     "login": {
@@ -1053,5 +1063,25 @@
         "description": "Estado do servidor e backups"
       }
     }
+  },
+  "memberHome": {
+    "greeting": "Shalom {{name}} 🙏",
+    "sub": "A torre vigia dia e noite. Tome seu lugar na muralha.",
+    "join": "Entrar na oração",
+    "waitingTitle": "A sala aguarda o próximo turno",
+    "waitingText": "Nenhuma oração em andamento agora. Entre na sala para ver o programa.",
+    "openRoom": "Abrir a sala de oração",
+    "unread_one": "{{count}} mensagem não lida",
+    "unread_other": "{{count}} mensagens não lidas",
+    "noUnread": "Nenhuma mensagem nova",
+    "share": "Compartilhar uma bênção",
+    "shareHint": "Uma mensagem, uma foto da sua igreja",
+    "ask": "Pedir oração",
+    "askHint": "Confie um pedido à família",
+    "carry": "Para levar em oração",
+    "family": "Notícias da família",
+    "seeAll": "Ver tudo",
+    "noRequests": "Nenhum pedido pendente agora.",
+    "noPosts": "Nada novo ainda. Seja o primeiro a compartilhar!"
   }
 }

@@ -23,7 +23,17 @@
     "logout": "Log out",
     "login": "Log in",
     "register": "Create an account",
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "more": "More",
+    "mainLabel": "Main menu",
+    "myMenu": "My menu",
+    "myProfile": "My profile",
+    "settings": "Account settings",
+    "tabbarLabel": "Quick navigation",
+    "prayerShort": "Prayer",
+    "feedShort": "Feed",
+    "requestsShort": "Requests",
+    "communitiesShort": "Churches"
   },
   "auth": {
     "login": {
@@ -1053,5 +1063,25 @@
         "description": "Server health and backups"
       }
     }
+  },
+  "memberHome": {
+    "greeting": "Shalom {{name}} 🙏",
+    "sub": "The tower keeps watch day and night. Take your place on the wall.",
+    "join": "Join the prayer",
+    "waitingTitle": "The room is waiting for the next slot",
+    "waitingText": "No prayer is running right now. Open the room to see the program.",
+    "openRoom": "Open the prayer room",
+    "unread_one": "{{count}} unread message",
+    "unread_other": "{{count}} unread messages",
+    "noUnread": "No new messages",
+    "share": "Share a blessing",
+    "shareHint": "A message, a photo of your church",
+    "ask": "Ask for prayer",
+    "askHint": "Entrust a topic to the family",
+    "carry": "To carry in prayer",
+    "family": "News from the family",
+    "seeAll": "See all",
+    "noRequests": "No pending request right now.",
+    "noPosts": "Nothing new yet. Be the first to share!"
   }
 }

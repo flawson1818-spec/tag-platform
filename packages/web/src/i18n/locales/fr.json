@@ -23,7 +23,17 @@
     "logout": "Se déconnecter",
     "login": "Connexion",
     "register": "Créer un compte",
-    "languageLabel": "Langue"
+    "languageLabel": "Langue",
+    "more": "Plus",
+    "mainLabel": "Menu principal",
+    "myMenu": "Mon menu",
+    "myProfile": "Mon profil",
+    "settings": "Paramètres du compte",
+    "tabbarLabel": "Navigation rapide",
+    "prayerShort": "Prière",
+    "feedShort": "Fil",
+    "requestsShort": "Demandes",
+    "communitiesShort": "Églises"
   },
   "auth": {
     "login": {
@@ -1053,5 +1063,25 @@
         "description": "État du serveur et sauvegardes"
       }
     }
+  },
+  "memberHome": {
+    "greeting": "Shalom {{name}} 🙏",
+    "sub": "La tour veille jour et nuit. Prends ta place sur la muraille.",
+    "join": "Rejoindre la prière",
+    "waitingTitle": "La salle attend le prochain créneau",
+    "waitingText": "Aucune prière n'est en cours pour l'instant. Entre dans la salle pour voir le programme.",
+    "openRoom": "Ouvrir la salle de prière",
+    "unread_one": "{{count}} message non lu",
+    "unread_other": "{{count}} messages non lus",
+    "noUnread": "Aucun nouveau message",
+    "share": "Partager une grâce",
+    "shareHint": "Un message, une photo de ton église",
+    "ask": "Demander la prière",
+    "askHint": "Confie un sujet à la famille",
+    "carry": "À porter dans la prière",
+    "family": "Nouvelles de la famille",
+    "seeAll": "Tout voir",
+    "noRequests": "Aucune demande en attente pour l'instant.",
+    "noPosts": "Rien de neuf pour l'instant. Sois le premier à partager !"
   }
 }
