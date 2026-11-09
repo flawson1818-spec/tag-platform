@@ -31,6 +31,7 @@ import { EventsPage } from './events/EventsPage';
 import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
 import { HeaderNav } from './HeaderNav';
+import { WatchtowerMark } from './WatchtowerMark';
 import { HomePage } from './home/HomePage';
 import { FeedPage } from './social/FeedPage';
 import { MemberProfilePage } from './social/MemberProfilePage';
@@ -41,11 +42,19 @@ export function App() {
   return (
     <AuthProvider>
       <div className="app">
-        <header>
-          <Link to="/" className="brand">
-            <h1>Tour d&apos;avant-garde</h1>
-            <p className="brand-tagline">{t('app.tagline')}</p>
-          </Link>
+        <header className="site-header">
+          <div className="header-top">
+            <Link to="/" className="brand">
+              <WatchtowerMark />
+              <span className="brand-text">
+                <h1>Tour d&apos;avant-garde</h1>
+                <span className="brand-tagline">{t('app.tagline')}</span>
+              </span>
+            </Link>
+            <p className="brand-verse">
+              « {t('app.verse')} » <cite>{t('app.verseRef')}</cite>
+            </p>
+          </div>
           <HeaderNav />
         </header>
         <main>

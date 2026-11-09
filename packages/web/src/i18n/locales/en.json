@@ -1,6 +1,8 @@
 {
   "app": {
-    "tagline": "A prayer rises at every moment"
+    "tagline": "A prayer rises at every moment",
+    "verse": "They shall never hold their peace day nor night",
+    "verseRef": "Isaiah 62:6"
   },
   "nav": {
     "home": "Home",

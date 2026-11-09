@@ -35,6 +35,9 @@ export function HeaderNav() {
         <NavLink to="/assistant" className={navClass}>{t('nav.aiWelcome')}</NavLink>
         <NavLink to="/foi" className={navClass}>{t('nav.aiEvangelism')}</NavLink>
         <NavLink to="/world-map" className={navClass}>{t('nav.worldMap')}</NavLink>
+        {status === 'authenticated' && (
+          <NavLink to="/dashboard" className={navClass}>{t('nav.dashboard')}</NavLink>
+        )}
       </div>
       <div className="nav-account">
         <ThemeToggle />

@@ -1,6 +1,8 @@
 {
   "app": {
-    "tagline": "Une prière s'élève à chaque instant"
+    "tagline": "Une prière s'élève à chaque instant",
+    "verse": "Ils ne se tairont ni jour ni nuit",
+    "verseRef": "Ésaïe 62:6"
   },
   "nav": {
     "home": "Accueil",

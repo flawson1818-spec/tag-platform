@@ -1,6 +1,8 @@
 {
   "app": {
-    "tagline": "Uma oração se eleva a cada instante"
+    "tagline": "Uma oração se eleva a cada instante",
+    "verse": "Nunca se calarão, nem de dia nem de noite",
+    "verseRef": "Isaías 62:6"
   },
   "nav": {
     "home": "Início",
