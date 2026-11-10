@@ -33,7 +33,10 @@
     "prayerShort": "Oración",
     "feedShort": "Muro",
     "requestsShort": "Peticiones",
-    "communitiesShort": "Iglesias"
+    "communitiesShort": "Iglesias",
+    "community": "Comunidad",
+    "askPrayer": "Petición de oración",
+    "communityShort": "Comunidad"
   },
   "auth": {
     "login": {
@@ -211,7 +214,23 @@
     "choosePgm": "Elegir un programa…",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "promote": "Convertir en tema colectivo (Mod)"
+    "promote": "Convertir en tema colectivo (Mod)",
+    "askTitle": "Petición de oración",
+    "askIntro": "Confía tu motivo de oración. Lo recibe el equipo de administración, que lo confía a intercesores. Los demás miembros no ven tu petición.",
+    "yourRequest": "Tu petición",
+    "photoOptional": "Foto (opcional)",
+    "whoSees": "¿Quién puede leerla?",
+    "confidentialityHelp": {
+      "ANONYMOUS": "tu nombre no se transmite",
+      "PRIVATE": "solo la administración y el intercesor que la lleva la leen",
+      "PUBLIC": "puede llevarse a la sala de oración, sin tu nombre"
+    },
+    "sent": "Tu petición fue recibida. El equipo la confía a intercesores: síguela aquí.",
+    "mineTitle": "Mis peticiones",
+    "mineEmpty": "Aún no has hecho ninguna petición.",
+    "entrustedTitle": "Peticiones que se te confían",
+    "entrustedIntro": "La administración te confió estos motivos: llévalos en oración.",
+    "loginToFollow": "Inicia sesión para seguir tus peticiones."
   },
   "confidentiality": {
     "ANONYMOUS": "Anónimo",
@@ -1069,6 +1088,10 @@
       "system": {
         "label": "Sistema",
         "description": "Estado del servidor y copias de seguridad"
+      },
+      "prayerRequests": {
+        "label": "Peticiones de oración",
+        "description": "Recibir peticiones, confiarlas a intercesores, seguir la respuesta"
       }
     }
   },
@@ -1090,6 +1113,38 @@
     "family": "Noticias de la familia",
     "seeAll": "Ver todo",
     "noRequests": "No hay peticiones pendientes ahora.",
-    "noPosts": "Nada nuevo aún. ¡Sé el primero en compartir!"
+    "noPosts": "Nada nuevo aún. ¡Sé el primero en compartir!",
+    "myRequests": "Mis peticiones de oración",
+    "entrusted": "Peticiones que se te confían",
+    "noMyRequests": "Ninguna petición por ahora."
+  },
+  "community": {
+    "title": "Comunidad",
+    "tabsLabel": "Comunidad",
+    "feed": "Muro",
+    "groups": "Iglesias y grupos",
+    "members": "Miembros",
+    "membersIntro": "Encuentra a tus hermanos y hermanas, descubre su iglesia, escríbeles.",
+    "groupsIntro": "Únete a tu iglesia, tu célula, tu grupo de oración.",
+    "searchMembers": "Buscar un miembro por nombre",
+    "noMembers": "Ningún miembro encontrado."
+  },
+  "adminRequests": {
+    "title": "Peticiones de oración recibidas",
+    "intro": "Todas las peticiones llegan aquí. Confía cada una a un intercesor y síguela hasta la respuesta.",
+    "empty": "Ninguna petición para este filtro.",
+    "anonymous": "Anónimo",
+    "entrustTo": "Confiar a",
+    "nobody": "Nadie",
+    "toRoom": "Llevar a la sala",
+    "toRoomHint": "Hacerla el motivo de oración actual de la sala",
+    "to": {
+      "IN_PROGRESS": "Empezar a orar",
+      "WAITING": "En espera",
+      "ANSWERED": "Respondida 🙌",
+      "ARCHIVED": "Archivar",
+      "RESTORED": "Restaurar",
+      "NEW": "Volver a nueva"
+    }
   }
 }

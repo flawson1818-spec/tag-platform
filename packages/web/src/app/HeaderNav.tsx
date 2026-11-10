@@ -23,10 +23,15 @@ interface Item {
 const MEMBER_MAIN: Item[] = [
   { to: '/', key: 'home', icon: '🏠' },
   { to: '/room', key: 'room', icon: '🕯️' },
-  { to: '/fil', key: 'feed', icon: '📰' },
-  { to: '/prayer-requests', key: 'prayerRequests', icon: '🙏' },
-  { to: '/communities', key: 'communities', icon: '⛪' },
+  { to: '/communaute', key: 'community', icon: '👥' },
+  { to: '/prayer-requests', key: 'askPrayer', icon: '🙏' },
 ];
+
+/** "Communauté" stays lit on the feed, the groups, the members and any profile or church page. */
+const COMMUNITY_PATHS = ['/communaute', '/membres/', '/communities'];
+function isCommunity(pathname: string): boolean {
+  return COMMUNITY_PATHS.some((p) => pathname === p || pathname.startsWith(p.endsWith('/') ? p : `${p}/`));
+}
 const MEMBER_MORE: Item[] = [
   { to: '/testimonies', key: 'testimonies', icon: '✨' },
   { to: '/events', key: 'events', icon: '📅' },
@@ -39,7 +44,7 @@ const MEMBER_MORE: Item[] = [
 const VISITOR_MAIN: Item[] = [
   { to: '/', key: 'home', icon: '🏠' },
   { to: '/room', key: 'room', icon: '🕯️' },
-  { to: '/prayer-requests', key: 'prayerRequests', icon: '🙏' },
+  { to: '/prayer-requests', key: 'askPrayer', icon: '🙏' },
   { to: '/world-map', key: 'worldMap', icon: '🌍' },
 ];
 const VISITOR_MORE: Item[] = [
@@ -108,6 +113,7 @@ function Dropdown({
 export function HeaderNav() {
   const { status, user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const signedIn = status === 'authenticated';
   const unread = useUnreadMessages(signedIn);
@@ -132,7 +138,14 @@ export function HeaderNav() {
       <nav aria-label={t('nav.mainLabel')} className={signedIn ? 'signed-in' : undefined}>
         <div className="nav-primary">
           {main.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.to === '/'} className={navClass}>
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              className={({ isActive }) =>
+                isActive || (item.to === '/communaute' && isCommunity(location.pathname)) ? 'active' : ''
+              }
+            >
               {t(`nav.${item.key}`)}
             </NavLink>
           ))}
@@ -218,30 +231,33 @@ export function HeaderNav() {
 export function MemberTabBar() {
   const { status } = useAuth();
   const { t } = useTranslation();
+  const location = useLocation();
+  const unread = useUnreadMessages(status === 'authenticated');
   if (status !== 'authenticated') return null;
   return (
-
-        <nav className="tabbar" aria-label={t('nav.tabbarLabel')}>
-          <NavLink to="/" end className={navClass}>
-            <span aria-hidden="true">🏠</span>
-            {t('nav.home')}
-          </NavLink>
-          <NavLink to="/room" className={navClass}>
-            <span aria-hidden="true">🕯️</span>
-            {t('nav.prayerShort')}
-          </NavLink>
-          <NavLink to="/fil" className={navClass}>
-            <span aria-hidden="true">📰</span>
-            {t('nav.feedShort')}
-          </NavLink>
-          <NavLink to="/prayer-requests" className={navClass}>
-            <span aria-hidden="true">🙏</span>
-            {t('nav.requestsShort')}
-          </NavLink>
-          <NavLink to="/communities" className={navClass}>
-            <span aria-hidden="true">⛪</span>
-            {t('nav.communitiesShort')}
-          </NavLink>
-        </nav>
+    <nav className="tabbar" aria-label={t('nav.tabbarLabel')}>
+      <NavLink to="/" end className={navClass}>
+        <span aria-hidden="true">🏠</span>
+        {t('nav.home')}
+      </NavLink>
+      <NavLink to="/room" className={navClass}>
+        <span aria-hidden="true">🕯️</span>
+        {t('nav.prayerShort')}
+      </NavLink>
+      <NavLink to="/communaute" className={({ isActive }) => (isActive || isCommunity(location.pathname) ? 'active' : '')}>
+        <span aria-hidden="true">👥</span>
+        {t('nav.communityShort')}
+      </NavLink>
+      <NavLink to="/prayer-requests" className={navClass}>
+        <span aria-hidden="true">🙏</span>
+        {t('nav.requestsShort')}
+      </NavLink>
+      <NavLink to="/messages" className={navClass}>
+        <span aria-hidden="true" className="tabbar-icon">
+          ✉️{unread > 0 && <span className="nav-badge">{unread > 9 ? '9+' : unread}</span>}
+        </span>
+        {t('nav.messages')}
+      </NavLink>
+    </nav>
   );
 }

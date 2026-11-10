@@ -33,7 +33,10 @@
     "prayerShort": "Prière",
     "feedShort": "Fil",
     "requestsShort": "Demandes",
-    "communitiesShort": "Églises"
+    "communitiesShort": "Églises",
+    "community": "Communauté",
+    "askPrayer": "Demande de prière",
+    "communityShort": "Communauté"
   },
   "auth": {
     "login": {
@@ -211,7 +214,23 @@
     "choosePgm": "Choisir un programme…",
     "confirm": "Confirmer",
     "cancel": "Annuler",
-    "promote": "Transformer en sujet collectif (Modo)"
+    "promote": "Transformer en sujet collectif (Modo)",
+    "askTitle": "Demande de prière",
+    "askIntro": "Confie ton sujet de prière. Il est reçu par l'équipe d'administration, qui le confie à des intercesseurs. Les autres membres ne voient pas ta demande.",
+    "yourRequest": "Ta demande",
+    "photoOptional": "Photo (facultatif)",
+    "whoSees": "Qui peut la lire ?",
+    "confidentialityHelp": {
+      "ANONYMOUS": "ton nom n'est pas transmis",
+      "PRIVATE": "seuls l'administration et l'intercesseur qui la porte la lisent",
+      "PUBLIC": "elle peut être portée dans la salle de prière, sans ton nom"
+    },
+    "sent": "Ta demande est bien reçue. L'équipe la confie aux intercesseurs : tu peux suivre son avancée ici.",
+    "mineTitle": "Mes demandes",
+    "mineEmpty": "Tu n'as pas encore déposé de demande.",
+    "entrustedTitle": "Demandes qui te sont confiées",
+    "entrustedIntro": "L'administration t'a confié ces sujets : porte-les dans la prière.",
+    "loginToFollow": "Connecte-toi pour suivre l'avancée de tes demandes."
   },
   "confidentiality": {
     "ANONYMOUS": "Anonyme",
@@ -1069,6 +1088,10 @@
       "system": {
         "label": "Système",
         "description": "État du serveur et sauvegardes"
+      },
+      "prayerRequests": {
+        "label": "Demandes de prière",
+        "description": "Recevoir les demandes, les confier aux intercesseurs, suivre l'exaucement"
       }
     }
   },
@@ -1090,6 +1113,38 @@
     "family": "Nouvelles de la famille",
     "seeAll": "Tout voir",
     "noRequests": "Aucune demande en attente pour l'instant.",
-    "noPosts": "Rien de neuf pour l'instant. Sois le premier à partager !"
+    "noPosts": "Rien de neuf pour l'instant. Sois le premier à partager !",
+    "myRequests": "Mes demandes de prière",
+    "entrusted": "Demandes qui te sont confiées",
+    "noMyRequests": "Aucune demande pour l'instant."
+  },
+  "community": {
+    "title": "Communauté",
+    "tabsLabel": "Communauté",
+    "feed": "Fil",
+    "groups": "Églises et groupes",
+    "members": "Membres",
+    "membersIntro": "Retrouve tes frères et sœurs, découvre leur église, écris-leur.",
+    "groupsIntro": "Rejoins ton église, ta cellule, ton groupe de prière.",
+    "searchMembers": "Chercher un membre par son nom",
+    "noMembers": "Aucun membre trouvé."
+  },
+  "adminRequests": {
+    "title": "Demandes de prière reçues",
+    "intro": "Toutes les demandes arrivent ici. Confie chacune à un intercesseur, suis-la jusqu'à l'exaucement.",
+    "empty": "Aucune demande pour ce filtre.",
+    "anonymous": "Anonyme",
+    "entrustTo": "Confier à",
+    "nobody": "Personne",
+    "toRoom": "Porter dans la salle",
+    "toRoomHint": "En faire le sujet de prière en cours dans la salle",
+    "to": {
+      "IN_PROGRESS": "Commencer à prier",
+      "WAITING": "En attente",
+      "ANSWERED": "Exaucée 🙌",
+      "ARCHIVED": "Archiver",
+      "RESTORED": "Restaurer",
+      "NEW": "Remettre en nouvelle"
+    }
   }
 }

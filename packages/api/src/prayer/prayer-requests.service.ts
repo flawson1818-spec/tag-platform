@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { buildPaginationMeta, PaginatedResult, paginationRange } from '../common/pagination';
 import { AiAgentsService } from '../ai/ai-agents.service';
@@ -139,34 +140,102 @@ export class PrayerRequestsService {
     return request;
   }
 
+  /**
+   * A member only ever sees their own requests (or, as an intercessor, the ones entrusted to
+   * them). The administration — prayer_request.manage_status — receives and sees all of them.
+   */
   async list(
     query: ListPrayerRequestsQueryDto,
-    canSeePrivate: boolean,
+    canManage: boolean,
     currentUserId?: string,
   ): Promise<PaginatedResult<PrayerRequest>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const { from, to } = paginationRange(page, limit);
 
-    let request = this.db
-      .select(REQUEST_COLUMNS, { count: 'exact' })
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .range(from, to);
-    if (query.mine && currentUserId) {
-      // Owner sees every one of their own requests, private included — an ANONYMOUS submission
-      // has no author_id at all (see create()), so it naturally never appears here either.
-      request = request.eq('author_id', currentUserId);
-    } else if (!canSeePrivate) {
-      request = request.neq('confidentiality', 'PRIVATE');
-    }
-    if (query.status) request = request.eq('status', query.status);
-    if (query.category) request = request.eq('category', query.category);
+    const build = (columns: string) => {
+      let request = this.db
+        .select(columns, { count: 'exact' })
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (query.assignedToMe && currentUserId) {
+        request = request.eq('assigned_to', currentUserId);
+      } else if (query.mine || !canManage) {
+        // An ANONYMOUS submission has no author_id (see create()), so it never shows up here.
+        request = request.eq('author_id', currentUserId ?? '00000000-0000-0000-0000-000000000000');
+      }
+      if (query.status) request = request.eq('status', query.status);
+      if (query.category) request = request.eq('category', query.category);
+      return request;
+    };
 
-    const { data, error, count } = await request;
+    // The administration also sees who asked and who carries it (fail-open before migration 20261111).
+    const extended = `${REQUEST_COLUMNS}, assigned_to, assigned_at, author:author_id(display_name), assignee:assigned_to(display_name)`;
+    let { data, error, count } = await build(canManage ? extended : `${REQUEST_COLUMNS}, assigned_to`);
+    if (error && ['42703', 'PGRST200', 'PGRST204'].includes(error.code ?? '')) {
+      if (query.assignedToMe) return { data: [], meta: buildPaginationMeta(page, limit, 0) };
+      ({ data, error, count } = await build(REQUEST_COLUMNS));
+    }
     if (error) throw new InternalServerErrorException(error.message);
 
-    return { data: data as unknown as PrayerRequest[], meta: buildPaginationMeta(page, limit, count ?? 0) };
+    const rows = (data ?? []) as unknown as (PrayerRequest & {
+      author?: { display_name: string } | null;
+      assignee?: { display_name: string } | null;
+    })[];
+    return {
+      data: rows.map(({ author, assignee, ...rest }) => ({
+        ...rest,
+        ...(canManage
+          ? {
+              author_display_name: rest.confidentiality === 'ANONYMOUS' ? null : (author?.display_name ?? null),
+              assignee_display_name: assignee?.display_name ?? null,
+            }
+          : {}),
+      })) as PrayerRequest[],
+      meta: buildPaginationMeta(page, limit, count ?? 0),
+    };
+  }
+
+  /** Who may open one request: the administration, its author, or the intercessor carrying it. */
+  async findForViewer(id: string, viewerId: string, canManage: boolean): Promise<PrayerRequest> {
+    const request = await this.findById(id, true);
+    if (canManage || request.author_id === viewerId) return request;
+    const { data } = await this.db.select('assigned_to').eq('id', id).maybeSingle();
+    if ((data as { assigned_to?: string | null } | null)?.assigned_to === viewerId) return request;
+    throw new NotFoundException(`Prayer request ${id} not found`);
+  }
+
+  /** The administration entrusts a request to an intercessor (or takes it back with null). */
+  async assign(id: string, assigneeId: string | null, actorId: string): Promise<PrayerRequest> {
+    const request = await this.findById(id, true);
+    const patch: Record<string, unknown> = {
+      assigned_to: assigneeId,
+      assigned_at: assigneeId ? new Date().toISOString() : null,
+      updated_by: actorId,
+    };
+    if (assigneeId && request.status === 'NEW') {
+      assertRequestTransition(request.status, 'ASSIGNED');
+      patch.status = 'ASSIGNED';
+    }
+    const { data, error } = await this.db.update(patch).eq('id', id).select(REQUEST_COLUMNS).single();
+    if (error) {
+      if (['42703', 'PGRST204'].includes(error.code ?? '')) {
+        throw new ServiceUnavailableException(
+          "L'assignation des demandes n'est pas encore activée : lance la migration 20261111 dans Supabase.",
+        );
+      }
+      throw new InternalServerErrorException(error.message);
+    }
+    if (assigneeId) {
+      await this.notificationsService
+        .create(assigneeId, 'PRAYER_REQUEST_ASSIGNED', { prayerRequestId: id })
+        .catch(() => null);
+      await this.pushNotificationsService
+        .send(assigneeId, 'Une demande de prière t\u2019est confiée', 'Ouvre Tour d\u2019avant-garde pour la porter dans la prière.')
+        .catch(() => undefined);
+    }
+    return data as unknown as PrayerRequest;
   }
 
   async updateStatus(

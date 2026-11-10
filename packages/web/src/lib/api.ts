@@ -319,6 +319,11 @@ export interface PrayerRequest {
   attachment_file_id: string | null;
   promoted_slot_id: string | null;
   created_at: string;
+  /** The intercessor carrying it (administration and that intercessor only). */
+  assigned_to?: string | null;
+  /** Administration view only; null for an anonymous request. */
+  author_display_name?: string | null;
+  assignee_display_name?: string | null;
 }
 
 export interface PaginatedResult<T> {
@@ -360,6 +365,18 @@ export const prayerRequestsApi = {
   listMine: (token: string, page = 1) =>
     request<PaginatedResult<PrayerRequest>>(`/prayer-requests?mine=true&page=${page}&limit=20`, {
       headers: authHeaders(token),
+    }),
+  /** An intercessor's view: the requests the administration entrusted to them. */
+  listAssignedToMe: (token: string, page = 1) =>
+    request<PaginatedResult<PrayerRequest>>(`/prayer-requests?assignedToMe=true&page=${page}&limit=20`, {
+      headers: authHeaders(token),
+    }),
+  /** Administration only: entrust a request to an intercessor, or take it back with null. */
+  assign: (token: string, id: string, userId: string | null) =>
+    request<PrayerRequest>(`/prayer-requests/${id}/assign`, {
+      method: 'PATCH',
+      headers: authHeaders(token),
+      body: JSON.stringify({ userId }),
     }),
   listFlagged: (token: string) =>
     request<FlaggedPrayerRequest[]>('/prayer-requests/flagged', { headers: authHeaders(token) }),
@@ -1264,6 +1281,11 @@ export const socialApi = {
     request<MemberProfile>(`/social/members/${memberId}`, { headers: authHeaders(token) }),
   memberPosts: (token: string, memberId: string, page = 1) =>
     request<PaginatedResult<FeedPost>>(`/social/members/${memberId}/posts?page=${page}`, { headers: authHeaders(token) }),
+  members: (token: string, search = '') =>
+    request<(MemberSummary & { churchName: string | null; city: string | null })[]>(
+      `/social/members?search=${encodeURIComponent(search)}`,
+      { headers: authHeaders(token) },
+    ),
   updateMyProfile: (token: string, data: { bio?: string; churchName?: string; city?: string }) =>
     request<MemberProfile>('/social/me/profile', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
 };

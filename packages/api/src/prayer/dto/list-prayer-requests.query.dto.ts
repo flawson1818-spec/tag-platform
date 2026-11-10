@@ -19,4 +19,10 @@ export class ListPrayerRequestsQueryDto extends PaginationQueryDto {
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   mine?: boolean;
+
+  /** An intercessor's view: the requests the administration entrusted to them. */
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  assignedToMe?: boolean;
 }

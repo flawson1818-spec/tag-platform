@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { COMMUNITY_TYPES, Community, JOIN_POLICIES, communitiesApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
+import { CommunityTabs } from '../social/CommunityTabs';
 import i18n from '../../i18n/config';
 
 export function CommunitiesPage() {
@@ -63,9 +64,10 @@ export function CommunitiesPage() {
   };
 
   return (
-    <div className="communities-page">
-      <h2>{t('communities.title')}</h2>
-      <p className="hint">{t('communities.intro')}</p>
+    <div className="communities-page social-page">
+      <h2>{t('community.title')}</h2>
+      <p className="hint">{t('community.groupsIntro')}</p>
+      <CommunityTabs />
 
       <input
         type="text"

@@ -1,4 +1,4 @@
-import { Route, Routes, Link } from 'react-router-dom';
+import { Navigate, Route, Routes, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TagsPage } from './tags/TagsPage';
 import { ItemsPage } from './items/ItemsPage';
@@ -41,6 +41,8 @@ import { MemberHomePage } from './home/MemberHomePage';
 import { FeedPage } from './social/FeedPage';
 import { MemberProfilePage } from './social/MemberProfilePage';
 import { MessagesPage } from './social/MessagesPage';
+import { MembersPage } from './social/MembersPage';
+import { AdminPrayerRequestsPage } from './admin/AdminPrayerRequestsPage';
 
 /** Permissions that open an administration page, from the same list the menus use. */
 function perms(path: string): string[] {
@@ -117,11 +119,28 @@ export function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/fil" element={<Navigate to="/communaute" replace />} />
             <Route
-              path="/fil"
+              path="/communaute"
               element={
                 <ProtectedRoute>
                   <FeedPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/communaute/groupes"
+              element={
+                <ProtectedRoute>
+                  <CommunitiesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/communaute/membres"
+              element={
+                <ProtectedRoute>
+                  <MembersPage />
                 </ProtectedRoute>
               }
             />
@@ -200,6 +219,16 @@ export function App() {
                 <ProtectedRoute>
                   <RequireAccess permissions={ADMIN_PERMISSIONS}>
                     <AdminHomePage />
+                  </RequireAccess>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/prayer-requests"
+              element={
+                <ProtectedRoute>
+                  <RequireAccess permissions={perms('/admin/prayer-requests')}>
+                    <AdminPrayerRequestsPage />
                   </RequireAccess>
                 </ProtectedRoute>
               }

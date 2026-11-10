@@ -16,7 +16,7 @@ function fakeDb(responses: Record<string, Result[]>) {
       return Promise.resolve({ data: null, error: null, count: 0, ...(r ?? {}) });
     };
     const builder: Record<string, unknown> = {};
-    for (const op of ['select', 'insert', 'upsert', 'delete', 'eq', 'is', 'or', 'in', 'order', 'range']) {
+    for (const op of ['select', 'insert', 'upsert', 'delete', 'eq', 'is', 'or', 'in', 'order', 'range', 'limit', 'ilike']) {
       builder[op] = (...args: unknown[]) => {
         entry.ops.push([op, args]);
         return builder;
@@ -141,6 +141,19 @@ describe('SocialService', () => {
     it('editing my profile before the migration answers 503', async () => {
       const { service } = build({ user_profiles: [{ error: { code: 'PGRST205', message: 'missing' } }] });
       await expect(service.updateMyProfile('u1', { bio: 'Servante' })).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
+  });
+
+  describe('members directory', () => {
+    it('finds members by name only, with church and city, never e-mail or phone', async () => {
+      const { service, db } = build({
+        users: [{ data: [{ id: 'u2', display_name: 'Paul', avatar_file_id: null }] }],
+        user_profiles: [{ data: [{ user_id: 'u2', church_name: 'Église de la Grâce', city: 'Lomé' }] }],
+      });
+      const found = await service.searchMembers('Pa,ul');
+      const select = db.calls.find((c) => c.table === 'users')?.ops.find(([op]) => op === 'select');
+      expect(String(select?.[1][0])).not.toMatch(/email|phone/);
+      expect(found).toEqual([{ id: 'u2', displayName: 'Paul', avatarUrl: null, churchName: 'Église de la Grâce', city: 'Lomé' }]);
     });
   });
 });

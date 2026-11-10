@@ -33,7 +33,10 @@
     "prayerShort": "Oração",
     "feedShort": "Feed",
     "requestsShort": "Pedidos",
-    "communitiesShort": "Igrejas"
+    "communitiesShort": "Igrejas",
+    "community": "Comunidade",
+    "askPrayer": "Pedido de oração",
+    "communityShort": "Comunidade"
   },
   "auth": {
     "login": {
@@ -211,7 +214,23 @@
     "choosePgm": "Escolher um programa…",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "promote": "Transformar em tema coletivo (Mod)"
+    "promote": "Transformar em tema coletivo (Mod)",
+    "askTitle": "Pedido de oração",
+    "askIntro": "Confie seu pedido de oração. Ele é recebido pela equipe de administração, que o confia a intercessores. Os outros membros não veem seu pedido.",
+    "yourRequest": "Seu pedido",
+    "photoOptional": "Foto (opcional)",
+    "whoSees": "Quem pode ler?",
+    "confidentialityHelp": {
+      "ANONYMOUS": "seu nome não é transmitido",
+      "PRIVATE": "só a administração e o intercessor que o leva o leem",
+      "PUBLIC": "pode ser levado à sala de oração, sem seu nome"
+    },
+    "sent": "Seu pedido foi recebido. A equipe o confia a intercessores: acompanhe aqui.",
+    "mineTitle": "Meus pedidos",
+    "mineEmpty": "Você ainda não fez nenhum pedido.",
+    "entrustedTitle": "Pedidos confiados a você",
+    "entrustedIntro": "A administração confiou estes pedidos a você: leve-os em oração.",
+    "loginToFollow": "Entre para acompanhar seus pedidos."
   },
   "confidentiality": {
     "ANONYMOUS": "Anônimo",
@@ -1069,6 +1088,10 @@
       "system": {
         "label": "Sistema",
         "description": "Estado do servidor e backups"
+      },
+      "prayerRequests": {
+        "label": "Pedidos de oração",
+        "description": "Receber pedidos, confiá-los a intercessores, acompanhar a resposta"
       }
     }
   },
@@ -1090,6 +1113,38 @@
     "family": "Notícias da família",
     "seeAll": "Ver tudo",
     "noRequests": "Nenhum pedido pendente agora.",
-    "noPosts": "Nada novo ainda. Seja o primeiro a compartilhar!"
+    "noPosts": "Nada novo ainda. Seja o primeiro a compartilhar!",
+    "myRequests": "Meus pedidos de oração",
+    "entrusted": "Pedidos confiados a você",
+    "noMyRequests": "Nenhum pedido por enquanto."
+  },
+  "community": {
+    "title": "Comunidade",
+    "tabsLabel": "Comunidade",
+    "feed": "Feed",
+    "groups": "Igrejas e grupos",
+    "members": "Membros",
+    "membersIntro": "Encontre seus irmãos e irmãs, descubra a igreja deles, escreva para eles.",
+    "groupsIntro": "Junte-se à sua igreja, sua célula, seu grupo de oração.",
+    "searchMembers": "Procurar um membro pelo nome",
+    "noMembers": "Nenhum membro encontrado."
+  },
+  "adminRequests": {
+    "title": "Pedidos de oração recebidos",
+    "intro": "Todos os pedidos chegam aqui. Confie cada um a um intercessor e acompanhe até a resposta.",
+    "empty": "Nenhum pedido para este filtro.",
+    "anonymous": "Anônimo",
+    "entrustTo": "Confiar a",
+    "nobody": "Ninguém",
+    "toRoom": "Levar à sala",
+    "toRoomHint": "Torná-lo o tema de oração atual da sala",
+    "to": {
+      "IN_PROGRESS": "Começar a orar",
+      "WAITING": "Em espera",
+      "ANSWERED": "Respondido 🙌",
+      "ARCHIVED": "Arquivar",
+      "RESTORED": "Restaurar",
+      "NEW": "Voltar a novo"
+    }
   }
 }

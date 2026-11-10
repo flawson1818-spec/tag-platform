@@ -213,6 +213,41 @@ export class SocialService {
     return { amenCount: count ?? 0, amenedByMe: amen };
   }
 
+  // ---- Members directory ----
+
+  /** Find brothers and sisters by name, church or city — never by e-mail or phone. */
+  async searchMembers(search: string, limit = 24): Promise<(MemberSummary & { churchName: string | null; city: string | null })[]> {
+    const term = search.replace(/[^\p{L}\p{N} '\-]/gu, '').trim();
+    let query = this.db
+      .from('users')
+      .select('id, display_name, avatar_file_id')
+      .eq('status', 'ACTIVE')
+      .is('deleted_at', null)
+      .order('display_name', { ascending: true })
+      .limit(Math.min(50, limit));
+    if (term) query = query.ilike('display_name', `%${term}%`);
+    const { data, error } = await query;
+    if (error) throw new InternalServerErrorException(error.message);
+    const users = (data ?? []) as { id: string; display_name: string; avatar_file_id: string | null }[];
+    if (users.length === 0) return [];
+
+    const [profiles, avatars] = await Promise.all([
+      this.db.from('user_profiles').select('user_id, church_name, city').in('user_id', users.map((u) => u.id)),
+      this.filesService.getPublicReadUrls(users.map((u) => u.avatar_file_id ?? '')),
+    ]);
+    const rows = (profiles.error ? [] : (profiles.data ?? [])) as { user_id: string; church_name: string | null; city: string | null }[];
+    return users.map((u) => {
+      const p = rows.find((r) => r.user_id === u.id);
+      return {
+        id: u.id,
+        displayName: u.display_name,
+        avatarUrl: u.avatar_file_id ? (avatars.get(u.avatar_file_id) ?? null) : null,
+        churchName: p?.church_name ?? null,
+        city: p?.city ?? null,
+      };
+    });
+  }
+
   // ---- Profiles ----
 
   async profile(memberId: string, viewerId: string): Promise<MemberProfile> {

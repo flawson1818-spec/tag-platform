@@ -1,23 +1,12 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getAccessToken } from '../auth/AuthContext';
-import {
-  CONFIDENTIALITY_LEVELS,
-  PRAYER_REQUEST_CATEGORIES,
-  PrayerProgram,
-  PrayerRequest,
-  filesApi,
-  prayerApi,
-  prayerRequestsApi,
-} from '../../lib/api';
-import { Pagination } from '../Pagination';
-
-const REQUEST_STATUSES = ['DRAFT', 'NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING', 'ANSWERED', 'ARCHIVED', 'RESTORED'];
-const MODERATOR_STATUSES = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING', 'ANSWERED', 'ARCHIVED', 'RESTORED'];
+import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { CONFIDENTIALITY_LEVELS, PRAYER_REQUEST_CATEGORIES, PrayerRequest, filesApi, prayerRequestsApi } from '../../lib/api';
 
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
-function RequestPhoto({ requestId }: { requestId: string }) {
+export function RequestPhoto({ requestId }: { requestId: string }) {
   const { t } = useTranslation();
   const [url, setUrl] = useState<string | null>(null);
 
@@ -34,76 +23,38 @@ function RequestPhoto({ requestId }: { requestId: string }) {
   return <img src={url} alt={t('prayerRequests.photoAlt')} className="testimony-media" />;
 }
 
-export function PrayerRequestsPage() {
+/** Where a request stands, in words a member understands. */
+export function RequestStatus({ status }: { status: string }) {
   const { t } = useTranslation();
+  return <span className={`chip chip-status status-${status.toLowerCase()}`}>{t(`requestStatuses.${status}`, status)}</span>;
+}
+
+/**
+ * Asking for prayer: a member (or a visitor) deposits a request, and follows where it stands.
+ * Requests are received only by the administration, which entrusts each one to intercessors —
+ * members never browse other people's requests. An intercessor also finds here the requests
+ * entrusted to them.
+ */
+export function PrayerRequestsPage() {
+  const { t, i18n } = useTranslation();
+  const { status } = useAuth();
+  const signedIn = status === 'authenticated';
   const [category, setCategory] = useState<string>(PRAYER_REQUEST_CATEGORIES[0]);
   const [description, setDescription] = useState('');
-  const [confidentiality, setConfidentiality] = useState('ANONYMOUS');
+  const [confidentiality, setConfidentiality] = useState('PRIVATE');
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<PrayerRequest | null>(null);
-
-  const [requests, setRequests] = useState<PrayerRequest[]>([]);
-  const [listError, setListError] = useState<string | null>(null);
-  const [listLoading, setListLoading] = useState(() => Boolean(getAccessToken()));
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [programs, setPrograms] = useState<PrayerProgram[]>([]);
-  const [promotingId, setPromotingId] = useState<string | null>(null);
-  const [promoteProgramId, setPromoteProgramId] = useState('');
-
-  const refreshRequests = () => {
-    const token = getAccessToken();
-    if (!token) return;
-
-    setListLoading(true);
-    prayerRequestsApi
-      .list(token, page, { status: statusFilter || undefined, category: categoryFilter || undefined })
-      .then((res) => {
-        setRequests(res.data);
-        setTotalPages(res.meta.totalPages);
-      })
-      .catch((err) => setListError((err as Error).message))
-      .finally(() => setListLoading(false));
-  };
-
-  useEffect(refreshRequests, [page, statusFilter, categoryFilter]);
+  const [sent, setSent] = useState(false);
+  const [mine, setMine] = useState<PrayerRequest[]>([]);
+  const [entrusted, setEntrusted] = useState<PrayerRequest[]>([]);
 
   useEffect(() => {
-    prayerApi
-      .listPrograms()
-      .then((res) => setPrograms(res.data))
-      .catch(() => setPrograms([]));
-  }, []);
-
-  const handleFilterChange = (setter: (value: string) => void) => (e: ChangeEvent<HTMLSelectElement>) => {
-    setter(e.target.value);
-    setPage(1);
-  };
-
-  const handleStatusChange = (id: string, status: string) => {
     const token = getAccessToken();
-    if (!token) return;
-    prayerRequestsApi
-      .updateStatus(token, id, status)
-      .then(refreshRequests)
-      .catch((err) => setListError((err as Error).message));
-  };
-
-  const handlePromote = (id: string) => {
-    const token = getAccessToken();
-    if (!token || !promoteProgramId) return;
-    prayerRequestsApi
-      .promote(token, id, promoteProgramId)
-      .then(() => {
-        setPromotingId(null);
-        refreshRequests();
-      })
-      .catch((err) => setListError((err as Error).message));
-  };
+    if (!token || !signedIn) return;
+    prayerRequestsApi.listMine(token).then((res) => setMine(res.data)).catch(() => setMine([]));
+    prayerRequestsApi.listAssignedToMe(token).then((res) => setEntrusted(res.data)).catch(() => setEntrusted([]));
+  }, [signedIn]);
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -119,7 +70,7 @@ export function PrayerRequestsPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
-    setConfirmation(null);
+    setSent(false);
     setSubmitting(true);
     const token = getAccessToken();
     try {
@@ -134,16 +85,11 @@ export function PrayerRequestsPage() {
         photoFileId = stored.id;
       }
       const created = await prayerRequestsApi.create({ category, description, confidentiality, photoFileId }, token);
-      setConfirmation(created);
+      setSent(true);
       setDescription('');
       setPhoto(null);
-      if (token) {
-        if (page === 1) {
-          setRequests((prev) => [created, ...prev]);
-        } else {
-          setPage(1);
-        }
-      }
+      // An anonymous request has no author: it can't appear in "Mes demandes".
+      if (created.author_id) setMine((prev) => [created, ...prev]);
     } catch (err) {
       setSubmitError((err as Error).message);
     } finally {
@@ -151,141 +97,118 @@ export function PrayerRequestsPage() {
     }
   };
 
+  const when = (iso: string) => new Date(iso).toLocaleDateString(i18n.language, { day: 'numeric', month: 'long' });
+
   return (
     <div className="requests-page">
-      <h2>{t('prayerRequests.title')}</h2>
-      <p className="hint">{t('prayerRequests.intro')}</p>
+      <section className="pr-ask">
+        <h2>{t('prayerRequests.askTitle')}</h2>
+        <p className="hint">{t('prayerRequests.askIntro')}</p>
 
-      <form onSubmit={handleSubmit} className="request-form">
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          {PRAYER_REQUEST_CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {t(`prayerCategories.${c}`, c)}
-            </option>
-          ))}
-        </select>
+        <form onSubmit={handleSubmit} className="pr-form">
+          <label>
+            {t('prayerRequests.categoryLabel')}
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              {PRAYER_REQUEST_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {t(`prayerCategories.${c}`, c)}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <textarea
-          placeholder={t('prayerRequests.descriptionPlaceholder')}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          required
-        />
+          <label>
+            {t('prayerRequests.yourRequest')}
+            <textarea
+              placeholder={t('prayerRequests.descriptionPlaceholder')}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              required
+            />
+          </label>
 
-        {getAccessToken() && (
-          <input type="file" accept="image/*" onChange={handlePhotoChange} />
-        )}
-
-        <div className="confidentiality-picker">
-          {CONFIDENTIALITY_LEVELS.map((level) => (
-            <label key={level}>
-              <input
-                type="radio"
-                name="confidentiality"
-                value={level}
-                checked={confidentiality === level}
-                onChange={(e) => setConfidentiality(e.target.value)}
-              />
-              {t(`confidentiality.${level}`)}
+          {signedIn && (
+            <label>
+              {t('prayerRequests.photoOptional')}
+              <input type="file" accept="image/*" onChange={handlePhotoChange} />
             </label>
-          ))}
-        </div>
+          )}
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? t('prayerRequests.submitting') : t('prayerRequests.submit')}
-        </button>
-      </form>
+          <fieldset className="confidentiality-picker">
+            <legend>{t('prayerRequests.whoSees')}</legend>
+            {CONFIDENTIALITY_LEVELS.map((level) => (
+              <label key={level}>
+                <input
+                  type="radio"
+                  name="confidentiality"
+                  value={level}
+                  checked={confidentiality === level}
+                  onChange={(e) => setConfidentiality(e.target.value)}
+                />
+                <span>
+                  <strong>{t(`confidentiality.${level}`)}</strong>
+                  <span className="hint"> — {t(`prayerRequests.confidentialityHelp.${level}`)}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
 
-      {submitError && <p className="error">{submitError}</p>}
-      {confirmation && (
-        <p className="confirmation">
-          {t('prayerRequests.confirmationPrefix')}{' '}
-          <strong>{t(`confidentiality.${confirmation.confidentiality}`)}</strong>
+          <button type="submit" disabled={submitting}>
+            {submitting ? t('prayerRequests.submitting') : t('prayerRequests.submit')}
+          </button>
+        </form>
+
+        {submitError && <p className="error">{submitError}</p>}
+        {sent && <p className="confirmation">{t('prayerRequests.sent')}</p>}
+      </section>
+
+      {signedIn ? (
+        <>
+          {entrusted.length > 0 && (
+            <section className="pr-block pr-entrusted">
+              <h3>{t('prayerRequests.entrustedTitle')}</h3>
+              <p className="hint">{t('prayerRequests.entrustedIntro')}</p>
+              <ul className="request-list">
+                {entrusted.map((r) => (
+                  <li key={r.id} className="request-row">
+                    <div className="request-meta">
+                      <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
+                      <RequestStatus status={r.status} />
+                    </div>
+                    <p>{r.description}</p>
+                    {r.photo_file_id && <RequestPhoto requestId={r.id} />}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section className="pr-block">
+            <h3>{t('prayerRequests.mineTitle')}</h3>
+            {mine.length === 0 ? (
+              <p className="hint">{t('prayerRequests.mineEmpty')}</p>
+            ) : (
+              <ul className="request-list">
+                {mine.map((r) => (
+                  <li key={r.id} className="request-row">
+                    <div className="request-meta">
+                      <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
+                      <RequestStatus status={r.status} />
+                      <span className="hint">{when(r.created_at)}</span>
+                    </div>
+                    <p>{r.description}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      ) : (
+        <p className="hint">
+          {t('prayerRequests.loginToFollow')} <Link to="/login">{t('nav.login')}</Link>
         </p>
       )}
-
-      <h3>{t('prayerRequests.communityTitle')}</h3>
-      {!getAccessToken() && <p className="hint">{t('prayerRequests.loginToView')}</p>}
-
-      {getAccessToken() && (
-        <div className="inline-form">
-          <label htmlFor="request-status-filter">{t('prayerRequests.statusLabel')}</label>
-          <select id="request-status-filter" value={statusFilter} onChange={handleFilterChange(setStatusFilter)}>
-            <option value="">{t('prayerRequests.allStatuses')}</option>
-            {REQUEST_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {t(`requestStatuses.${s}`, s)}
-              </option>
-            ))}
-          </select>
-          <label htmlFor="request-category-filter">{t('prayerRequests.categoryLabel')}</label>
-          <select id="request-category-filter" value={categoryFilter} onChange={handleFilterChange(setCategoryFilter)}>
-            <option value="">{t('prayerRequests.allCategories')}</option>
-            {PRAYER_REQUEST_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {t(`prayerCategories.${c}`, c)}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {listLoading && <p>{t('prayerRequests.loading')}</p>}
-      {listError && <p className="error">{listError}</p>}
-      {requests.length > 0 && (
-        <ul className="request-list">
-          {requests.map((r) => (
-            <li key={r.id} className="request-row">
-              <div className="request-meta">
-                <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
-                <span className="chip chip-status">{t(`requestStatuses.${r.status}`, r.status)}</span>
-              </div>
-              <p>{r.description}</p>
-              {r.photo_file_id && <RequestPhoto requestId={r.id} />}
-
-              <div className="request-form">
-                {MODERATOR_STATUSES.filter((s) => s !== r.status).map((s) => (
-                  <button key={s} type="button" onClick={() => handleStatusChange(r.id, s)}>
-                    {t(`requestStatuses.${s}`, s)}
-                  </button>
-                ))}
-              </div>
-
-              {promotingId === r.id ? (
-                <div className="request-form">
-                  <select value={promoteProgramId} onChange={(e) => setPromoteProgramId(e.target.value)}>
-                    <option value="">{t('prayerRequests.choosePgm')}</option>
-                    {programs.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="button" onClick={() => handlePromote(r.id)} disabled={!promoteProgramId}>
-                    {t('prayerRequests.confirm')}
-                  </button>
-                  <button type="button" className="link-button" onClick={() => setPromotingId(null)}>
-                    {t('prayerRequests.cancel')}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="link-button"
-                  onClick={() => {
-                    setPromotingId(r.id);
-                    setPromoteProgramId('');
-                  }}
-                >
-                  {t('prayerRequests.promote')}
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>
   );
 }

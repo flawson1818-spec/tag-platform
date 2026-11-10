@@ -33,7 +33,10 @@
     "prayerShort": "Prayer",
     "feedShort": "Feed",
     "requestsShort": "Requests",
-    "communitiesShort": "Churches"
+    "communitiesShort": "Churches",
+    "community": "Community",
+    "askPrayer": "Prayer request",
+    "communityShort": "Community"
   },
   "auth": {
     "login": {
@@ -211,7 +214,23 @@
     "choosePgm": "Choose a program…",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "promote": "Turn into a collective subject (Mod)"
+    "promote": "Turn into a collective subject (Mod)",
+    "askTitle": "Prayer request",
+    "askIntro": "Entrust your prayer topic. The administration team receives it and entrusts it to intercessors. Other members do not see your request.",
+    "yourRequest": "Your request",
+    "photoOptional": "Photo (optional)",
+    "whoSees": "Who can read it?",
+    "confidentialityHelp": {
+      "ANONYMOUS": "your name is not passed on",
+      "PRIVATE": "only the administration and the intercessor carrying it read it",
+      "PUBLIC": "it may be carried in the prayer room, without your name"
+    },
+    "sent": "Your request has been received. The team entrusts it to intercessors: follow it here.",
+    "mineTitle": "My requests",
+    "mineEmpty": "You haven't made a request yet.",
+    "entrustedTitle": "Requests entrusted to you",
+    "entrustedIntro": "The administration entrusted these topics to you: carry them in prayer.",
+    "loginToFollow": "Sign in to follow your requests."
   },
   "confidentiality": {
     "ANONYMOUS": "Anonymous",
@@ -1069,6 +1088,10 @@
       "system": {
         "label": "System",
         "description": "Server health and backups"
+      },
+      "prayerRequests": {
+        "label": "Prayer requests",
+        "description": "Receive requests, entrust them to intercessors, follow them to their answer"
       }
     }
   },
@@ -1090,6 +1113,38 @@
     "family": "News from the family",
     "seeAll": "See all",
     "noRequests": "No pending request right now.",
-    "noPosts": "Nothing new yet. Be the first to share!"
+    "noPosts": "Nothing new yet. Be the first to share!",
+    "myRequests": "My prayer requests",
+    "entrusted": "Requests entrusted to you",
+    "noMyRequests": "No request yet."
+  },
+  "community": {
+    "title": "Community",
+    "tabsLabel": "Community",
+    "feed": "Feed",
+    "groups": "Churches and groups",
+    "members": "Members",
+    "membersIntro": "Find your brothers and sisters, discover their church, write to them.",
+    "groupsIntro": "Join your church, your cell, your prayer group.",
+    "searchMembers": "Search a member by name",
+    "noMembers": "No member found."
+  },
+  "adminRequests": {
+    "title": "Prayer requests received",
+    "intro": "Every request arrives here. Entrust each one to an intercessor and follow it to its answer.",
+    "empty": "No request for this filter.",
+    "anonymous": "Anonymous",
+    "entrustTo": "Entrust to",
+    "nobody": "Nobody",
+    "toRoom": "Carry in the room",
+    "toRoomHint": "Make it the current prayer topic in the room",
+    "to": {
+      "IN_PROGRESS": "Start praying",
+      "WAITING": "Waiting",
+      "ANSWERED": "Answered 🙌",
+      "ARCHIVED": "Archive",
+      "RESTORED": "Restore",
+      "NEW": "Back to new"
+    }
   }
 }

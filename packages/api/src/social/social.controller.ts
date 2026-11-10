@@ -60,6 +60,11 @@ export class SocialController {
     return this.socialService.updateMyProfile(user.id, dto);
   }
 
+  @Get('members')
+  members(@Query('search') search = '') {
+    return this.socialService.searchMembers(String(search).slice(0, 80));
+  }
+
   @Get('members/:id')
   profile(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.socialService.profile(id, user.id);

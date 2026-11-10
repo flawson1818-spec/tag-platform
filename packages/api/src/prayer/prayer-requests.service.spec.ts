@@ -141,14 +141,56 @@ describe('PrayerRequestsService', () => {
       expect(chain.neq).not.toHaveBeenCalledWith('confidentiality', 'PRIVATE');
     });
 
-    it('excludes PRIVATE requests for a non-moderator browsing everyone\'s requests', async () => {
+    it("a member only ever sees their own requests, never other people's", async () => {
       const chain = createQueryChain({ data: [NEW_REQUEST], error: null, count: 1 });
       const supabase = createSupabaseServiceMock({ prayer_requests: chain });
       const { service } = buildDeps({ supabase });
 
       await service.list({} as never, false, 'user-1');
 
-      expect(chain.neq).toHaveBeenCalledWith('confidentiality', 'PRIVATE');
+      expect(chain.eq).toHaveBeenCalledWith('author_id', 'user-1');
+    });
+
+    it('the administration receives every request, with who asked and who carries it', async () => {
+      const chain = createQueryChain({
+        data: [{ ...NEW_REQUEST, confidentiality: 'PUBLIC', author: { display_name: 'Marie' }, assignee: { display_name: 'Paul' } }],
+        error: null,
+        count: 1,
+      });
+      const supabase = createSupabaseServiceMock({ prayer_requests: chain });
+      const { service } = buildDeps({ supabase });
+
+      const page = await service.list({} as never, true, 'admin-1');
+
+      expect(chain.eq).not.toHaveBeenCalledWith('author_id', expect.anything());
+      expect(page.data[0]).toMatchObject({ author_display_name: 'Marie', assignee_display_name: 'Paul' });
+    });
+
+    it('an intercessor sees the requests entrusted to them', async () => {
+      const chain = createQueryChain({ data: [], error: null, count: 0 });
+      const supabase = createSupabaseServiceMock({ prayer_requests: chain });
+      const { service } = buildDeps({ supabase });
+
+      await service.list({ assignedToMe: true } as never, false, 'int-1');
+
+      expect(chain.eq).toHaveBeenCalledWith('assigned_to', 'int-1');
+    });
+  });
+
+  describe('assign', () => {
+    it('entrusts a NEW request to an intercessor and tells them', async () => {
+      const update = createQueryChain({ data: { ...NEW_REQUEST, status: 'ASSIGNED' }, error: null });
+      const supabase = createSupabaseServiceMock({
+        prayer_requests: [createQueryChain({ data: NEW_REQUEST, error: null }), update],
+      });
+      const deps = buildDeps({ supabase });
+
+      await deps.service.assign(NEW_REQUEST.id, 'int-1', 'admin-1');
+
+      expect(update.update).toHaveBeenCalledWith(expect.objectContaining({ assigned_to: 'int-1', status: 'ASSIGNED' }));
+      expect(deps.notificationsService.create).toHaveBeenCalledWith('int-1', 'PRAYER_REQUEST_ASSIGNED', {
+        prayerRequestId: NEW_REQUEST.id,
+      });
     });
   });
 

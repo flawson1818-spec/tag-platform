@@ -35,6 +35,7 @@ export function MemberHomePage() {
   const [remaining, setRemaining] = useState(0);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
+  const [entrusted, setEntrusted] = useState<PrayerRequest[]>([]);
   const [events, setEvents] = useState<TagEvent[]>([]);
 
   useEffect(() => {
@@ -52,9 +53,14 @@ export function MemberHomePage() {
         .feed(token, 1)
         .then((res) => setPosts(res.data.slice(0, 3)))
         .catch(() => undefined);
+      // A member follows their own requests; an intercessor also sees the ones entrusted to them.
       prayerRequestsApi
-        .list(token, 1)
-        .then((res) => setRequests(res.data.filter((r) => r.status !== 'ARCHIVED' && r.status !== 'ANSWERED').slice(0, 3)))
+        .listMine(token)
+        .then((res) => setRequests(res.data.slice(0, 3)))
+        .catch(() => undefined);
+      prayerRequestsApi
+        .listAssignedToMe(token)
+        .then((res) => setEntrusted(res.data.filter((r) => r.status !== 'ANSWERED' && r.status !== 'ARCHIVED').slice(0, 3)))
         .catch(() => undefined);
     }
     eventsApi
@@ -128,7 +134,7 @@ export function MemberHomePage() {
           <strong>{t('nav.messages')}</strong>
           <span className="hint">{unread > 0 ? t('memberHome.unread', { count: unread }) : t('memberHome.noUnread')}</span>
         </Link>
-        <Link to="/fil" className="mh-shortcut">
+        <Link to="/communaute" className="mh-shortcut">
           <span aria-hidden="true">📷</span>
           <strong>{t('memberHome.share')}</strong>
           <span className="hint">{t('memberHome.shareHint')}</span>
@@ -143,16 +149,19 @@ export function MemberHomePage() {
       <div className="mh-columns">
         <section className="mh-block">
           <div className="mh-block-head">
-            <h3>{t('memberHome.carry')}</h3>
+            <h3>{entrusted.length > 0 ? t('memberHome.entrusted') : t('memberHome.myRequests')}</h3>
             <Link to="/prayer-requests">{t('memberHome.seeAll')}</Link>
           </div>
-          {requests.length === 0 ? (
-            <p className="hint">{t('memberHome.noRequests')}</p>
+          {(entrusted.length > 0 ? entrusted : requests).length === 0 ? (
+            <p className="hint">
+              {t('memberHome.noMyRequests')} <Link to="/prayer-requests">{t('memberHome.ask')}</Link>
+            </p>
           ) : (
             <ul className="mh-list">
-              {requests.map((r) => (
+              {(entrusted.length > 0 ? entrusted : requests).map((r) => (
                 <li key={r.id}>
-                  <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>
+                  <span className="chip">{t(`prayerCategories.${r.category}`, r.category)}</span>{' '}
+                  <span className="chip chip-status">{t(`requestStatuses.${r.status}`, r.status)}</span>
                   <p>{excerpt(r.description)}</p>
                 </li>
               ))}
@@ -163,7 +172,7 @@ export function MemberHomePage() {
         <section className="mh-block">
           <div className="mh-block-head">
             <h3>{t('memberHome.family')}</h3>
-            <Link to="/fil">{t('memberHome.seeAll')}</Link>
+            <Link to="/communaute">{t('memberHome.seeAll')}</Link>
           </div>
           {posts.length === 0 ? (
             <p className="hint">{t('memberHome.noPosts')}</p>

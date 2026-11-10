@@ -66,7 +66,7 @@ export function MemberProfilePage() {
 
   return (
     <section className="social-page">
-      <Link to="/fil" className="link-button">← {t('social.backToFeed')}</Link>
+      <Link to="/communaute" className="link-button">← {t('social.backToFeed')}</Link>
 
       <div className="social-profile-card">
         <Avatar name={profile.displayName} url={profile.avatarUrl} size={88} />

@@ -10,6 +10,7 @@ import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.
 import { CreatePrayerRequestDto } from './dto/create-prayer-request.dto';
 import { ListPrayerRequestsQueryDto } from './dto/list-prayer-requests.query.dto';
 import { PromotePrayerRequestDto } from './dto/promote-prayer-request.dto';
+import { AssignPrayerRequestDto } from './dto/assign-prayer-request.dto';
 import { UpdatePrayerRequestStatusDto } from './dto/update-prayer-request-status.dto';
 import { PrayerRequestStatus } from './prayer-request.entity';
 import { PrayerRequestsService } from './prayer-requests.service';
@@ -40,10 +41,8 @@ export class PrayerRequestsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async list(@CurrentUser() currentUser: AuthenticatedUser, @Query() query: ListPrayerRequestsQueryDto) {
-    const canSeePrivate = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(
-      MODERATE_PERMISSION,
-    );
-    return this.requestsService.list(query, canSeePrivate, currentUser.id);
+    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(MODERATE_PERMISSION);
+    return this.requestsService.list(query, canManage, currentUser.id);
   }
 
   @Get('flagged')
@@ -58,10 +57,8 @@ export class PrayerRequestsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async findOne(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
-    const canSeePrivate = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(
-      MODERATE_PERMISSION,
-    );
-    return this.requestsService.findById(id, canSeePrivate);
+    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(MODERATE_PERMISSION);
+    return this.requestsService.findForViewer(id, currentUser.id, canManage);
   }
 
   @Get(':id/media')
@@ -72,10 +69,9 @@ export class PrayerRequestsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('kind') kind: 'photo' | 'attachment' = 'photo',
   ) {
-    const canSeePrivate = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(
-      MODERATE_PERMISSION,
-    );
-    const url = await this.requestsService.getMediaUrl(id, kind, canSeePrivate);
+    const canManage = (await this.permissionsService.getUserPermissionCodes(currentUser.id)).has(MODERATE_PERMISSION);
+    await this.requestsService.findForViewer(id, currentUser.id, canManage);
+    const url = await this.requestsService.getMediaUrl(id, kind, true);
     return { url };
   }
 
@@ -96,6 +92,18 @@ export class PrayerRequestsController {
       currentUser.id,
       canManageStatus,
     );
+  }
+
+  @Patch(':id/assign')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @RequirePermission(MODERATE_PERMISSION)
+  assign(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignPrayerRequestDto,
+  ) {
+    return this.requestsService.assign(id, dto.userId ?? null, currentUser.id);
   }
 
   @Post(':id/promote')

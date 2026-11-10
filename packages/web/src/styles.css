@@ -2812,3 +2812,81 @@ header.site-header::after {
   font-size: 0.95rem;
   color: var(--color-primary);
 }
+
+/* ---- Community hub ---- */
+.community-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  overflow-x: auto;
+}
+.community-tab {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.community-tab:hover { background: var(--color-surface-tint); color: var(--color-text); text-decoration: none; }
+.community-tab.active { background: var(--color-primary); color: #fff; }
+@media (max-width: 480px) {
+  .community-tab { padding: 0.5rem 0.4rem; font-size: 0.8rem; }
+}
+.communities-page.social-page { max-width: 640px; }
+.members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; }
+.member-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  padding: 1rem 0.6rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.member-card:hover { box-shadow: var(--shadow-md); text-decoration: none; }
+.member-card .hint { margin: 0; font-size: 0.78rem; }
+
+/* ---- Prayer requests ---- */
+.pr-ask {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem;
+  margin-bottom: 1.25rem;
+}
+.pr-ask h2 { margin-top: 0; }
+.pr-form { display: flex; flex-direction: column; gap: 0.8rem; }
+.pr-form > label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; }
+.pr-form textarea,
+.pr-form select,
+.pr-form input { font-weight: 400; }
+.pr-form .confidentiality-picker { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.pr-form .confidentiality-picker legend { font-weight: 600; margin-bottom: 0.3rem; }
+.pr-form .confidentiality-picker label { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 400; }
+.pr-form .confidentiality-picker input { margin-top: 0.25rem; }
+.pr-form button[type='submit'] { align-self: flex-start; }
+.pr-block { margin-bottom: 1.25rem; }
+.pr-entrusted { border-left: 3px solid var(--color-accent); padding-left: 0.9rem; }
+.chip-status.status-answered { background: var(--color-success-soft); color: var(--color-success); }
+.chip-status.status-assigned,
+.chip-status.status-in_progress { background: var(--color-accent-soft); color: var(--color-accent); }
+.admin-requests { display: flex; flex-direction: column; gap: 1rem; }
+.admin-requests-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.admin-request-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.admin-assign { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; }
+.admin-status-button-visible:disabled { display: inline-block; }
+.tabbar-icon { position: relative; }
+.tabbar-icon .nav-badge { position: absolute; top: -4px; right: -12px; font-size: 0.6rem; min-width: 1rem; line-height: 1rem; }

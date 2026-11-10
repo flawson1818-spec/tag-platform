@@ -10,6 +10,7 @@ export interface AdminSection {
 }
 
 export const ADMIN_SECTIONS: AdminSection[] = [
+  { to: '/admin/prayer-requests', key: 'prayerRequests', icon: '🙏', permissions: ['prayer_request.manage_status'] },
   { to: '/admin/users', key: 'members', icon: '👥', permissions: ['user.manage', 'role.assign'] },
   { to: '/programs', key: 'programs', icon: '🕯️', permissions: ['prayer_program.create'] },
   { to: '/room/moderate', key: 'room', icon: '🎙️', permissions: ['room.moderate'] },

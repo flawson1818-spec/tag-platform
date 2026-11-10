@@ -5,6 +5,7 @@ import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { FeedPost, MemberProfile, socialApi } from '../../lib/api';
 import { SocialComposer } from './SocialComposer';
 import { Avatar, SocialPostCard } from './SocialPostCard';
+import { CommunityTabs } from './CommunityTabs';
 
 /** The Christian social network's home: what the prayer family shares. */
 export function FeedPage() {
@@ -41,7 +42,7 @@ export function FeedPage() {
     <section className="social-page">
       <div className="social-head">
         <div>
-          <h2>{t('social.title')}</h2>
+          <h2>{t('community.title')}</h2>
           <p className="hint">{t('social.subtitle')}</p>
         </div>
         {user && (
@@ -51,6 +52,8 @@ export function FeedPage() {
           </Link>
         )}
       </div>
+
+      <CommunityTabs />
 
       <SocialComposer communities={me?.communities ?? []} onPublished={(post) => setPosts((prev) => [post, ...prev])} />
 
