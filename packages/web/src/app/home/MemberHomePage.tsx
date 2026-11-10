@@ -7,6 +7,8 @@ import {
   FeedPost,
   PrayerRequest,
   TagEvent,
+  WorldMapSnapshot,
+  analyticsApi,
   eventsApi,
   prayerApi,
   prayerRequestsApi,
@@ -17,6 +19,7 @@ import { splitVerse } from '../../lib/creneau-parser';
 import { useUnreadMessages } from '../social/useUnreadMessages';
 import { Avatar, formatWhen } from '../social/SocialPostCard';
 import { WatchtowerMark } from '../WatchtowerMark';
+import { RotatingGlobe } from '../world-map/RotatingGlobe';
 
 const UPCOMING = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
 
@@ -37,9 +40,11 @@ export function MemberHomePage() {
   const [requests, setRequests] = useState<PrayerRequest[]>([]);
   const [entrusted, setEntrusted] = useState<PrayerRequest[]>([]);
   const [events, setEvents] = useState<TagEvent[]>([]);
+  const [snapshot, setSnapshot] = useState<WorldMapSnapshot | null>(null);
 
   useEffect(() => {
     const token = getAccessToken();
+    analyticsApi.worldMap().then(setSnapshot).catch(() => undefined);
     prayerApi
       .active('world')
       .then((active) => {
@@ -88,6 +93,15 @@ export function MemberHomePage() {
   return (
     <div className="member-home">
       <section className="mh-now">
+        <div className="mh-globe">
+          <RotatingGlobe snapshot={snapshot} size={240} />
+          {snapshot && (
+            <Link to="/world-map" className="mh-presence">
+              <strong>{snapshot.presence}</strong> {t('home.presenceLabel')}
+            </Link>
+          )}
+        </div>
+        <div className="mh-now-body">
         <div className="mh-now-head">
           <WatchtowerMark size={36} />
           <div>
@@ -126,6 +140,7 @@ export function MemberHomePage() {
             </div>
           )
         )}
+        </div>
       </section>
 
       <div className="mh-shortcuts">
