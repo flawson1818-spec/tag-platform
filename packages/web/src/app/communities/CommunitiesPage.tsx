@@ -68,6 +68,9 @@ export function CommunitiesPage() {
       <h2>{t('community.title')}</h2>
       <p className="hint">{t('community.groupsIntro')}</p>
       <CommunityTabs />
+      <Link to="/candidatures?type=eglise" className="applications-cta">
+        <span aria-hidden="true">⛪</span> {t('applications.registerChurch')}
+      </Link>
 
       <input
         type="text"

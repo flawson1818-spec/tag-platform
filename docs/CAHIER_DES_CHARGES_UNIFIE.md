@@ -1,6 +1,6 @@
 # Cahier des charges unifié — Tour d'avant-garde
 
-**Version 1.0 — 10 novembre 2026.** Document unique de référence du projet. Il remplace, pour
+**Version 1.1 — 10 novembre 2026.** Document unique de référence du projet. Il remplace, pour
 toute décision produit, les quatre sources qui coexistaient :
 
 | Source | Contenu | Ce qu'on en fait |
@@ -8,6 +8,7 @@ toute décision produit, les quatre sources qui coexistaient :
 | `tag-platform` (ce dépôt) + `docs/01…17` | Plateforme en ligne : NestJS + React + Supabase, salle de prière 24 h/24, réseau social, administration | **Socle conservé.** C'est ici que tout se développe. |
 | `Tour-d-Avant-Garde-PILOTE-V1` (`tag-final`, versions V3 → V20) | Seconde conception : Le Veilleur, WhatsApp, intention mondiale, Flambeau, actes de foi, candidatures, profils d'intercesseurs, mobilisation de groupes | **Fonctions reprises** et réécrites dans ce socle (liste §5). Le code (sql.js, frontend HTML, squelette mobile) n'est pas importé. |
 | `Downloads/tag-tour-de-garde` | Version antérieure du pilote (même README, statut plus ancien) | Rien de plus que le pilote V1 : **remplacé**. |
+| `Tour-d-Avant-Garde-main` (branche principale GitHub du pilote) | Même projet que `tag-tour-de-garde` ; tous ses fichiers et toutes ses routes existent dans le pilote V1, qui ajoute en plus 37 fichiers (salle des sujets, mobilisations, candidatures, modération) | Aucune fonction propre : **remplacé** par le pilote V1. Ses modules Actes de foi et Réunions sont couverts par §5.8 et par les Événements. |
 | `FORMATION IA/tag-app` | Maquette statique (tableau de bord, campagnes, groupes, réunions, chroniques) | Écrans déjà couverts : **remplacé**. |
 
 Règle : quand ce document et un autre se contredisent, ce document gagne. Les documents
@@ -91,41 +92,44 @@ prière du moment, les raccourcis, mes demandes, les nouvelles de la communauté
 
 ## 5. Fonctions reprises du pilote V1 (à développer dans ce socle)
 
-Ordre de développement = ordre de ce chapitre.
+Ordre de développement = ordre de ce chapitre. État : ✅ fait · 🔨 à faire · ⛔ bloqué.
 
-### 5.1 Le Veilleur (pilote V17)
+### 5.1 Le Veilleur (pilote V17) — ✅
 L'IA d'accueil prend le nom **Le Veilleur**. Missions : accueillir, guider vers la salle,
 recevoir une demande de prière, donner le programme du jour, rappeler la prochaine rencontre,
 mettre en relation avec un responsable. C'est l'actuelle « IA Accueil » renommée et enrichie.
 
-### 5.2 Intention de prière mondiale du jour (pilote, Sprint 1)
+### 5.2 Intention de prière mondiale du jour (pilote, Sprint 1) — ✅
 Chaque jour a une intention collective (titre, texte, verset) préparée à l'avance par
 l'administration. Affichée sur l'accueil sous le globe et dans la salle. Sans intention prévue,
 rien ne s'affiche (jamais de contenu inventé).
 
-### 5.3 Le Flambeau de la journée (pilote, Sprint 1)
+### 5.3 Le Flambeau de la journée (pilote, Sprint 1) — ✅
 Chaque jour, un responsable est **Gardien du Flambeau** : il veille sur la journée de prière.
 Une liste de veille (ouvrir la journée, vérifier le programme, accueillir les nouveaux,
 encourager, clôturer) qu'il coche ; un mot d'encouragement publié sur l'accueil.
 L'administration désigne les gardiens à l'avance.
 
-### 5.4 Candidatures (pilote V1)
+### 5.4 Candidatures (pilote V1) — ✅
 - **Intercesseur** : un membre candidate (motivation, disponibilités) ; un administrateur valide
   (le rôle Intercesseur est donné) ou refuse.
 - **Église / communauté** : une communauté candidate ; elle n'apparaît dans l'annuaire qu'après
-  validation.
+  validation ; le candidat en devient le responsable (rôle Responsable d'équipe pour cette
+  communauté). Le téléphone de contact n'est visible que par l'administration.
+- Écrans : menu de l'avatar → Candidatures ; Communauté → Églises et groupes → « Inscrire mon
+  église » ; Administration → Candidatures (accepter / refuser avec un mot pour le candidat).
 
-### 5.5 Profil opérationnel des intercesseurs et recommandation (pilote V8)
+### 5.5 Profil opérationnel des intercesseurs et recommandation (pilote V8) — 🔨
 Disponibilité (disponible, occupé, absent), sujets de prédilection, capacité (demandes
 actives maximum). À l'assignation d'une demande, la plateforme **recommande** les intercesseurs
 (sujet 40 pts, disponibilité 25, capacité 25, urgence/présence 10) ; l'administrateur décide —
 aucune assignation automatique.
 
-### 5.6 Mobilisation d'un groupe sur une demande (pilote V13)
+### 5.6 Mobilisation d'un groupe sur une demande (pilote V13) — 🔨
 L'administration peut confier une demande à un **groupe** (église, cellule, équipe) en plus d'un
 intercesseur : invité → accepté / décliné → terminé. Le responsable du groupe est notifié.
 
-### 5.7 « Je prie pour ce sujet » (pilote V9-V10, adapté)
+### 5.7 « Je prie pour ce sujet » (pilote V9-V10, adapté) — 🔨
 Quand une demande est portée dans la salle, chacun peut appuyer « Je prie pour ce sujet » : un
 compteur sans double comptage par personne, et le demandeur voit combien ont prié.
 **Adaptation** : dans le pilote, les sujets « ouverts » étaient visibles par tout le réseau. Ici,
@@ -133,7 +137,7 @@ conformément à la décision du 10/11/2026, **seule l'administration** décide 
 dans la salle, et seulement si le demandeur l'a autorisé (confidentialité « Public »), sans son
 nom.
 
-### 5.8 Actes de foi (pilote)
+### 5.8 Actes de foi (pilote) — 🔨
 Un membre enregistre un acte de foi (engagement, jeûne, don de temps) ; il apparaît dans son
 profil et nourrit les témoignages.
 
@@ -142,7 +146,7 @@ Menu conversationnel 1-6 (rejoindre la prière, déposer une demande, programme 
 prochaine rencontre, témoignage, parler à un responsable), webhook Meta signé, simulateur.
 Nécessite un compte Meta Business (WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID).
 
-### 5.10 Pilotage (pilote V7)
+### 5.10 Pilotage (pilote V7) — 🔨
 Le tableau de bord ajoute : taux d'assignation, de prise en charge, d'exaucement, de publication
 des témoignages, sources des demandes, série sur 7 à 90 jours.
 

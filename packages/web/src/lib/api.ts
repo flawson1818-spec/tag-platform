@@ -1374,3 +1374,31 @@ export const watchApi = {
   updateFlambeau: (token: string, day: string, data: { item?: number; done?: boolean; encouragement?: string }) =>
     request<FlambeauDay>(`/watch/flambeau/${day}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
 };
+
+// ---- Applications: intercessor, church or group ----
+
+export interface Application {
+  id: string;
+  kind: 'INTERCESSOR' | 'COMMUNITY';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  payload: Record<string, unknown>;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  communityId: string | null;
+  createdAt: string;
+  applicant: { id: string; displayName: string };
+}
+
+export const applicationsApi = {
+  apply: (
+    token: string,
+    data:
+      | { kind: 'INTERCESSOR'; intercessor: { motivation: string; availability?: string; prayerSkills?: string[] } }
+      | { kind: 'COMMUNITY'; community: { name: string; type: string; country: string; city?: string; mission?: string; contactPhone?: string } },
+  ) => request<Application>('/applications', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+  mine: (token: string) => request<Application[]>('/applications/mine', { headers: authHeaders(token) }),
+  list: (token: string, status = 'PENDING') =>
+    request<Application[]>(`/applications${status ? `?status=${status}` : ''}`, { headers: authHeaders(token) }),
+  review: (token: string, id: string, status: 'APPROVED' | 'REJECTED', note?: string) =>
+    request<Application>(`/applications/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ status, note }) }),
+};

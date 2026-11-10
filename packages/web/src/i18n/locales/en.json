@@ -36,7 +36,8 @@
     "communitiesShort": "Churches",
     "community": "Community",
     "askPrayer": "Prayer request",
-    "communityShort": "Community"
+    "communityShort": "Community",
+    "applications": "Applications"
   },
   "auth": {
     "login": {
@@ -1096,6 +1097,10 @@
       "watch": {
         "label": "Daily watch",
         "description": "World intention and Keeper of the Flambeau for each day"
+      },
+      "applications": {
+        "label": "Applications",
+        "description": "Intercessors and churches asking to join the Tower"
       }
     }
   },
@@ -1169,5 +1174,46 @@
     "guardianFor": "Keeper of the Flambeau for {{day}}",
     "progress": "Watch: {{done}}/{{total}} done",
     "saved": "Saved."
+  },
+  "applications": {
+    "title": "Applications",
+    "intro": "Join the service of the Tower: become an intercessor or register your church. The administration reviews each application.",
+    "intercessorTab": "Become an intercessor",
+    "communityTab": "Register my church or group",
+    "intercessorIntro": "An intercessor receives prayer requests entrusted by the administration and carries them faithfully.",
+    "motivation": "Why do you want to become an intercessor?",
+    "availability": "Your availability",
+    "availabilityPlaceholder": "E.g. evenings after 8 pm, Saturday mornings",
+    "skills": "Topics you particularly carry (comma separated)",
+    "skillsPlaceholder": "Family, health, nations…",
+    "communityIntro": "Once approved, your church appears in the Community and you become its leader on the platform.",
+    "churchName": "Name of the church or group",
+    "churchType": "Type",
+    "country": "Country",
+    "city": "City",
+    "mission": "Its mission in a few words",
+    "phone": "Contact phone",
+    "phoneHint": "Visible to the administration only.",
+    "send": "Send my application",
+    "sent": "Application sent. You will be notified of the decision.",
+    "mineTitle": "My applications",
+    "mineEmpty": "No application yet.",
+    "kind": {
+      "INTERCESSOR": "Intercessor",
+      "COMMUNITY": "Church / group"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "APPROVED": "Accepted",
+      "REJECTED": "Declined"
+    },
+    "adminTitle": "Applications",
+    "adminIntro": "Accepting an intercessor gives the Intercessor role; accepting a church creates it in the Community with the applicant as its leader.",
+    "adminEmpty": "No application for this filter.",
+    "by": "proposed by {{name}}",
+    "notePlaceholder": "A word for the applicant (optional)",
+    "approve": "Accept",
+    "reject": "Decline",
+    "registerChurch": "Register my church or group"
   }
 }

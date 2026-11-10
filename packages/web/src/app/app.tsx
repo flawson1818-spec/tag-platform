@@ -44,6 +44,8 @@ import { MessagesPage } from './social/MessagesPage';
 import { MembersPage } from './social/MembersPage';
 import { AdminPrayerRequestsPage } from './admin/AdminPrayerRequestsPage';
 import { AdminWatchPage } from './admin/AdminWatchPage';
+import { AdminApplicationsPage } from './admin/AdminApplicationsPage';
+import { ApplicationsPage } from './applications/ApplicationsPage';
 
 /** Permissions that open an administration page, from the same list the menus use. */
 function perms(path: string): string[] {
@@ -241,6 +243,24 @@ export function App() {
                   <RequireAccess permissions={perms('/admin/veille')}>
                     <AdminWatchPage />
                   </RequireAccess>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/candidatures"
+              element={
+                <ProtectedRoute>
+                  <RequireAccess permissions={perms('/admin/candidatures')}>
+                    <AdminApplicationsPage />
+                  </RequireAccess>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidatures"
+              element={
+                <ProtectedRoute>
+                  <ApplicationsPage />
                 </ProtectedRoute>
               }
             />

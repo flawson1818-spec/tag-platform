@@ -36,7 +36,8 @@
     "communitiesShort": "Iglesias",
     "community": "Comunidad",
     "askPrayer": "Petición de oración",
-    "communityShort": "Comunidad"
+    "communityShort": "Comunidad",
+    "applications": "Candidaturas"
   },
   "auth": {
     "login": {
@@ -1096,6 +1097,10 @@
       "watch": {
         "label": "Vela del día",
         "description": "Intención mundial y Guardián de la Antorcha de cada día"
+      },
+      "applications": {
+        "label": "Candidaturas",
+        "description": "Intercesores e iglesias que piden unirse a la Torre"
       }
     }
   },
@@ -1169,5 +1174,46 @@
     "guardianFor": "Guardián de la Antorcha para {{day}}",
     "progress": "Vela: {{done}}/{{total}} hechos",
     "saved": "Guardado."
+  },
+  "applications": {
+    "title": "Candidaturas",
+    "intro": "Únete al servicio de la Torre: hazte intercesor o inscribe tu iglesia. La administración estudia cada candidatura.",
+    "intercessorTab": "Ser intercesor",
+    "communityTab": "Inscribir mi iglesia o grupo",
+    "intercessorIntro": "Un intercesor recibe peticiones confiadas por la administración y las lleva fielmente.",
+    "motivation": "¿Por qué quieres ser intercesor?",
+    "availability": "Tu disponibilidad",
+    "availabilityPlaceholder": "P. ej. por la noche después de las 20 h",
+    "skills": "Temas que llevas especialmente (separados por comas)",
+    "skillsPlaceholder": "Familia, salud, naciones…",
+    "communityIntro": "Tras la validación, tu iglesia aparece en la Comunidad y te conviertes en su responsable en la plataforma.",
+    "churchName": "Nombre de la iglesia o grupo",
+    "churchType": "Tipo",
+    "country": "País",
+    "city": "Ciudad",
+    "mission": "Su misión en pocas palabras",
+    "phone": "Teléfono de contacto",
+    "phoneHint": "Visible solo para la administración.",
+    "send": "Enviar mi candidatura",
+    "sent": "Candidatura enviada. Recibirás una notificación con la decisión.",
+    "mineTitle": "Mis candidaturas",
+    "mineEmpty": "Ninguna candidatura por ahora.",
+    "kind": {
+      "INTERCESSOR": "Intercesor",
+      "COMMUNITY": "Iglesia / grupo"
+    },
+    "status": {
+      "PENDING": "Pendiente",
+      "APPROVED": "Aceptada",
+      "REJECTED": "Rechazada"
+    },
+    "adminTitle": "Candidaturas",
+    "adminIntro": "Aceptar a un intercesor le da el rol Intercesor; aceptar una iglesia la crea en la Comunidad con el candidato como responsable.",
+    "adminEmpty": "Ninguna candidatura para este filtro.",
+    "by": "propuesta por {{name}}",
+    "notePlaceholder": "Palabra para el candidato (opcional)",
+    "approve": "Aceptar",
+    "reject": "Rechazar",
+    "registerChurch": "Inscribir mi iglesia o grupo"
   }
 }

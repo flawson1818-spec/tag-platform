@@ -36,7 +36,8 @@
     "communitiesShort": "Églises",
     "community": "Communauté",
     "askPrayer": "Demande de prière",
-    "communityShort": "Communauté"
+    "communityShort": "Communauté",
+    "applications": "Candidatures"
   },
   "auth": {
     "login": {
@@ -1096,6 +1097,10 @@
       "watch": {
         "label": "Veille du jour",
         "description": "Intention mondiale et Gardien du Flambeau de chaque jour"
+      },
+      "applications": {
+        "label": "Candidatures",
+        "description": "Intercesseurs et églises qui demandent à rejoindre la Tour"
       }
     }
   },
@@ -1169,5 +1174,46 @@
     "guardianFor": "Gardien du Flambeau pour {{day}}",
     "progress": "Veille : {{done}}/{{total}} faits",
     "saved": "Enregistré."
+  },
+  "applications": {
+    "title": "Candidatures",
+    "intro": "Rejoins le service de la Tour : deviens intercesseur ou inscris ton église. L'administration étudie chaque candidature.",
+    "intercessorTab": "Devenir intercesseur",
+    "communityTab": "Inscrire mon église ou groupe",
+    "intercessorIntro": "Un intercesseur reçoit des demandes de prière confiées par l'administration et les porte fidèlement.",
+    "motivation": "Pourquoi veux-tu devenir intercesseur ?",
+    "availability": "Tes disponibilités",
+    "availabilityPlaceholder": "Ex. le soir après 20 h, le samedi matin",
+    "skills": "Sujets que tu portes particulièrement (séparés par des virgules)",
+    "skillsPlaceholder": "Famille, santé, nations…",
+    "communityIntro": "Après validation, ton église apparaît dans la Communauté et tu en deviens le responsable sur la plateforme.",
+    "churchName": "Nom de l'église ou du groupe",
+    "churchType": "Type",
+    "country": "Pays",
+    "city": "Ville",
+    "mission": "Sa mission en quelques mots",
+    "phone": "Téléphone de contact",
+    "phoneHint": "Visible uniquement par l'administration.",
+    "send": "Envoyer ma candidature",
+    "sent": "Candidature envoyée. Tu recevras une notification dès la décision.",
+    "mineTitle": "Mes candidatures",
+    "mineEmpty": "Aucune candidature pour l'instant.",
+    "kind": {
+      "INTERCESSOR": "Intercesseur",
+      "COMMUNITY": "Église / groupe"
+    },
+    "status": {
+      "PENDING": "En attente",
+      "APPROVED": "Acceptée",
+      "REJECTED": "Refusée"
+    },
+    "adminTitle": "Candidatures",
+    "adminIntro": "Accepter un intercesseur lui donne le rôle Intercesseur ; accepter une église la crée dans la Communauté avec le candidat comme responsable.",
+    "adminEmpty": "Aucune candidature pour ce filtre.",
+    "by": "proposée par {{name}}",
+    "notePlaceholder": "Mot pour le candidat (facultatif)",
+    "approve": "Accepter",
+    "reject": "Refuser",
+    "registerChurch": "Inscrire mon église ou mon groupe"
   }
 }

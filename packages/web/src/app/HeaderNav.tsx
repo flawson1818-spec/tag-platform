@@ -196,6 +196,9 @@ export function HeaderNav() {
                 <NavLink to="/dashboard" className={navClass}>
                   <span aria-hidden="true">🧭</span> {t('nav.dashboard')}
                 </NavLink>
+                <NavLink to="/candidatures" className={navClass}>
+                  <span aria-hidden="true">📝</span> {t('nav.applications')}
+                </NavLink>
                 <NavLink to="/profile" className={navClass}>
                   <span aria-hidden="true">⚙️</span> {t('nav.settings')}
                 </NavLink>
