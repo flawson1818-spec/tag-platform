@@ -1116,7 +1116,8 @@
     "noPosts": "Nothing new yet. Be the first to share!",
     "myRequests": "My prayer requests",
     "entrusted": "Requests entrusted to you",
-    "noMyRequests": "No request yet."
+    "noMyRequests": "No request yet.",
+    "prayingNow": "The prayer of this moment"
   },
   "community": {
     "title": "Community",

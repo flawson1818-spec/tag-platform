@@ -1116,7 +1116,8 @@
     "noPosts": "Nada nuevo aún. ¡Sé el primero en compartir!",
     "myRequests": "Mis peticiones de oración",
     "entrusted": "Peticiones que se te confían",
-    "noMyRequests": "Ninguna petición por ahora."
+    "noMyRequests": "Ninguna petición por ahora.",
+    "prayingNow": "La oración de este momento"
   },
   "community": {
     "title": "Comunidad",

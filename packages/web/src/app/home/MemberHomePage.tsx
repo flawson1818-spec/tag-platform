@@ -92,15 +92,31 @@ export function MemberHomePage() {
 
   return (
     <div className="member-home">
-      <section className="mh-now">
-        <div className="mh-globe">
-          <RotatingGlobe snapshot={snapshot} size={240} />
-          {snapshot && (
-            <Link to="/world-map" className="mh-presence">
-              <strong>{snapshot.presence}</strong> {t('home.presenceLabel')}
+      <section className="home-globe-hero mh-hero">
+        <RotatingGlobe snapshot={snapshot} size={340} />
+        <span className={slot ? 'live-badge' : 'home-hero-paused'}>{slot ? t('home.live') : t('home.paused')}</span>
+        <h2>{t('home.title')}</h2>
+        {slot ? (
+          <p className="home-hero-subject">
+            {t('home.currentSubject')} <strong>{slot.title}</strong> · ⏱ {formatRemaining(remaining)}
+          </p>
+        ) : (
+          roomChecked && <p className="hint">{t('home.noSlot')}</p>
+        )}
+        <Link to="/room" className="home-hero-cta">
+          {t('home.joinCta')}
+        </Link>
+        {snapshot && (
+          <p className="home-presence-line">
+            <strong>{snapshot.presence}</strong> {t('home.presenceLabel')} ·{' '}
+            <Link to="/world-map" className="home-kpis-link">
+              {t('home.viewMap')}
             </Link>
-          )}
-        </div>
+          </p>
+        )}
+      </section>
+
+      <section className="mh-now">
         <div className="mh-now-body">
         <div className="mh-now-head">
           <WatchtowerMark size={36} />
@@ -112,7 +128,7 @@ export function MemberHomePage() {
 
         {slot ? (
           <div className="mh-live">
-            <span className="live-badge">{t('home.live')}</span>
+            <p className="mh-label">{t('memberHome.prayingNow')}</p>
             <h2>{slot.title}</h2>
             {slot.guided_text && <p className="mh-prayer">{excerpt(slot.guided_text, 220)}</p>}
             {verse && (
@@ -120,12 +136,7 @@ export function MemberHomePage() {
                 {verse.text && <span>« {excerpt(verse.text, 180)} »</span>} <cite>{verse.reference}</cite>
               </blockquote>
             )}
-            <div className="mh-live-foot">
-              <Link to="/room" className="home-hero-cta">
-                {t('memberHome.join')}
-              </Link>
-              <span className="mh-remaining">⏱ {formatRemaining(remaining)}</span>
-            </div>
+
           </div>
         ) : (
           roomChecked && (

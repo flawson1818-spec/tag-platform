@@ -1116,7 +1116,8 @@
     "noPosts": "Rien de neuf pour l'instant. Sois le premier à partager !",
     "myRequests": "Mes demandes de prière",
     "entrusted": "Demandes qui te sont confiées",
-    "noMyRequests": "Aucune demande pour l'instant."
+    "noMyRequests": "Aucune demande pour l'instant.",
+    "prayingNow": "La prière de ce moment"
   },
   "community": {
     "title": "Communauté",
