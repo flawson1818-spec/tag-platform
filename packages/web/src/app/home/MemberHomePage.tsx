@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { getAccessToken } from '../auth/AuthContext';
 import {
   ActivePrayerSlot,
   FeedPost,
@@ -18,7 +18,6 @@ import { formatRemaining } from '../../lib/format';
 import { splitVerse } from '../../lib/creneau-parser';
 import { useUnreadMessages } from '../social/useUnreadMessages';
 import { Avatar, formatWhen } from '../social/SocialPostCard';
-import { WatchtowerMark } from '../WatchtowerMark';
 import { RotatingGlobe } from '../world-map/RotatingGlobe';
 
 const UPCOMING = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
@@ -31,7 +30,6 @@ function excerpt(text: string, max = 140): string {
 /** A signed-in member's home: the prayer happening now first, then their people and what to carry. */
 export function MemberHomePage() {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
   const unread = useUnreadMessages(true);
   const [slot, setSlot] = useState<ActivePrayerSlot | null>(null);
   const [roomChecked, setRoomChecked] = useState(false);
@@ -88,7 +86,6 @@ export function MemberHomePage() {
   }, [slot]);
 
   const verse = slot?.bible_references?.[0] ? splitVerse(slot.bible_references[0]) : null;
-  const firstName = (user?.display_name ?? '').split(' ')[0];
 
   return (
     <div className="member-home">
@@ -118,13 +115,6 @@ export function MemberHomePage() {
 
       <section className="mh-now">
         <div className="mh-now-body">
-        <div className="mh-now-head">
-          <WatchtowerMark size={36} />
-          <div>
-            <p className="mh-greeting">{t('memberHome.greeting', { name: firstName })}</p>
-            <p className="mh-sub">{t('memberHome.sub')}</p>
-          </div>
-        </div>
 
         {slot ? (
           <div className="mh-live">
