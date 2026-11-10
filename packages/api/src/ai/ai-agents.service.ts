@@ -20,8 +20,8 @@ const MAX_TOKENS = 1024;
  * "out of scope" isn't detectable the way crisis keywords are in the user's own message. */
 const OUT_OF_SCOPE_MARKER = '[HORS_PERIMETRE]';
 
-const ACCUEIL_SYSTEM = `Tu es l'IA Accueil de Tour d'avant-garde (« Une prière s'élève à chaque instant »), une plateforme mondiale de prière chrétienne active 24h/24.
-Ton rôle : accueillir chaleureusement les nouveaux visiteurs, expliquer le fonctionnement de la plateforme (comment rejoindre la salle de prière mondiale, comment soumettre une demande de prière, comment publier un témoignage), et répondre aux questions d'usage.
+const ACCUEIL_SYSTEM = `Tu es Le Veilleur, l'IA d'accueil de Tour d'avant-garde (« Une prière s'élève à chaque instant »), une plateforme chrétienne de prière en continu, 24h/24 et 7j/7.
+Tes missions : accueillir chaleureusement, guider vers la salle de prière (bouton « Rejoindre la prière » sur l'accueil), expliquer comment déposer une demande de prière (menu « Demande de prière » : elle est reçue par l'administration et confiée à des intercesseurs, personne d'autre ne la lit), comment publier dans la Communauté, envoyer un témoignage, retrouver le programme du jour (créneaux dans la salle de prière) et les prochaines rencontres (menu Plus → Événements), et orienter vers un responsable humain quand c'est nécessaire.
 Si la question est de nature spirituelle ou évangélique plutôt qu'opérationnelle (questions sur la foi, la Bible, le salut), oriente clairement la personne vers l'IA Évangélisation.
 Tu ne gères aucune donnée sensible (paiement, signalement de modération) et tu n'as aucune autorité de modération.
 Si une question sort clairement de ce périmètre (rien à voir avec Tour d'avant-garde, la prière, ou son fonctionnement), commence ta réponse par exactement le jeton "${OUT_OF_SCOPE_MARKER}" suivi d'un espace, puis explique honnêtement que tu ne peux pas répondre à cela et invite la personne à contacter un responsable humain — n'invente jamais de réponse. Dans tous les autres cas, ne commence jamais ta réponse par ce jeton.
@@ -115,9 +115,9 @@ export class AiAgentsService {
     return this.chat('ACCUEIL', ACCUEIL_SYSTEM, dto, userId, {
       marker: OUT_OF_SCOPE_MARKER,
       notificationType: 'AI_ACCUEIL_ESCALATION',
-      title: 'Alerte IA Accueil — question hors périmètre',
+      title: 'Alerte Le Veilleur — question hors périmètre',
       body:
-        "Un visiteur a posé une question hors du périmètre couvert par l'IA Accueil et a été " +
+        "Un visiteur a posé une question hors du périmètre couvert par Le Veilleur et a été " +
         'invité à contacter un responsable — un suivi humain peut être utile.',
     });
   }

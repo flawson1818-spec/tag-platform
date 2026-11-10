@@ -2906,3 +2906,40 @@ header.site-header::after {
 
 .home-hero-cta, .home-hero-cta:hover { text-decoration: none; }
 .mh-label { margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--watch-gold); }
+
+/* ---- The day's watch: world intention and Flambeau ---- */
+.today-watch { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.9rem; margin-bottom: 1.1rem; }
+.tw-card {
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--watch-gold);
+  box-shadow: var(--shadow-sm);
+}
+.tw-card h3 { margin: 0.25rem 0 0.35rem; font-size: 1.15rem; }
+.tw-label { margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent); }
+.tw-text { margin: 0 0 0.5rem; line-height: 1.55; }
+.tw-verse { margin: 0; font-family: var(--font-display); font-style: italic; color: var(--color-text-muted); }
+.tw-flambeau .hint { margin: 0 0 0.5rem; }
+.tw-encouragement { margin: 0.4rem 0 0; padding-left: 0.75rem; border-left: 2px solid var(--watch-gold); font-style: italic; }
+.tw-guardian { margin-top: 0.8rem; padding-top: 0.7rem; border-top: 1px dashed var(--color-border-strong); }
+.tw-guardian-title { margin: 0 0 0.4rem; font-weight: 700; font-size: 0.9rem; }
+.tw-checklist { list-style: none; margin: 0 0 0.5rem; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.tw-checklist label { display: flex; gap: 0.5rem; align-items: center; cursor: pointer; }
+.tw-checklist .is-done { text-decoration: line-through; color: var(--color-text-muted); }
+.tw-encouragement-form textarea { width: 100%; box-sizing: border-box; }
+.tw-actions { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.4rem; }
+.admin-watch { display: flex; flex-direction: column; gap: 1rem; }
+.watch-days { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.watch-day {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+}
+.watch-day h3 { margin: 0 0 0.6rem; font-size: 1rem; }
+.watch-day h3::first-letter { text-transform: uppercase; }
+.watch-day-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+.watch-intention, .watch-flambeau { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+@media (max-width: 720px) { .watch-day-grid { grid-template-columns: 1fr; } }

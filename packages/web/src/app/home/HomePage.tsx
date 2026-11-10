@@ -14,6 +14,7 @@ import {
   testimoniesApi,
 } from '../../lib/api';
 import { formatRemaining } from '../../lib/format';
+import { TodayWatch } from '../watch/TodayWatch';
 import { RotatingGlobe } from '../world-map/RotatingGlobe';
 
 const UPCOMING_EVENT_STATUSES = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
@@ -104,6 +105,8 @@ export function HomePage() {
           </p>
         )}
       </section>
+
+      <TodayWatch />
 
       <div className="home-columns">
         <section>

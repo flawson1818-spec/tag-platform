@@ -1339,3 +1339,38 @@ export const messagesApi = {
       headers: authHeaders(token),
     }),
 };
+
+// ---- The day's watch: world prayer intention and Flambeau ----
+
+export interface WorldIntention {
+  day: string;
+  title: string;
+  description: string | null;
+  bibleReference: string | null;
+}
+
+export interface FlambeauDay {
+  day: string;
+  guardian: { id: string; displayName: string };
+  checklist: { label: string; done: boolean }[];
+  encouragement: string | null;
+}
+
+export const watchApi = {
+  today: () => request<{ day: string; intention: WorldIntention | null; flambeau: FlambeauDay | null }>('/watch/today'),
+  plan: (token: string, from?: string, days = 14) =>
+    request<{ intentions: WorldIntention[]; flambeaux: FlambeauDay[] }>(
+      `/watch/plan?days=${days}${from ? `&from=${from}` : ''}`,
+      { headers: authHeaders(token) },
+    ),
+  setIntention: (token: string, day: string, data: { title: string; description?: string; bibleReference?: string }) =>
+    request<WorldIntention>(`/watch/intentions/${day}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(data) }),
+  removeIntention: (token: string, day: string) =>
+    request<{ removed: true }>(`/watch/intentions/${day}`, { method: 'DELETE', headers: authHeaders(token) }),
+  setFlambeau: (token: string, day: string, data: { guardianId: string; encouragement?: string }) =>
+    request<FlambeauDay>(`/watch/flambeau/${day}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(data) }),
+  removeFlambeau: (token: string, day: string) =>
+    request<{ removed: true }>(`/watch/flambeau/${day}`, { method: 'DELETE', headers: authHeaders(token) }),
+  updateFlambeau: (token: string, day: string, data: { item?: number; done?: boolean; encouragement?: string }) =>
+    request<FlambeauDay>(`/watch/flambeau/${day}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
+};

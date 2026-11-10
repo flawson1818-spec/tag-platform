@@ -10,6 +10,7 @@ import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { SocialModule } from '../social/social.module';
 import { MessagesModule } from '../messages/messages.module';
+import { WatchModule } from '../watch/watch.module';
 import { RolesModule } from '../roles/roles.module';
 import { CommunitiesModule } from '../communities/communities.module';
 import { PostsModule } from '../posts/posts.module';
@@ -39,6 +40,7 @@ import { HealthController } from './health.controller';
     UsersModule,
     SocialModule,
     MessagesModule,
+    WatchModule,
     RolesModule,
     CommunitiesModule,
     PostsModule,

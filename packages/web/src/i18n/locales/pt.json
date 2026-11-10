@@ -15,7 +15,7 @@
     "admin": "Administração",
     "campaigns": "Campanhas",
     "events": "Eventos",
-    "aiWelcome": "IA Boas-vindas",
+    "aiWelcome": "O Vigia",
     "aiEvangelism": "IA Evangelização",
     "worldMap": "Mapa mundial",
     "notifications": "Notificações",
@@ -877,8 +877,8 @@
     "send": "Enviar"
   },
   "aiWelcome": {
-    "title": "🙏 IA Boas-vindas",
-    "intro": "Faça suas perguntas sobre o funcionamento de Tour d'avant-garde — como entrar em uma sala, enviar um pedido de oração, publicar um testemunho…",
+    "title": "🛡️ O Vigia",
+    "intro": "O Vigia te acolhe: como entrar na oração, fazer um pedido, publicar na Comunidade, enviar um testemunho…",
     "placeholder": "Como entro na sala de oração?"
   },
   "aiEvangelism": {
@@ -1092,6 +1092,10 @@
       "prayerRequests": {
         "label": "Pedidos de oração",
         "description": "Receber pedidos, confiá-los a intercessores, acompanhar a resposta"
+      },
+      "watch": {
+        "label": "Vigília do dia",
+        "description": "Intenção mundial e Guardião da Tocha de cada dia"
       }
     }
   },
@@ -1147,5 +1151,23 @@
       "RESTORED": "Restaurar",
       "NEW": "Voltar a novo"
     }
+  },
+  "watch": {
+    "intentionLabel": "Intenção de oração mundial do dia",
+    "flambeauLabel": "Tocha do dia",
+    "flambeauRole": "Guardião da Tocha: vigia a oração deste dia.",
+    "yourWatch": "Sua vigília de hoje",
+    "writeEncouragement": "Escrever uma palavra de encorajamento",
+    "editEncouragement": "Editar a palavra de encorajamento",
+    "encouragementPlaceholder": "Uma palavra para encorajar a comunidade hoje…",
+    "adminTitle": "Vigília do dia",
+    "adminIntro": "Prepare para cada dia a intenção de oração mundial e o Guardião da Tocha. Aparecem no início, sob o globo.",
+    "titlePlaceholder": "Título da intenção",
+    "textPlaceholder": "Texto da intenção (opcional)",
+    "versePlaceholder": "Versículo (ex. Salmo 2:8 — Pede-me…)",
+    "noGuardian": "Nenhum guardião",
+    "guardianFor": "Guardião da Tocha para {{day}}",
+    "progress": "Vigília: {{done}}/{{total}} feitos",
+    "saved": "Salvo."
   }
 }

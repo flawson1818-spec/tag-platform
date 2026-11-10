@@ -15,7 +15,7 @@
     "admin": "Administration",
     "campaigns": "Campaigns",
     "events": "Events",
-    "aiWelcome": "AI Welcome",
+    "aiWelcome": "The Watchman",
     "aiEvangelism": "AI Evangelism",
     "worldMap": "World map",
     "notifications": "Notifications",
@@ -877,8 +877,8 @@
     "send": "Send"
   },
   "aiWelcome": {
-    "title": "🙏 AI Welcome",
-    "intro": "Ask your questions about how Tour d'avant-garde works — how to join a room, submit a prayer request, publish a testimony…",
+    "title": "🛡️ The Watchman",
+    "intro": "The Watchman welcomes you: how to join the prayer, make a request, post in the Community, share a testimony…",
     "placeholder": "How do I join the prayer room?"
   },
   "aiEvangelism": {
@@ -1092,6 +1092,10 @@
       "prayerRequests": {
         "label": "Prayer requests",
         "description": "Receive requests, entrust them to intercessors, follow them to their answer"
+      },
+      "watch": {
+        "label": "Daily watch",
+        "description": "World intention and Keeper of the Flambeau for each day"
       }
     }
   },
@@ -1147,5 +1151,23 @@
       "RESTORED": "Restore",
       "NEW": "Back to new"
     }
+  },
+  "watch": {
+    "intentionLabel": "World prayer intention of the day",
+    "flambeauLabel": "Flambeau of the day",
+    "flambeauRole": "Keeper of the Flambeau: watches over today's prayer.",
+    "yourWatch": "Your watch today",
+    "writeEncouragement": "Write a word of encouragement",
+    "editEncouragement": "Edit the word of encouragement",
+    "encouragementPlaceholder": "A word to encourage the community today…",
+    "adminTitle": "Daily watch",
+    "adminIntro": "Prepare for each day the world prayer intention and the Keeper of the Flambeau. They show on the home page, under the globe.",
+    "titlePlaceholder": "Intention title (e.g. For the nations of Africa)",
+    "textPlaceholder": "Intention text (optional)",
+    "versePlaceholder": "Verse (e.g. Psalm 2:8 — Ask of me…)",
+    "noGuardian": "No keeper",
+    "guardianFor": "Keeper of the Flambeau for {{day}}",
+    "progress": "Watch: {{done}}/{{total}} done",
+    "saved": "Saved."
   }
 }

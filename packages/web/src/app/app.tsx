@@ -43,6 +43,7 @@ import { MemberProfilePage } from './social/MemberProfilePage';
 import { MessagesPage } from './social/MessagesPage';
 import { MembersPage } from './social/MembersPage';
 import { AdminPrayerRequestsPage } from './admin/AdminPrayerRequestsPage';
+import { AdminWatchPage } from './admin/AdminWatchPage';
 
 /** Permissions that open an administration page, from the same list the menus use. */
 function perms(path: string): string[] {
@@ -229,6 +230,16 @@ export function App() {
                 <ProtectedRoute>
                   <RequireAccess permissions={perms('/admin/prayer-requests')}>
                     <AdminPrayerRequestsPage />
+                  </RequireAccess>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/veille"
+              element={
+                <ProtectedRoute>
+                  <RequireAccess permissions={perms('/admin/veille')}>
+                    <AdminWatchPage />
                   </RequireAccess>
                 </ProtectedRoute>
               }

@@ -18,6 +18,7 @@ import { formatRemaining } from '../../lib/format';
 import { splitVerse } from '../../lib/creneau-parser';
 import { useUnreadMessages } from '../social/useUnreadMessages';
 import { Avatar, formatWhen } from '../social/SocialPostCard';
+import { TodayWatch } from '../watch/TodayWatch';
 import { RotatingGlobe } from '../world-map/RotatingGlobe';
 
 const UPCOMING = new Set(['SCHEDULED', 'OPEN', 'RUNNING']);
@@ -112,6 +113,8 @@ export function MemberHomePage() {
           </p>
         )}
       </section>
+
+      <TodayWatch />
 
       <section className="mh-now">
         <div className="mh-now-body">

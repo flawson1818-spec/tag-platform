@@ -15,7 +15,7 @@
     "admin": "Administration",
     "campaigns": "Campagnes",
     "events": "Événements",
-    "aiWelcome": "IA Accueil",
+    "aiWelcome": "Le Veilleur",
     "aiEvangelism": "IA Évangélisation",
     "worldMap": "Carte mondiale",
     "notifications": "Notifications",
@@ -877,8 +877,8 @@
     "send": "Envoyer"
   },
   "aiWelcome": {
-    "title": "🙏 IA Accueil",
-    "intro": "Pose tes questions sur le fonctionnement de Tour d'avant-garde — comment rejoindre une salle, soumettre une demande de prière, publier un témoignage…",
+    "title": "🛡️ Le Veilleur",
+    "intro": "Le Veilleur t'accueille : comment rejoindre la prière, déposer une demande, publier dans la Communauté, envoyer un témoignage…",
     "placeholder": "Comment rejoindre la salle de prière ?"
   },
   "aiEvangelism": {
@@ -1092,6 +1092,10 @@
       "prayerRequests": {
         "label": "Demandes de prière",
         "description": "Recevoir les demandes, les confier aux intercesseurs, suivre l'exaucement"
+      },
+      "watch": {
+        "label": "Veille du jour",
+        "description": "Intention mondiale et Gardien du Flambeau de chaque jour"
       }
     }
   },
@@ -1147,5 +1151,23 @@
       "RESTORED": "Restaurer",
       "NEW": "Remettre en nouvelle"
     }
+  },
+  "watch": {
+    "intentionLabel": "Intention de prière mondiale du jour",
+    "flambeauLabel": "Flambeau de la journée",
+    "flambeauRole": "Gardien du Flambeau : il veille sur la prière de ce jour.",
+    "yourWatch": "Ta veille d'aujourd'hui",
+    "writeEncouragement": "Écrire un mot d'encouragement",
+    "editEncouragement": "Modifier le mot d'encouragement",
+    "encouragementPlaceholder": "Un mot pour encourager la communauté aujourd'hui…",
+    "adminTitle": "Veille du jour",
+    "adminIntro": "Prépare pour chaque jour l'intention de prière mondiale et le Gardien du Flambeau. Ils s'affichent sur l'accueil, sous le globe.",
+    "titlePlaceholder": "Titre de l'intention (ex. Pour les nations d'Afrique)",
+    "textPlaceholder": "Texte de l'intention (facultatif)",
+    "versePlaceholder": "Verset (ex. Psaumes 2:8 — Demande-moi…)",
+    "noGuardian": "Aucun gardien",
+    "guardianFor": "Gardien du Flambeau pour {{day}}",
+    "progress": "Veille : {{done}}/{{total}} faits",
+    "saved": "Enregistré."
   }
 }

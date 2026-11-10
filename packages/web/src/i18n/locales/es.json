@@ -15,7 +15,7 @@
     "admin": "Administración",
     "campaigns": "Campañas",
     "events": "Eventos",
-    "aiWelcome": "IA Bienvenida",
+    "aiWelcome": "El Centinela",
     "aiEvangelism": "IA Evangelización",
     "worldMap": "Mapa mundial",
     "notifications": "Notificaciones",
@@ -877,8 +877,8 @@
     "send": "Enviar"
   },
   "aiWelcome": {
-    "title": "🙏 IA Bienvenida",
-    "intro": "Haz tus preguntas sobre el funcionamiento de Tour d'avant-garde — cómo unirte a una sala, enviar una petición de oración, publicar un testimonio…",
+    "title": "🛡️ El Centinela",
+    "intro": "El Centinela te recibe: cómo unirte a la oración, hacer una petición, publicar en la Comunidad, compartir un testimonio…",
     "placeholder": "¿Cómo me uno a la sala de oración?"
   },
   "aiEvangelism": {
@@ -1092,6 +1092,10 @@
       "prayerRequests": {
         "label": "Peticiones de oración",
         "description": "Recibir peticiones, confiarlas a intercesores, seguir la respuesta"
+      },
+      "watch": {
+        "label": "Vela del día",
+        "description": "Intención mundial y Guardián de la Antorcha de cada día"
       }
     }
   },
@@ -1147,5 +1151,23 @@
       "RESTORED": "Restaurar",
       "NEW": "Volver a nueva"
     }
+  },
+  "watch": {
+    "intentionLabel": "Intención de oración mundial del día",
+    "flambeauLabel": "Antorcha del día",
+    "flambeauRole": "Guardián de la Antorcha: vela por la oración de este día.",
+    "yourWatch": "Tu vela de hoy",
+    "writeEncouragement": "Escribir una palabra de ánimo",
+    "editEncouragement": "Editar la palabra de ánimo",
+    "encouragementPlaceholder": "Una palabra para animar a la comunidad hoy…",
+    "adminTitle": "Vela del día",
+    "adminIntro": "Prepara para cada día la intención de oración mundial y el Guardián de la Antorcha. Aparecen en el inicio, bajo el globo.",
+    "titlePlaceholder": "Título de la intención",
+    "textPlaceholder": "Texto de la intención (opcional)",
+    "versePlaceholder": "Versículo (p. ej. Salmo 2:8 — Pídeme…)",
+    "noGuardian": "Sin guardián",
+    "guardianFor": "Guardián de la Antorcha para {{day}}",
+    "progress": "Vela: {{done}}/{{total}} hechos",
+    "saved": "Guardado."
   }
 }
