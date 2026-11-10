@@ -12,6 +12,24 @@ function toTimeOfDay(iso: string): string {
  * continuous by product decision and can't be paused, archived, completed, or deleted. */
 const WORLD_ROOM_STOPPING_STATUSES = new Set(['PAUSED', 'COMPLETED', 'ARCHIVED']);
 
+/** Calendar view: the program's segments in time order, one group per day. */
+function byDay(slots: PrayerSlot[]): { day: string; slots: PrayerSlot[] }[] {
+  const groups: { day: string; slots: PrayerSlot[] }[] = [];
+  for (const slot of [...slots].sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at))) {
+    const day = new Date(slot.start_at).toDateString();
+    const last = groups[groups.length - 1];
+    if (last && last.day === day) last.slots.push(slot);
+    else groups.push({ day, slots: [slot] });
+  }
+  return groups;
+}
+
+function formatDay(iso: string, lang: string, loopLabel: string): string {
+  // Segments of a looping créneau (the older mode) carry a reference date, not a real day.
+  if (new Date(iso).getFullYear() < 2001) return loopLabel;
+  return new Date(iso).toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 function toCsv(list: string[]): string {
   return list.join(', ');
 }
@@ -35,7 +53,7 @@ const EMPTY_SLOT_FORM = {
 };
 
 export function ProgramsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [programs, setPrograms] = useState<PrayerProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -268,7 +286,11 @@ export function ProgramsPage() {
               </tr>
             </thead>
             <tbody>
-              {slots.map((slot) => (
+              {byDay(slots).map(({ day, slots: daySlots }) => [
+                <tr key={`day-${day}`} className="slot-day-row">
+                  <td colSpan={4}>{formatDay(daySlots[0].start_at, i18n.language, t('programs.loopDay'))}</td>
+                </tr>,
+                ...daySlots.map((slot) => (
                 <tr key={slot.id} className={slot.status === 'RUNNING' ? 'slot-row-live' : ''}>
                   <td>
                     {toTimeOfDay(slot.start_at)}–{toTimeOfDay(slot.end_at)}
@@ -285,7 +307,8 @@ export function ProgramsPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                )),
+              ])}
             </tbody>
           </table>
           {!slotsLoading && slots.length === 0 && <p className="hint">{t('programs.noSlots')}</p>}

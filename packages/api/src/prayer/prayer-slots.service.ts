@@ -458,4 +458,161 @@ export class PrayerSlotsService {
     if (error) throw new InternalServerErrorException(error.message);
     return data ? (data as unknown as { order_index: number }).order_index + 1 : 0;
   }
+
+  // ---- Calendar mode: créneaux dated over a day, a week, a month ----
+
+  /**
+   * Adds dated créneaux to a program (docs/01_FUNCTIONAL_SPECIFICATION.md §2: the prayer runs
+   * 24 h/24 over a day, a week or a month). Each segment has its real start and end. Whatever
+   * the program already had in the same window is ARCHIVED (replaced, never deleted: prayer
+   * hours stay attached to it).
+   */
+  async addCalendarSegments(
+    programId: string,
+    segments: { startAt: Date; endAt: Date; title: string; durationSeconds: number; guidedText?: string; bibleReferences?: string[] }[],
+  ): Promise<PrayerSlot[]> {
+    if (segments.length === 0) throw new BadRequestException('Aucun segment à ajouter.');
+    const sorted = [...segments].sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].startAt < sorted[i - 1].endAt) {
+        throw new BadRequestException(
+          `Deux segments se chevauchent : « ${sorted[i - 1].title} » et « ${sorted[i].title} ».`,
+        );
+      }
+    }
+
+    // Replace what was planned over the same hours.
+    for (const window of mergeWindows(sorted)) {
+      const { error } = await this.db
+        .update({ status: 'ARCHIVED' })
+        .eq('program_id', programId)
+        .neq('status', 'ARCHIVED')
+        .lt('start_at', window.end.toISOString())
+        .gt('end_at', window.start.toISOString());
+      if (error) throw new InternalServerErrorException(error.message);
+    }
+
+    let order = await this.nextOrderIndex(programId);
+    const created: string[] = [];
+    for (const segment of sorted) {
+      const { data, error } = await this.db
+        .insert({
+          program_id: programId,
+          order_index: order++,
+          title: segment.title,
+          guided_text: segment.guidedText ?? null,
+          bible_references: segment.bibleReferences ?? [],
+          recommended_songs: [],
+          importance: 'Normal',
+          start_at: segment.startAt.toISOString(),
+          end_at: segment.endAt.toISOString(),
+          status: 'SCHEDULED',
+        })
+        .select('id')
+        .single();
+      if (error) throw new InternalServerErrorException(error.message);
+      const id = (data as { id: string }).id;
+      created.push(id);
+      await this.writeDuration(id, segment.durationSeconds);
+    }
+    return this.listForProgram(programId);
+  }
+
+  /** The segment planned for `at` (the latest-starting one wins: an urgent topic beats the plan). */
+  async findPlannedAt(programId: string, at: Date): Promise<PrayerSlot | null> {
+    const iso = at.toISOString();
+    const { data, error } = await this.db
+      .select(SLOT_COLUMNS)
+      .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
+      .lte('start_at', iso)
+      .gt('end_at', iso)
+      .order('start_at', { ascending: false })
+      .limit(1);
+    if (error) throw new InternalServerErrorException(error.message);
+    const rows = (data ?? []) as unknown as SlotRow[];
+    return rows.length ? mapSlot(rows[0]) : null;
+  }
+
+  /** The first planned segment after `at`, or null when the program's calendar is over. */
+  async findNextPlanned(programId: string, at: Date): Promise<PrayerSlot | null> {
+    const { data, error } = await this.db
+      .select(SLOT_COLUMNS)
+      .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
+      .gt('start_at', at.toISOString())
+      .order('start_at', { ascending: true })
+      .limit(1);
+    if (error) throw new InternalServerErrorException(error.message);
+    const rows = (data ?? []) as unknown as SlotRow[];
+    return rows.length ? mapSlot(rows[0]) : null;
+  }
+
+  /**
+   * The créneau to carry on with when nothing is planned now: the last one that was prayed
+   * (its segments end-to-end, in order), or — before the calendar starts — the first one.
+   */
+  async findReplayBlock(programId: string, at: Date): Promise<PrayerSlot[]> {
+    const iso = at.toISOString();
+    const { data: before, error } = await this.db
+      .select(SLOT_COLUMNS)
+      .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
+      .lte('end_at', iso)
+      .order('start_at', { ascending: false })
+      .limit(60);
+    if (error) throw new InternalServerErrorException(error.message);
+    let rows = ((before ?? []) as unknown as SlotRow[]).map(mapSlot).reverse();
+    if (rows.length === 0) {
+      const { data: after, error: afterError } = await this.db
+        .select(SLOT_COLUMNS)
+        .eq('program_id', programId)
+        .neq('status', 'ARCHIVED')
+        .gt('start_at', iso)
+        .order('start_at', { ascending: true })
+        .limit(60);
+      if (afterError) throw new InternalServerErrorException(afterError.message);
+      rows = ((after ?? []) as unknown as SlotRow[]).map(mapSlot);
+      return contiguousFrom(rows, 'start');
+    }
+    return contiguousFrom(rows, 'end');
+  }
+
+  /** Engine-only: marks a planned segment RUNNING without touching its planned window. */
+  async markRunning(id: string): Promise<PrayerSlot> {
+    const { data, error } = await this.db.update({ status: 'RUNNING' }).eq('id', id).select(SLOT_COLUMNS).single();
+    if (error) throw new InternalServerErrorException(error.message);
+    return mapSlot(data as unknown as SlotRow);
+  }
+}
+
+/** Touching or overlapping windows merged, so a whole pasted day archives in a few queries. */
+function mergeWindows(sorted: { startAt: Date; endAt: Date }[]): { start: Date; end: Date }[] {
+  const out: { start: Date; end: Date }[] = [];
+  for (const s of sorted) {
+    const last = out[out.length - 1];
+    if (last && s.startAt.getTime() <= last.end.getTime()) {
+      if (s.endAt > last.end) last.end = s.endAt;
+    } else {
+      out.push({ start: s.startAt, end: s.endAt });
+    }
+  }
+  return out;
+}
+
+/**
+ * The run of segments that follow each other with no gap (one créneau), taken from the end
+ * (the most recent one) or from the start (the first one) of a time-ordered list.
+ */
+export function contiguousFrom(slots: PrayerSlot[], from: 'start' | 'end'): PrayerSlot[] {
+  if (slots.length === 0) return [];
+  const touches = (a: PrayerSlot, b: PrayerSlot) => Math.abs(Date.parse(b.start_at) - Date.parse(a.end_at)) < 1000;
+  if (from === 'end') {
+    let i = slots.length - 1;
+    while (i > 0 && touches(slots[i - 1], slots[i])) i--;
+    return slots.slice(i);
+  }
+  let j = 0;
+  while (j < slots.length - 1 && touches(slots[j], slots[j + 1])) j++;
+  return slots.slice(0, j + 1);
 }

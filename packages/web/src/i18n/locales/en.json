@@ -327,7 +327,8 @@
       "PRAISE": "Praise",
       "INSTRUMENTAL_ADORATION": "Instrumental worship",
       "GOSPEL": "Gospel"
-    }
+    },
+    "sharedByProgram": "Prepared by the moderators · scheduled for this hour"
   },
   "communities": {
     "title": "Communities",
@@ -552,9 +553,9 @@
     "PRAYER_TOPIC_STARTED": "A prayer topic you follow has just started"
   },
   "creneauImport": {
-    "open": "Paste a prayer time",
-    "title": "Paste a prayer time",
-    "intro": "Paste the prayer time the way you usually write it: the date, then each segment with its times (“12:10-12:15”), “Prayer1: …” and the verses. Check the preview before saving.",
+    "open": "Add créneaux",
+    "title": "Add créneaux to the calendar",
+    "intro": "Paste one or more créneaux as you write them: the date, then each segment with its hours, “Prière1: …” and the verses. Paste a whole day, a week or a month: each date starts a new créneau.",
     "placeholder": "THURSDAY 5 NOVEMBER 2026\n\nOpening prayer 12:00-12:03\n\n12:10-12:15\nPrière1: Father, thank you for your divine power…\nJohn 10:10 “The thief comes only to steal…”",
     "summary_one": "{{count}} segment · {{duration}}",
     "summary_other": "{{count}} segments · {{duration}} in total",
@@ -564,9 +565,15 @@
     "save_one": "Save prayer time ({{count}} segment)",
     "save_other": "Save prayer time ({{count}} segments)",
     "saving": "Saving…",
-    "saved_one": "Prayer time saved: {{count}} segment.",
-    "saved_other": "Prayer time saved: {{count}} segments.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "dateLabel": "Date for créneaux without a date",
+    "summaryDays_one": "{{count}} créneau · {{segments}} segments",
+    "summaryDays_other": "{{count}} créneaux · {{segments}} segments",
+    "calendarNote": "Each créneau takes its place at its hour. Anything already planned at the same hours is replaced. Between two written créneaux the AI carries on with the last one: the prayer never stops.",
+    "saveDays_one": "Add {{count}} créneau",
+    "saveDays_other": "Add {{count}} créneaux",
+    "saved_one": "{{count}} créneau added to the calendar.",
+    "saved_other": "{{count}} créneaux added to the calendar."
   },
   "notificationStatuses": {
     "DELIVERED": "Unread",
@@ -687,7 +694,7 @@
     "worldRoomProtected": "World room — continuous, cannot be stopped",
     "needLoginCreate": "Log in with a moderator account to create a program.",
     "slotsTitle": "Slots — {{title}}",
-    "dailyScheduleHint": "Daily schedule — every slot repeats each day at the same time, no date needed.",
+    "dailyScheduleHint": "24/7 prayer calendar: each créneau starts at its hour and the next follows without a break. Plan a day, a week or a month.",
     "tableTime": "Time",
     "tableTitle": "Title",
     "tableLeader": "Led by",
@@ -707,7 +714,8 @@
     "saving": "Saving…",
     "save": "Save",
     "addSlot": "Add the slot",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "loopDay": "Looping créneau (former mode)"
   },
   "adminUsers": {
     "title": "Members and roles",

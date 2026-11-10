@@ -134,12 +134,26 @@ function eventRoomId(eventId: string): string {
  * event's chat is ephemeral, same philosophy as reaction:send's confetti, not a durable record).
  */
 export interface RoomSharer {
-  kind: 'MODERATOR' | 'AI';
+  /** PROGRAM: a dated créneau starting at its hour, as the moderators wrote it. */
+  kind: 'MODERATOR' | 'AI' | 'PROGRAM';
   userId?: string;
   displayName: string | null;
 }
 
 export const AI_SHARER: RoomSharer = { kind: 'AI', displayName: null };
+export const PROGRAM_SHARER: RoomSharer = { kind: 'PROGRAM', displayName: null };
+
+/**
+ * Between two dated créneaux the AI carries on with the last one: a segment shown in the room
+ * with a live window (start now, end at its own length or at the next planned créneau), never
+ * written to the database, so the planned calendar stays exactly as the moderators wrote it.
+ */
+export interface ReplayState {
+  programId: string;
+  block: PrayerSlot[];
+  index: number;
+  slot: PrayerSlot;
+}
 
 export interface PendingRelay {
   /** The créneau's last segment, kept RUNNING so the prayer never stops during the relay. */
@@ -182,6 +196,9 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   private readonly roomModerators = new Map<string, Map<string, string>>();
   private readonly roomSharers = new Map<string, RoomSharer>();
   private readonly pendingRelays = new Map<string, PendingRelay>();
+  private readonly replays = new Map<string, ReplayState>();
+  /** What the engine announced as coming next, replayed to members who join mid-segment. */
+  private readonly lastNext = new Map<string, { slotId: string; next: { title: string; startsNewCreneau: boolean } | null }>();
   private relayShareHandler?: (roomId: string, sharer: RoomSharer) => Promise<void>;
 
   constructor(
@@ -238,20 +255,25 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
 
     const program = await this.programsService.findActiveByCommunity(fromRoomId(payload.roomId));
     if (!program) return;
-    const slot = await this.slotsService.findRunningSlotByProgram(program.id);
+    const slot = (await this.slotsService.findRunningSlotByProgram(program.id)) ?? this.replays.get(payload.roomId)?.slot ?? null;
     if (!slot) return;
 
     const userId = extractUserId(client, this.tokenService);
     if (userId) await this.slotsService.recordAttendance(slot.id, userId);
 
     const remainingSeconds = Math.max(0, Math.round((new Date(slot.end_at).getTime() - Date.now()) / 1000));
-    const next = await this.slotsService.nextAfter(slot).catch(() => null);
+    const announced = this.lastNext.get(payload.roomId);
+    let next = announced && announced.slotId === slot.id ? announced.next : undefined;
+    if (next === undefined) {
+      const after = await this.slotsService.nextAfter(slot).catch(() => null);
+      next = after ? { title: after.slot.title, startsNewCreneau: after.wraps } : null;
+    }
     client.emit('slot:started', {
       roomId: payload.roomId,
       slot,
       remainingSeconds,
       sharedBy: this.sharerOf(payload.roomId),
-      next: next ? { title: next.slot.title, startsNewCreneau: next.wraps } : null,
+      next,
     });
   }
 
@@ -733,6 +755,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     remainingSeconds: number,
     next?: { title: string; startsNewCreneau: boolean } | null,
   ): void {
+    this.lastNext.set(roomId, { slotId: slot.id, next: next ?? null });
     this.server
       ?.to(roomId)
       .emit('slot:started', { roomId, slot, remainingSeconds, sharedBy: this.sharerOf(roomId), next: next ?? null });
@@ -764,6 +787,15 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
 
   setSharer(roomId: string, sharer: RoomSharer): void {
     this.roomSharers.set(roomId, sharer);
+  }
+
+  getReplay(roomId: string): ReplayState | undefined {
+    return this.replays.get(roomId);
+  }
+
+  setReplay(roomId: string, replay: ReplayState | null): void {
+    if (replay) this.replays.set(roomId, replay);
+    else this.replays.delete(roomId);
   }
 
   private sharerOf(roomId: string): RoomSharer {

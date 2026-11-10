@@ -254,6 +254,20 @@ export const prayerApi = {
   removeProgram: (token: string, id: string) =>
     request<void>(`/prayer-programs/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
   /** Replaces a créneau's segments, in order — e.g. after pasting a new one. */
+  /** Dated créneaux (a day, a week, a month): each runs at its own hour, the prayer never stops. */
+  addCreneaux: (
+    token: string,
+    programId: string,
+    creneaux: {
+      date: string;
+      segments: { start: string; end: string; title: string; guidedText?: string; bibleReferences?: string[] }[];
+    }[],
+  ) =>
+    request<{ timeZone: string; slots: PrayerSlot[] }>(`/prayer-programs/${programId}/creneaux`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ creneaux }),
+    }),
   replaceSchedule: (
     token: string,
     programId: string,

@@ -24,6 +24,8 @@ import { roleRank } from '../roles/role-hierarchy';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { CreateSlotDto } from './dto/create-slot.dto';
 import { ReplaceScheduleDto } from './dto/replace-schedule.dto';
+import { AddCreneauxDto } from './dto/add-creneaux.dto';
+import { placeCreneaux } from './dated-creneaux';
 import { UpdateProgramDto } from './dto/update-program.dto';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { PrayerSlotsService } from './prayer-slots.service';
@@ -144,5 +146,26 @@ export class PrayerProgramsController {
     const program = await this.programsService.findById(id);
     await this.assertCanEditSchedule(currentUser.id, program.community_id);
     return this.slotsService.replaceSchedule(id, dto.segments);
+  }
+
+  /**
+   * Dated créneaux for a day, a week or a month: each runs at its own hour and the prayer goes
+   * on without a break. Turns the program into a calendar program.
+   */
+  @Post(':id/creneaux')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async addCreneaux(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddCreneauxDto,
+  ) {
+    const program = await this.programsService.findById(id);
+    await this.assertCanEditSchedule(currentUser.id, program.community_id);
+    const timeZone = await this.programsService.timeZoneOf(program);
+    const segments = placeCreneaux(dto.creneaux, timeZone);
+    await this.programsService.useCalendar(id);
+    const slots = await this.slotsService.addCalendarSegments(id, segments);
+    return { timeZone, slots };
   }
 }

@@ -30,7 +30,7 @@ function extractYouTubeId(url: string): string | null {
 }
 
 type ConnectionState = 'connecting' | 'live' | 'empty';
-type Sharer = { kind: 'MODERATOR' | 'AI'; displayName: string | null };
+type Sharer = { kind: 'MODERATOR' | 'AI' | 'PROGRAM'; displayName: string | null };
 type NextUp = { title: string; startsNewCreneau: boolean };
 type Relay = { nextTitle: string; deadline: string; moderators: string[] };
 type FloatingReaction = { id: number; emoji: string };
@@ -397,7 +397,9 @@ export function PrayerRoomPage() {
             <span>
               {sharedBy?.kind === 'MODERATOR' && sharedBy.displayName
                 ? t('room.sharedByModerator', { name: sharedBy.displayName })
-                : t('room.sharedByAi')}
+                : sharedBy?.kind === 'PROGRAM'
+                  ? t('room.sharedByProgram')
+                  : t('room.sharedByAi')}
             </span>
           </div>
 

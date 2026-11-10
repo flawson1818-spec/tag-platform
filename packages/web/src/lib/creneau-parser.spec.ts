@@ -1,4 +1,4 @@
-import { formatVerse, parseCreneau, splitVerse } from './creneau-parser';
+import { formatVerse, parseCreneau, splitVerse, parseCreneauxByDate, parseDateLine } from './creneau-parser';
 
 // The créneau exactly as a moderator sent it (WCI Soviépé, Thursday 5 November 2026).
 const EXAMPLE = `JEUDI 05 NOVEMBRE 2026
@@ -127,5 +127,38 @@ describe('parseCreneau', () => {
     expect(stored).toBe('Jean 4:14 — mais celui qui boira…');
     expect(splitVerse(stored)).toEqual({ reference: 'Jean 4:14', text: 'mais celui qui boira…' });
     expect(splitVerse('Psaume 100:1-5')).toEqual({ reference: 'Psaume 100:1-5', text: '' });
+  });
+});
+
+describe('parseCreneauxByDate', () => {
+  it('reads French and numeric dates', () => {
+    expect(parseDateLine('JEUDI 05 NOVEMBRE 2026')).toBe('2026-11-05');
+    expect(parseDateLine('Vendredi 1er août 2026')).toBe('2026-08-01');
+    expect(parseDateLine('Samedi 07/11/2026')).toBe('2026-11-07');
+    expect(parseDateLine('Prière 1: Père merci')).toBeNull();
+    expect(parseDateLine('31 février 2026')).toBeNull();
+  });
+
+  it('splits a paste covering several days into dated créneaux', () => {
+    const text = [
+      'JEUDI 05 NOVEMBRE 2026',
+      "Prière d'ouverture 12:00-12:05",
+      'Adoration 12:05-13:00',
+      'VENDREDI 06 NOVEMBRE 2026',
+      "Prière d'ouverture 06:00-06:10",
+      'Prière1: Seigneur, merci pour ce jour.',
+      'Louange 06:10-07:00',
+    ].join('\n');
+    const creneaux = parseCreneauxByDate(text);
+    expect(creneaux.map((c) => [c.date, c.segments.length, c.segments[0].start])).toEqual([
+      ['2026-11-05', 2, '12:00'],
+      ['2026-11-06', 2, '06:00'],
+    ]);
+  });
+
+  it('keeps a paste without any date as one créneau to date by hand', () => {
+    const [only] = parseCreneauxByDate("Prière d'ouverture 12:00-12:05\nAdoration 12:05-13:00");
+    expect(only.date).toBeNull();
+    expect(only.segments).toHaveLength(2);
   });
 });

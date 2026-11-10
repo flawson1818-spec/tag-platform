@@ -222,3 +222,63 @@ export function splitVerse(stored: string): ParsedVerse {
   if (m && m[4]) return { reference: `${m[1]} ${m[2]}:${m[3]}`, text: stripQuotes(m[4]) };
   return { reference: stored, text: '' };
 }
+
+// ---- Several dated créneaux at once (a day, a week, a month) ----
+
+const MONTHS: Record<string, number> = {
+  janvier: 1, fevrier: 2, février: 2, mars: 3, avril: 4, mai: 5, juin: 6, juillet: 7,
+  aout: 8, août: 8, septembre: 9, octobre: 10, novembre: 11, decembre: 12, décembre: 12,
+};
+const WORD_DATE = /\b(\d{1,2})(?:er)?\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)\s+(\d{4})\b/i;
+const NUM_DATE = /\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})\b/;
+
+/** "JEUDI 05 NOVEMBRE 2026" or "05/11/2026" → "2026-11-05"; null when the line holds no date. */
+export function parseDateLine(line: string): string | null {
+  const clean = line.replace(/\u00a0/g, ' ');
+  let day: number, month: number, year: number;
+  const w = clean.match(WORD_DATE);
+  if (w) {
+    day = Number(w[1]);
+    month = MONTHS[w[2].toLowerCase().replace('û', 'u')] ?? MONTHS[w[2].toLowerCase()];
+    year = Number(w[3]);
+  } else {
+    const n = clean.match(NUM_DATE);
+    if (!n) return null;
+    [day, month, year] = [Number(n[1]), Number(n[2]), Number(n[3])];
+  }
+  if (!month || month > 12 || day < 1 || day > 31) return null;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  if (d.getUTCMonth() !== month - 1) return null; // 31 février
+  return d.toISOString().slice(0, 10);
+}
+
+export interface DatedCreneau extends ParsedCreneau {
+  /** null when the text gave no date: the moderator picks it. */
+  date: string | null;
+}
+
+/**
+ * Splits a paste covering several days into créneaux: every line that carries a date (and no
+ * time range) starts a new one. Text without any date is a single créneau with date null.
+ */
+export function parseCreneauxByDate(input: string): DatedCreneau[] {
+  const lines = input.split(/\r?\n/);
+  const chunks: { date: string | null; lines: string[] }[] = [];
+  let current: { date: string | null; lines: string[] } | null = null;
+  for (const line of lines) {
+    const date = TIME_RANGE.test(line) ? null : parseDateLine(line);
+    if (date) {
+      current = { date, lines: [line] };
+      chunks.push(current);
+      continue;
+    }
+    if (!current) {
+      current = { date: null, lines: [] };
+      chunks.push(current);
+    }
+    current.lines.push(line);
+  }
+  return chunks
+    .map((chunk) => ({ date: chunk.date, ...parseCreneau(chunk.lines.join('\n')) }))
+    .filter((c) => c.segments.length > 0);
+}

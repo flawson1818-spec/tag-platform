@@ -327,7 +327,8 @@
       "PRAISE": "Louange",
       "INSTRUMENTAL_ADORATION": "Adoration instrumentale",
       "GOSPEL": "Gospel"
-    }
+    },
+    "sharedByProgram": "Préparé par les modérateurs · au programme de cette heure"
   },
   "communities": {
     "title": "Communautés",
@@ -552,9 +553,9 @@
     "PRAYER_TOPIC_STARTED": "Un sujet de prière que tu suis vient de commencer"
   },
   "creneauImport": {
-    "open": "Coller un créneau",
-    "title": "Coller un créneau",
-    "intro": "Colle le créneau tel que tu l'écris d'habitude : la date, puis chaque segment avec son horaire (« 12:10-12:15 »), « Prière1: … » et les versets. Vérifie l'aperçu avant d'enregistrer.",
+    "open": "Ajouter des créneaux",
+    "title": "Ajouter des créneaux au calendrier",
+    "intro": "Colle un ou plusieurs créneaux tels que tu les écris : la date (« JEUDI 05 NOVEMBRE 2026 »), puis chaque segment avec son horaire, « Prière1: … » et les versets. Tu peux coller une journée entière, une semaine ou un mois : chaque date commence un nouveau créneau.",
     "placeholder": "JEUDI 05 NOVEMBRE 2026\n\nPrière d'ouverture 12:00-12:03\n\n12:10-12:15\nPrière1: Père merci pour ta puissance divine…\nJean 10:10 « Le voleur ne vient que pour dérober… »",
     "summary_one": "{{count}} segment · {{duration}}",
     "summary_other": "{{count}} segments · {{duration}} au total",
@@ -564,9 +565,15 @@
     "save_one": "Enregistrer le créneau ({{count}} segment)",
     "save_other": "Enregistrer le créneau ({{count}} segments)",
     "saving": "Enregistrement…",
-    "saved_one": "Créneau enregistré : {{count}} segment.",
-    "saved_other": "Créneau enregistré : {{count}} segments.",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "dateLabel": "Date des créneaux sans date",
+    "summaryDays_one": "{{count}} créneau · {{segments}} segments",
+    "summaryDays_other": "{{count}} créneaux · {{segments}} segments",
+    "calendarNote": "Chaque créneau prendra place à son heure. Ce qui était déjà prévu aux mêmes heures sera remplacé. Entre deux créneaux écrits, l'IA prolonge la prière avec le dernier créneau : la prière ne s'arrête jamais.",
+    "saveDays_one": "Ajouter {{count}} créneau",
+    "saveDays_other": "Ajouter {{count}} créneaux",
+    "saved_one": "{{count}} créneau ajouté au calendrier.",
+    "saved_other": "{{count}} créneaux ajoutés au calendrier."
   },
   "notificationStatuses": {
     "DELIVERED": "Non lue",
@@ -687,7 +694,7 @@
     "worldRoomProtected": "Salle mondiale — continue, ne peut pas être arrêtée",
     "needLoginCreate": "Connecte-toi avec un compte modérateur pour créer un programme.",
     "slotsTitle": "Créneaux — {{title}}",
-    "dailyScheduleHint": "Horaire quotidien — chaque créneau se répète tous les jours à la même heure, pas besoin de date.",
+    "dailyScheduleHint": "Calendrier de prière 24 h/24 : chaque créneau commence à son heure, le suivant enchaîne sans arrêt. Programme une journée, une semaine ou un mois.",
     "tableTime": "Heure",
     "tableTitle": "Titre",
     "tableLeader": "Animé par",
@@ -707,7 +714,8 @@
     "saving": "Enregistrement…",
     "save": "Enregistrer",
     "addSlot": "Ajouter le créneau",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "loopDay": "Créneau en boucle (ancien mode)"
   },
   "adminUsers": {
     "title": "Membres et rôles",

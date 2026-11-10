@@ -2795,3 +2795,20 @@ header.site-header::after {
   .mh-shortcut .hint { display: none; }
 }
 .mh-live-foot .home-hero-cta { text-decoration: none; }
+
+/* ---- Prayer calendar ---- */
+.slot-day-row td {
+  padding-top: 1rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary-soft-strong);
+}
+.slot-day-row td::first-letter,
+.creneau-preview-day h5::first-letter { text-transform: uppercase; }
+.creneau-date { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; margin: 0.6rem 0; max-width: 260px; }
+.creneau-preview-day h5 {
+  margin: 0.9rem 0 0.4rem;
+  font-size: 0.95rem;
+  color: var(--color-primary);
+}

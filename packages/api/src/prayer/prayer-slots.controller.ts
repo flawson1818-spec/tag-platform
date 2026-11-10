@@ -7,6 +7,8 @@ import { fromRoomId, WORLD_ROOM_ID } from './prayer-constants';
 import { UpdateSlotDto } from './dto/update-slot.dto';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { PrayerSlotsService } from './prayer-slots.service';
+import { PrayerRealtimeGateway } from './prayer-realtime.gateway';
+import { toRoomId } from './prayer-constants';
 
 @ApiTags('prayer-slots')
 @Controller('prayer-slots')
@@ -14,6 +16,7 @@ export class PrayerSlotsController {
   constructor(
     private readonly slotsService: PrayerSlotsService,
     private readonly programsService: PrayerProgramsService,
+    private readonly gateway: PrayerRealtimeGateway,
   ) {}
 
   @Get('active')
@@ -21,7 +24,11 @@ export class PrayerSlotsController {
     const program = await this.programsService.findActiveByCommunity(fromRoomId(roomId));
     if (!program) throw new NotFoundException(`No active prayer program for room ${roomId}`);
 
-    const slot = await this.slotsService.findRunningSlotByProgram(program.id);
+    // Between two dated créneaux the AI carries on with the last one (never written to the database).
+    const slot =
+      (await this.slotsService.findRunningSlotByProgram(program.id)) ??
+      this.gateway.getReplay(toRoomId(program.community_id))?.slot ??
+      null;
     if (!slot) throw new NotFoundException(`No slot currently running for room ${roomId}`);
 
     const remainingSeconds = Math.max(0, Math.round((new Date(slot.end_at).getTime() - Date.now()) / 1000));

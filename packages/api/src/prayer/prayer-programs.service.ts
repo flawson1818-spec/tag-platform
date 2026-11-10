@@ -1,4 +1,10 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { buildPaginationMeta, PaginatedResult, paginationRange } from '../common/pagination';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
@@ -7,6 +13,10 @@ import { UpdateProgramDto } from './dto/update-program.dto';
 import { PrayerProgram, PrayerProgramStatus } from './prayer-program.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
 import { assertProgramTransition } from './prayer-state-machines';
+import { DEFAULT_PRAYER_TIMEZONE, isValidTimeZone } from './zoned-time';
+
+export type ScheduleMode = 'LOOP' | 'CALENDAR';
+const MODE_CACHE_MS = 15_000;
 
 const PROGRAM_COLUMNS = 'id, community_id, title, recurrence_rule, status, created_at, updated_at, deleted_at';
 
@@ -26,8 +36,46 @@ export class PrayerProgramsService {
     private readonly slotsService: PrayerSlotsService,
   ) {}
 
+  /** The engine asks every second; the mode only changes when créneaux are added. */
+  private readonly modeCache = new Map<string, { mode: ScheduleMode; at: number }>();
+
   private get db() {
     return this.supabase.client.from('prayer_programs');
+  }
+
+  /**
+   * LOOP: the program's créneau runs again and again (relay at each end). CALENDAR: dated
+   * créneaux over a day, a week, a month, each at its own hour. Fail-open: without migration
+   * 20261110 every program is LOOP, as before.
+   */
+  async scheduleMode(programId: string): Promise<ScheduleMode> {
+    const cached = this.modeCache.get(programId);
+    if (cached && Date.now() - cached.at < MODE_CACHE_MS) return cached.mode;
+    const { data, error } = await this.db.select('schedule_mode').eq('id', programId).maybeSingle();
+    const mode: ScheduleMode = !error && (data as { schedule_mode?: string } | null)?.schedule_mode === 'CALENDAR' ? 'CALENDAR' : 'LOOP';
+    this.modeCache.set(programId, { mode, at: Date.now() });
+    return mode;
+  }
+
+  async useCalendar(programId: string): Promise<void> {
+    const { error } = await this.db.update({ schedule_mode: 'CALENDAR' }).eq('id', programId);
+    if (error) {
+      if (['42703', 'PGRST204'].includes(error.code ?? '')) {
+        throw new ServiceUnavailableException(
+          "Le calendrier de prière n'est pas encore activé : lance la migration 20261110 dans Supabase.",
+        );
+      }
+      throw new InternalServerErrorException(error.message);
+    }
+    this.modeCache.set(programId, { mode: 'CALENDAR', at: Date.now() });
+  }
+
+  /** Créneaux are written in the community's local time; the world room uses PRAYER_TIMEZONE. */
+  async timeZoneOf(program: PrayerProgram): Promise<string> {
+    if (!program.community_id) return DEFAULT_PRAYER_TIMEZONE;
+    const { data } = await this.supabase.client.from('communities').select('timezone').eq('id', program.community_id).maybeSingle();
+    const tz = (data as { timezone?: string } | null)?.timezone;
+    return tz && isValidTimeZone(tz) ? tz : DEFAULT_PRAYER_TIMEZONE;
   }
 
   async create(dto: CreateProgramDto, actorId: string): Promise<PrayerProgram> {
@@ -134,6 +182,8 @@ export class PrayerProgramsService {
 
   /** Kicks off the first slot if the program has none currently RUNNING. */
   private async ensureRunningSlot(programId: string): Promise<void> {
+    // A calendar program starts each créneau at its own hour: the engine does it on its next tick.
+    if ((await this.scheduleMode(programId)) === 'CALENDAR') return;
     const running = await this.slotsService.findRunningSlotByProgram(programId);
     if (running) return;
     const first = await this.slotsService.findFirstByProgram(programId);

@@ -327,7 +327,8 @@
       "PRAISE": "Alabanza",
       "INSTRUMENTAL_ADORATION": "Adoración instrumental",
       "GOSPEL": "Gospel"
-    }
+    },
+    "sharedByProgram": "Preparado por los moderadores · previsto para esta hora"
   },
   "communities": {
     "title": "Comunidades",
@@ -552,9 +553,9 @@
     "PRAYER_TOPIC_STARTED": "Un tema de oración que sigues acaba de comenzar"
   },
   "creneauImport": {
-    "open": "Pegar un tiempo de oración",
-    "title": "Pegar un tiempo de oración",
-    "intro": "Pega el tiempo de oración como lo escribes normalmente: la fecha, luego cada segmento con su horario («12:10-12:15»), «Prière1: …» y los versículos. Revisa la vista previa antes de guardar.",
+    "open": "Añadir turnos",
+    "title": "Añadir turnos al calendario",
+    "intro": "Pega uno o varios turnos tal como los escribes: la fecha, luego cada segmento con su horario, «Prière1: …» y los versículos. Puedes pegar un día, una semana o un mes: cada fecha empieza un turno nuevo.",
     "placeholder": "JUEVES 5 DE NOVIEMBRE DE 2026\n\nOración de apertura 12:00-12:03\n\n12:10-12:15\nPrière1: Padre, gracias por tu poder divino…\nJuan 10:10 «El ladrón no viene sino para hurtar…»",
     "summary_one": "{{count}} segmento · {{duration}}",
     "summary_other": "{{count}} segmentos · {{duration}} en total",
@@ -564,9 +565,15 @@
     "save_one": "Guardar ({{count}} segmento)",
     "save_other": "Guardar ({{count}} segmentos)",
     "saving": "Guardando…",
-    "saved_one": "Tiempo de oración guardado: {{count}} segmento.",
-    "saved_other": "Tiempo de oración guardado: {{count}} segmentos.",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "dateLabel": "Fecha de los turnos sin fecha",
+    "summaryDays_one": "{{count}} turno · {{segments}} segmentos",
+    "summaryDays_other": "{{count}} turnos · {{segments}} segmentos",
+    "calendarNote": "Cada turno ocupará su hora. Lo ya previsto a las mismas horas se reemplaza. Entre dos turnos escritos, la IA prolonga la oración con el último: la oración nunca se detiene.",
+    "saveDays_one": "Añadir {{count}} turno",
+    "saveDays_other": "Añadir {{count}} turnos",
+    "saved_one": "{{count}} turno añadido al calendario.",
+    "saved_other": "{{count}} turnos añadidos al calendario."
   },
   "notificationStatuses": {
     "DELIVERED": "No leída",
@@ -687,7 +694,7 @@
     "worldRoomProtected": "Sala mundial — continua, no se puede detener",
     "needLoginCreate": "Inicia sesión con una cuenta de moderador para crear un programa.",
     "slotsTitle": "Turnos — {{title}}",
-    "dailyScheduleHint": "Horario diario — cada turno se repite todos los días a la misma hora, sin necesidad de fecha.",
+    "dailyScheduleHint": "Calendario de oración 24/7: cada turno empieza a su hora y el siguiente sigue sin parar. Programa un día, una semana o un mes.",
     "tableTime": "Hora",
     "tableTitle": "Título",
     "tableLeader": "Dirigido por",
@@ -707,7 +714,8 @@
     "saving": "Guardando…",
     "save": "Guardar",
     "addSlot": "Añadir el turno",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "loopDay": "Turno en bucle (modo anterior)"
   },
   "adminUsers": {
     "title": "Miembros y roles",
