@@ -49,12 +49,15 @@ describe('ApplicationsService', () => {
     );
   });
 
-  it('approving an intercessor gives the Intercesseur role and tells them', async () => {
+  it('approving an intercessor gives the Intercesseur role, starts their profile and tells them', async () => {
+    const profiles = createQueryChain({ data: null, error: null });
     const { service, rolesService, notificationsService } = build({
       applications: [createQueryChain({ data: ROW, error: null }), createQueryChain({ data: { ...ROW, status: 'APPROVED' }, error: null })],
+      intercessor_profiles: profiles,
     });
     await service.review('app-1', { status: 'APPROVED' }, 'admin-1');
     expect(rolesService.assign).toHaveBeenCalledWith({ userId: 'u-1', roleCode: 'INTERCESSEUR' }, 'admin-1');
+    expect(profiles.upsert).toHaveBeenCalledWith({ user_id: 'u-1', prayer_skills: [] }, { onConflict: 'user_id', ignoreDuplicates: true });
     expect(notificationsService.create).toHaveBeenCalledWith('u-1', 'APPLICATION_APPROVED', expect.objectContaining({ applicationId: 'app-1' }));
   });
 

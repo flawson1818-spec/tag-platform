@@ -1215,5 +1215,24 @@
     "approve": "Accept",
     "reject": "Decline",
     "registerChurch": "Register my church or group"
+  },
+  "intercessor": {
+    "title": "My intercessor profile",
+    "intro": "Help the administration entrust you the right requests: when you are available, the topics you carry best, and how many requests at a time.",
+    "availability": "Availability",
+    "skills": "Favourite topics",
+    "capacity": "Maximum active requests",
+    "saved": "Saved.",
+    "status": {
+      "AVAILABLE": "Available",
+      "BUSY": "Busy",
+      "OFFLINE": "Away"
+    },
+    "recommended": "Recommended",
+    "noneRecommended": "No intercessor yet.",
+    "load": "{{active}}/{{max}} requests",
+    "matchesTopic": "favourite topic",
+    "full": "full",
+    "entrust": "Entrust"
   }
 }

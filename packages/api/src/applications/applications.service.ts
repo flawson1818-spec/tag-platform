@@ -132,6 +132,11 @@ export class ApplicationsService {
     if (dto.status === 'APPROVED') {
       if (application.kind === 'INTERCESSOR') {
         await this.rolesService.assign({ userId: application.applicant.id, roleCode: 'INTERCESSEUR' } as never, reviewerId);
+        // The topics they named become their intercessor profile (fail-open before migration 20261114).
+        const skills = Array.isArray(application.payload.prayerSkills) ? (application.payload.prayerSkills as string[]) : [];
+        await this.supabase.client
+          .from('intercessor_profiles')
+          .upsert({ user_id: application.applicant.id, prayer_skills: skills.slice(0, 12) }, { onConflict: 'user_id', ignoreDuplicates: true });
       } else {
         const p = application.payload as { name: string; type: string };
         const community = await this.communitiesService.create({ name: p.name, type: p.type } as never, reviewerId);

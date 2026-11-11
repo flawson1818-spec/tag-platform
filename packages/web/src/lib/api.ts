@@ -1402,3 +1402,32 @@ export const applicationsApi = {
   review: (token: string, id: string, status: 'APPROVED' | 'REJECTED', note?: string) =>
     request<Application>(`/applications/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ status, note }) }),
 };
+
+// ---- Intercessors: operational profile and recommendations ----
+
+export type IntercessorAvailability = 'AVAILABLE' | 'BUSY' | 'OFFLINE';
+
+export interface IntercessorProfile {
+  availability: IntercessorAvailability;
+  prayerSkills: string[];
+  maxActive: number;
+}
+
+export interface IntercessorRecommendation {
+  userId: string;
+  displayName: string;
+  score: number;
+  availability: IntercessorAvailability;
+  activeRequests: number;
+  maxActive: number;
+  matchesTopic: boolean;
+  full: boolean;
+}
+
+export const intercessorsApi = {
+  me: (token: string) => request<IntercessorProfile>('/intercessors/me', { headers: authHeaders(token) }),
+  updateMe: (token: string, data: Partial<IntercessorProfile>) =>
+    request<IntercessorProfile>('/intercessors/me', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
+  recommendations: (token: string, requestId: string) =>
+    request<IntercessorRecommendation[]>(`/intercessors/recommendations/${requestId}`, { headers: authHeaders(token) }),
+};

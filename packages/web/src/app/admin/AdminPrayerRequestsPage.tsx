@@ -4,6 +4,7 @@ import { getAccessToken } from '../auth/AuthContext';
 import { useAccess } from '../auth/AccessContext';
 import { LeaderCandidate, PRAYER_REQUEST_CATEGORIES, PrayerProgram, PrayerRequest, prayerApi, prayerRequestsApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
+import { RecommendedIntercessors } from './RecommendedIntercessors';
 import { RequestPhoto, RequestStatus } from '../prayer-requests/PrayerRequestsPage';
 
 const STATUSES = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING', 'ANSWERED', 'ARCHIVED'];
@@ -139,6 +140,9 @@ export function AdminPrayerRequestsPage() {
                   )}
                 </select>
               </label>
+              {['NEW', 'ASSIGNED', 'RESTORED'].includes(r.status) && (
+                <RecommendedIntercessors requestId={r.id} onPick={(userId) => act((token) => prayerRequestsApi.assign(token, r.id, userId))} />
+              )}
               <span className="admin-status-actions">
                 {(NEXT[r.status] ?? []).map((s) => (
                   <button key={s} type="button" className="admin-status-button admin-status-button-visible" onClick={() => act((token) => prayerRequestsApi.updateStatus(token, r.id, s))}>

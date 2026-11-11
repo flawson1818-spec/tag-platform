@@ -2967,3 +2967,30 @@ header.site-header::after {
   margin: 0.6rem 0;
 }
 .admin-note { flex: 1; min-width: 180px; }
+
+/* ---- Intercessor profile (§5.5) ---- */
+.intercessor-label { margin: 0.9rem 0 0.4rem; font-weight: 600; }
+.intercessor-availability, .intercessor-skills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.intercessor-pill, .intercessor-skill {
+  border: 1px solid var(--border, #d9d4c7); border-radius: 999px; padding: 0.35rem 0.8rem;
+  background: transparent; color: inherit; cursor: pointer; font-size: 0.9rem;
+}
+.intercessor-skill input { position: absolute; opacity: 0; pointer-events: none; }
+.intercessor-skill:focus-within { outline: 2px solid var(--accent, #c8963e); }
+.intercessor-pill.is-on, .intercessor-skill.is-on { background: var(--accent, #c8963e); border-color: var(--accent, #c8963e); color: #fff; }
+.intercessor-pill.av-busy.is-on { background: #b7791f; border-color: #b7791f; }
+.intercessor-pill.av-offline.is-on { background: #6b7280; border-color: #6b7280; }
+.intercessor-capacity { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.9rem; }
+.intercessor-capacity input { width: 5rem; }
+.recommend { width: 100%; }
+.recommend-panel { margin-top: 0.5rem; border: 1px solid var(--border, #d9d4c7); border-radius: 10px; padding: 0.5rem; }
+.recommend-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.recommend-pick {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left;
+  background: transparent; color: inherit; border: 1px solid transparent; border-radius: 8px; padding: 0.4rem 0.5rem; cursor: pointer;
+}
+.recommend-pick:hover:not(:disabled) { border-color: var(--accent, #c8963e); }
+.recommend-pick:disabled { opacity: 0.55; cursor: default; background: transparent; color: inherit; }
+.recommend-score { min-width: 2.4rem; text-align: center; font-weight: 700; color: var(--accent, #c8963e); }
+.recommend-who { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.recommend-cta { font-weight: 600; color: var(--accent, #c8963e); }

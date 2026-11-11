@@ -2,9 +2,13 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { useAccess } from '../auth/AccessContext';
+import { IntercessorProfileCard } from './IntercessorProfileCard';
 import { CONFIDENTIALITY_LEVELS, PRAYER_REQUEST_CATEGORIES, PrayerRequest, filesApi, prayerRequestsApi } from '../../lib/api';
 
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+/** Roles that carry entrusted requests — same list as the server's PRAYER_LEADER_ELIGIBLE_ROLES. */
+const INTERCESSOR_ROLES = ['INTERCESSEUR', 'MODERATEUR', 'RESPONSABLE_EQUIPE', 'PASTEUR', 'ADMINISTRATEUR', 'SUPER_ADMINISTRATEUR'];
 
 export function RequestPhoto({ requestId }: { requestId: string }) {
   const { t } = useTranslation();
@@ -39,6 +43,8 @@ export function PrayerRequestsPage() {
   const { t, i18n } = useTranslation();
   const { status } = useAuth();
   const signedIn = status === 'authenticated';
+  const { roles } = useAccess();
+  const isIntercessor = roles.some((r) => INTERCESSOR_ROLES.includes(r));
   const [category, setCategory] = useState<string>(PRAYER_REQUEST_CATEGORIES[0]);
   const [description, setDescription] = useState('');
   const [confidentiality, setConfidentiality] = useState('PRIVATE');
@@ -165,6 +171,8 @@ export function PrayerRequestsPage() {
 
       {signedIn ? (
         <>
+          {isIntercessor && <IntercessorProfileCard />}
+
           {entrusted.length > 0 && (
             <section className="pr-block pr-entrusted">
               <h3>{t('prayerRequests.entrustedTitle')}</h3>

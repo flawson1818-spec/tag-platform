@@ -1215,5 +1215,24 @@
     "approve": "Aceitar",
     "reject": "Recusar",
     "registerChurch": "Inscrever minha igreja ou grupo"
+  },
+  "intercessor": {
+    "title": "Meu perfil de intercessor",
+    "intro": "Ajude a administração a confiar-lhe os pedidos certos: quando está disponível, os temas que carrega melhor e quantos pedidos de cada vez.",
+    "availability": "Disponibilidade",
+    "skills": "Temas preferidos",
+    "capacity": "Pedidos ativos no máximo",
+    "saved": "Guardado.",
+    "status": {
+      "AVAILABLE": "Disponível",
+      "BUSY": "Ocupado",
+      "OFFLINE": "Ausente"
+    },
+    "recommended": "Recomendados",
+    "noneRecommended": "Nenhum intercessor por enquanto.",
+    "load": "{{active}}/{{max}} pedidos",
+    "matchesTopic": "tema preferido",
+    "full": "completo",
+    "entrust": "Confiar"
   }
 }

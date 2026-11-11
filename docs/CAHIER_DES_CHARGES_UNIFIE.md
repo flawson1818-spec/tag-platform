@@ -119,11 +119,13 @@ L'administration désigne les gardiens à l'avance.
 - Écrans : menu de l'avatar → Candidatures ; Communauté → Églises et groupes → « Inscrire mon
   église » ; Administration → Candidatures (accepter / refuser avec un mot pour le candidat).
 
-### 5.5 Profil opérationnel des intercesseurs et recommandation (pilote V8) — 🔨
+### 5.5 Profil opérationnel des intercesseurs et recommandation (pilote V8) — ✅
 Disponibilité (disponible, occupé, absent), sujets de prédilection, capacité (demandes
 actives maximum). À l'assignation d'une demande, la plateforme **recommande** les intercesseurs
 (sujet 40 pts, disponibilité 25, capacité 25, urgence/présence 10) ; l'administrateur décide —
 aucune assignation automatique.
+- Écrans : Demande de prière → « Mon profil d'intercesseur » (intercesseurs et plus) ;
+  Administration → Demandes de prière → « ✨ Recommandés » puis « Confier ».
 
 ### 5.6 Mobilisation d'un groupe sur une demande (pilote V13) — 🔨
 L'administration peut confier une demande à un **groupe** (église, cellule, équipe) en plus d'un
