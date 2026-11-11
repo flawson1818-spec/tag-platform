@@ -2,7 +2,8 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
-import { ChatMessage, PrayerSlot, RoomPerson, WS_URL, prayerApi } from '../../lib/api';
+import { ChatMessage, PrayerSlot, RoomPerson, WS_URL, prayerApi, prayerRequestsApi } from '../../lib/api';
+import { Link } from 'react-router-dom';
 import { formatRemaining } from '../../lib/format';
 import { splitVerse } from '../../lib/creneau-parser';
 import i18n from '../../i18n/config';
@@ -66,6 +67,8 @@ export function PrayerRoomPage() {
   const [takeoverOpen, setTakeoverOpen] = useState(false);
   const [takeoverForm, setTakeoverForm] = useState({ title: '', text: '', minutes: 60 });
   const [now, setNow] = useState(() => Date.now());
+  /** The request carried by the current slot, if any (§5.7). */
+  const [carried, setCarried] = useState<{ requestId: string; count: number; prayedByMe: boolean } | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
   // The room:join effect below only runs once on mount, so its socket handlers close over
@@ -196,12 +199,42 @@ export function PrayerRoomPage() {
     socket.on('room:role', (payload: { canShare: boolean }) => setCanShare(payload.canShare));
     socket.on('relay:pending', (payload: Relay) => setRelay(payload));
     socket.on('relay:cleared', () => setRelay(null));
+    socket.on('request:prayed', (payload: { requestId: string; count: number }) => {
+      setCarried((c) => (c && c.requestId === payload.requestId ? { ...c, count: payload.count } : c));
+    });
 
     return () => {
       socket.emit('room:leave', { roomId: ROOM_ID });
       socket.disconnect();
     };
   }, []);
+
+  const slotId = slot?.id;
+  useEffect(() => {
+    if (!slotId || !/^[0-9a-f-]{36}$/i.test(slotId)) return;
+    let cancelled = false;
+    prayerRequestsApi
+      .forSlot(slotId, getAccessToken())
+      .then((res) => {
+        if (!cancelled) setCarried(res.requestId ? { requestId: res.requestId, count: res.count, prayedByMe: res.prayedByMe } : null);
+      })
+      .catch(() => {
+        if (!cancelled) setCarried(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slotId]);
+
+  const prayForIt = () => {
+    const token = getAccessToken();
+    if (!token || !carried) return;
+    setCarried({ ...carried, prayedByMe: true, count: carried.prayedByMe ? carried.count : carried.count + 1 });
+    prayerRequestsApi
+      .pray(token, carried.requestId)
+      .then((res) => setCarried((c) => (c ? { ...c, count: res.count, prayedByMe: true } : c)))
+      .catch((err) => setRoomError((err as Error).message));
+  };
 
   useEffect(() => {
     if (!chatError) return;
@@ -517,6 +550,27 @@ export function PrayerRoomPage() {
                   </blockquote>
                 );
               })}
+            </div>
+          )}
+
+          {carried && /^[0-9a-f-]{36}$/i.test(slot.id) && carried && (
+            <div className="room-carried">
+              {status === 'authenticated' ? (
+                <button
+                  type="button"
+                  className={`room-pray-for${carried.prayedByMe ? ' is-on' : ''}`}
+                  onClick={prayForIt}
+                  disabled={carried.prayedByMe}
+                  aria-pressed={carried.prayedByMe}
+                >
+                  <span aria-hidden="true">🙏</span> {carried.prayedByMe ? t('prayedFor.done') : t('prayedFor.button')}
+                </button>
+              ) : (
+                <Link to="/login" className="room-pray-for">
+                  <span aria-hidden="true">🙏</span> {t('prayedFor.login')}
+                </Link>
+              )}
+              <span className="hint">{t('prayedFor.count', { count: carried.count })}</span>
             </div>
           )}
 

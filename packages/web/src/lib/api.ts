@@ -321,6 +321,8 @@ export const CONFIDENTIALITY_LEVELS = ['ANONYMOUS', 'PRIVATE', 'PUBLIC'] as cons
 
 export interface PrayerRequest {
   id: string;
+  /** How many people prayed for it in the room ("Je prie pour ce sujet"). */
+  prayed_count?: number;
   author_id: string | null;
   category: string;
   description: string;
@@ -348,6 +350,13 @@ export interface FlaggedPrayerRequest extends PrayerRequest {
 }
 
 export const prayerRequestsApi = {
+  /** The request carried by a slot of the room, if any: its id and counter (never its author). */
+  forSlot: (slotId: string, token?: string | null) =>
+    request<{ requestId: string | null; count: number; prayedByMe: boolean }>(`/prayer-requests/for-slot/${slotId}`, {
+      headers: token ? authHeaders(token) : {},
+    }),
+  pray: (token: string, id: string) =>
+    request<{ count: number; prayedByMe: boolean }>(`/prayer-requests/${id}/pray`, { method: 'POST', headers: authHeaders(token) }),
   create: (
     data: {
       category: string;

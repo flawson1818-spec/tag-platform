@@ -427,4 +427,38 @@ describe('PrayerRequestsService', () => {
       expect(url).toBe('https://signed.example/photo.jpg');
     });
   });
+
+  describe('« Je prie pour ce sujet » (§5.7)', () => {
+    it('never carries into the room a request its author did not make public', async () => {
+      const supabase = createSupabaseServiceMock({
+        prayer_requests: createQueryChain({ data: { ...NEW_REQUEST, confidentiality: 'PRIVATE' }, error: null }),
+      });
+      const { service, slotsService } = buildDeps({ supabase });
+      await expect(service.promote('r1', { programId: 'p1' } as never, 'admin')).rejects.toThrow(/Public/);
+      expect((slotsService as { injectUrgent?: unknown }).injectUrgent).toBeUndefined();
+    });
+
+    it('counts a prayer once per person, only for a request carried in the room', async () => {
+      const notCarried = buildDeps({
+        supabase: createSupabaseServiceMock({ prayer_requests: createQueryChain({ data: { id: 'r1', promoted_slot_id: null }, error: null }) }),
+      });
+      await expect(notCarried.service.pray('r1', 'u1')).rejects.toThrow(/pas portée/);
+
+      const prayers = createQueryChain({ data: [{ prayer_request_id: 'r1', user_id: 'u1' }, { prayer_request_id: 'r1', user_id: 'u2' }], error: null });
+      const carried = buildDeps({
+        supabase: createSupabaseServiceMock({
+          prayer_requests: createQueryChain({ data: { id: 'r1', promoted_slot_id: 's1' }, error: null }),
+          prayer_request_prayers: prayers,
+        }),
+        slotsService: { findById: vi.fn().mockResolvedValue({ id: 's1', program_id: 'p1' }) },
+        gateway: { emitRequestPrayed: vi.fn() },
+      });
+      await expect(carried.service.pray('r1', 'u1')).resolves.toEqual({ count: 2, prayedByMe: true });
+      expect(prayers.upsert).toHaveBeenCalledWith(
+        { prayer_request_id: 'r1', user_id: 'u1' },
+        expect.objectContaining({ ignoreDuplicates: true }),
+      );
+      expect((carried.gateway as { emitRequestPrayed: ReturnType<typeof vi.fn> }).emitRequestPrayed).toHaveBeenCalledWith('community-1', 'r1', 2);
+    });
+  });
 });

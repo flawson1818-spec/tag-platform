@@ -3318,3 +3318,13 @@ nav .nav-dropdown-panel .share-app-button,
 nav .nav-dropdown-panel .share-app-panel button { color: var(--color-text); background: transparent; box-shadow: none; }
 nav .nav-dropdown-panel .share-app-button:hover,
 nav .nav-dropdown-panel .share-app-panel button:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+
+/* ---- « Je prie pour ce sujet » (§5.7) ---- */
+.room-carried { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; margin: 0.6rem 0; }
+.room-pray-for {
+  display: inline-flex; gap: 0.4rem; align-items: center; border-radius: 999px; padding: 0.6rem 1.3rem; font-weight: 700;
+  background: var(--color-accent); color: #1f2340; border: none; text-decoration: none; cursor: pointer;
+}
+.room-pray-for.is-on { background: color-mix(in srgb, #16a34a 18%, transparent); color: #15803d; cursor: default; }
+.room-carried .hint { margin: 0; }
+.prayed-count { margin: 0.3rem 0 0; font-weight: 600; color: #15803d; }

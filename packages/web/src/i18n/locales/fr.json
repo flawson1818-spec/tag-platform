@@ -1447,5 +1447,14 @@
     "copy": "Copier le lien",
     "copied": "Lien copié !",
     "copyPrompt": "Copie ce lien :"
+  },
+  "prayedFor": {
+    "button": "Je prie pour ce sujet",
+    "done": "Tu pries pour ce sujet",
+    "login": "Connecte-toi pour dire que tu pries",
+    "count_one": "{{count}} personne prie pour ce sujet",
+    "count_other": "{{count}} personnes prient pour ce sujet",
+    "mine_one": "{{count}} personne a prié pour ta demande dans la salle",
+    "mine_other": "{{count}} personnes ont prié pour ta demande dans la salle"
   }
 }

@@ -1447,5 +1447,14 @@
     "copy": "Copy the link",
     "copied": "Link copied!",
     "copyPrompt": "Copy this link:"
+  },
+  "prayedFor": {
+    "button": "I'm praying for this",
+    "done": "You are praying for this",
+    "login": "Sign in to say you are praying",
+    "count_one": "{{count}} person is praying for this",
+    "count_other": "{{count}} people are praying for this",
+    "mine_one": "{{count}} person prayed for your request in the room",
+    "mine_other": "{{count}} people prayed for your request in the room"
   }
 }

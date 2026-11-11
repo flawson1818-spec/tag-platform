@@ -966,6 +966,11 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     };
   }
 
+  /** "Je prie pour ce sujet": the counter of the request carried in the room moved. */
+  emitRequestPrayed(roomId: string, requestId: string, count: number): void {
+    this.server?.to(roomId).emit('request:prayed', { roomId, requestId, count });
+  }
+
   emitSlotTick(roomId: string, remainingSeconds: number): void {
     this.server?.to(roomId).emit('slot:tick', { roomId, remainingSeconds });
   }

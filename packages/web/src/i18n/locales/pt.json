@@ -1447,5 +1447,14 @@
     "copy": "Copiar o link",
     "copied": "Link copiado!",
     "copyPrompt": "Copie este link:"
+  },
+  "prayedFor": {
+    "button": "Oro por este tema",
+    "done": "Está a orar por este tema",
+    "login": "Inicie sessão para dizer que ora",
+    "count_one": "{{count}} pessoa ora por este tema",
+    "count_other": "{{count}} pessoas oram por este tema",
+    "mine_one": "{{count}} pessoa orou pelo seu pedido na sala",
+    "mine_other": "{{count}} pessoas oraram pelo seu pedido na sala"
   }
 }

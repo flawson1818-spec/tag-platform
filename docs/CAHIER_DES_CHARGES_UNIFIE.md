@@ -151,7 +151,7 @@ aucune assignation automatique.
 L'administration peut confier une demande à un **groupe** (église, cellule, équipe) en plus d'un
 intercesseur : invité → accepté / décliné → terminé. Le responsable du groupe est notifié.
 
-### 5.7 « Je prie pour ce sujet » (pilote V9-V10, adapté) — 🔨
+### 5.7 « Je prie pour ce sujet » (pilote V9-V10, adapté) — ✅
 Quand une demande est portée dans la salle, chacun peut appuyer « Je prie pour ce sujet » : un
 compteur sans double comptage par personne, et le demandeur voit combien ont prié.
 **Adaptation** : dans le pilote, les sujets « ouverts » étaient visibles par tout le réseau. Ici,
@@ -202,3 +202,60 @@ mondial ; campagnes publicitaires automatisées.
 - Tests automatisés pour toute règle métier ; interface vérifiée sur ordinateur et téléphone.
 - Jamais d'e-mail ni de téléphone sur une page publique ; secrets jamais enregistrés en clair.
 - Guide de mise en ligne : `docs/MISE_EN_LIGNE.md`.
+
+---
+
+## 9. État au 11 novembre 2026 et reste à faire
+
+### 9.1 À développer
+
+| Point | État | Ce qu'il faut |
+|---|---|---|
+| §5.8 Actes de foi | 🔨 | Développement (table, profil, lien avec les témoignages) |
+| §5.10 Pilotage | 🔨 | Développement (taux d'assignation, de prise en charge, d'exaucement, sources, séries 7-90 jours) |
+| §5.9 WhatsApp | ⛔ | Un compte Meta Business vérifié, puis WHATSAPP_ACCESS_TOKEN et WHATSAPP_PHONE_NUMBER_ID |
+
+### 9.2 Développé, mais à activer en production
+
+Chaque fonction marche sans sa migration (lecture vide, écriture « pas encore activée »).
+Pour la rendre active, il faut lancer sa migration dans l'éditeur SQL de Supabase, dans l'ordre :
+
+| Migration | Active |
+|---|---|
+| 20261106_prayer_slot_duration | Durée propre de chaque segment |
+| 20261107_social_feed | Fil, photos, Amen, profils |
+| 20261108_direct_messages | Messages privés |
+| 20261109_storage_bucket | Envoi des photos et documents |
+| 20261110_prayer_calendar | Calendrier de prière (jour, semaine, 3 mois) |
+| 20261111_prayer_request_assignment | Confier une demande à un intercesseur |
+| 20261112_daily_watch | Intention du jour, Flambeau |
+| 20261113_applications | Candidatures intercesseur / église |
+| 20261114_intercessor_profiles | Profil d'intercesseur |
+| 20261115_worship_interlude | Liens de louange entre les prières |
+| 20261116_social_post_kinds | Expériences et écrits dans le fil |
+| 20261117_prayer_request_mobilizations | Mobiliser un groupe sur une demande |
+| 20261118_prayer_request_prayers | « Je prie pour ce sujet » |
+
+Réglages du serveur (Render → Environment) dont dépendent certaines fonctions :
+
+| Réglage | Sans lui |
+|---|---|
+| ANTHROPIC_API_KEY | Le Veilleur, IA Évangélisation, modération IA et textes de prière générés ne répondent pas (repli sans IA) |
+| BREVO_API_KEY, EMAIL_FROM | Pas d'e-mails (inscription, mot de passe oublié, double authentification par e-mail) |
+| VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT | Pas de notifications sur le téléphone (elles restent dans l'application) |
+| TWILIO_* | Pas de double authentification par SMS |
+| PRAYER_WORSHIP_LINKS (facultatif) | La louange entre les prières n'a pas de musique par défaut tant qu'aucun lien n'est enregistré dans le programme |
+
+### 9.3 Limites connues de l'hébergement actuel
+
+- **Render gratuit** : le serveur se réveille tout seul toutes les 10 minutes, mais un redémarrage
+  (mise à jour, panne) efface ce qui est gardé en mémoire : salles en direct des groupes, main
+  reprise par un modérateur, louange en cours, discussion de la salle en direct. La prière, elle,
+  reprend seule. Un plan payant (« Starter ») évite la mise en veille et les redémarrages
+  imprévus.
+- **Un seul serveur** : les salles en direct supposent une seule instance du serveur. Pour en
+  avoir plusieurs, il faudra partager l'état (Redis).
+- **Vidéo** : la plateforme montre les directs YouTube / Facebook et ouvre les visios (Zoom,
+  Meet, Jitsi) ; elle n'héberge pas elle-même la vidéo (WebRTC, §7).
+- **Ancienne adresse** `dist-pi-lovat-44.vercel.app` : n'est plus mise à jour. L'adresse
+  officielle est `tag-platform-inky.vercel.app` (à relier plus tard à un nom de domaine).

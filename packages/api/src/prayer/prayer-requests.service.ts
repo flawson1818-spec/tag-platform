@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -183,9 +184,11 @@ export class PrayerRequestsService {
       author?: { display_name: string } | null;
       assignee?: { display_name: string } | null;
     })[];
+    const prayers = await this.prayerCounts(rows.map((r) => r.id), currentUserId);
     return {
       data: rows.map(({ author, assignee, ...rest }) => ({
         ...rest,
+        prayed_count: prayers.get(rest.id)?.count ?? 0,
         ...(canManage
           ? {
               author_display_name: rest.confidentiality === 'ANONYMOUS' ? null : (author?.display_name ?? null),
@@ -284,6 +287,12 @@ export class PrayerRequestsService {
    */
   async promote(id: string, dto: PromotePrayerRequestDto, actorId: string): Promise<PrayerRequest> {
     const request = await this.findById(id, true);
+    // Only what the requester allowed to be shared (cahier des charges unifié §5.7), never with their name.
+    if (request.confidentiality !== 'PUBLIC') {
+      throw new BadRequestException(
+        "Le demandeur n'a pas autorisé que sa demande soit portée dans la salle (confidentialité « Public » requise).",
+      );
+    }
     assertRequestTransition(request.status, 'ASSIGNED');
 
     const guidedText = await this.aiAgentsService
@@ -312,5 +321,78 @@ export class PrayerRequestsService {
       .single();
     if (error) throw new InternalServerErrorException(error.message);
     return data as unknown as PrayerRequest;
+  }
+
+  // ---- "Je prie pour ce sujet" (§5.7) ----
+
+  /** How many people prayed for each request, and whether the viewer did (fail-open before migration 20261118). */
+  private async prayerCounts(ids: string[], viewerId?: string): Promise<Map<string, { count: number; mine: boolean }>> {
+    const out = new Map<string, { count: number; mine: boolean }>();
+    if (ids.length === 0) return out;
+    let rows: unknown;
+    try {
+      const { data, error } = await this.supabase.client
+        .from('prayer_request_prayers')
+        .select('prayer_request_id, user_id')
+        .in('prayer_request_id', ids);
+      rows = error ? [] : data;
+    } catch {
+      return out; // the counter is a bonus: a request list never fails because of it
+    }
+    if (!Array.isArray(rows)) return out;
+    const data = rows;
+    for (const row of data as { prayer_request_id: string; user_id: string }[]) {
+      const entry = out.get(row.prayer_request_id) ?? { count: 0, mine: false };
+      entry.count += 1;
+      if (viewerId && row.user_id === viewerId) entry.mine = true;
+      out.set(row.prayer_request_id, entry);
+    }
+    return out;
+  }
+
+  /** The request carried by a slot of the room, if any — its id and counter only, never its author. */
+  async forSlot(slotId: string, viewerId?: string): Promise<{ requestId: string; count: number; prayedByMe: boolean } | null> {
+    const { data, error } = await this.db
+      .select('id')
+      .eq('promoted_slot_id', slotId)
+      .is('deleted_at', null)
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    const requestId = (data as { id: string }).id;
+    const counts = await this.prayerCounts([requestId], viewerId);
+    return { requestId, count: counts.get(requestId)?.count ?? 0, prayedByMe: counts.get(requestId)?.mine ?? false };
+  }
+
+  /** "Je prie pour ce sujet": once per person; everyone in the room sees the counter move. */
+  async pray(id: string, userId: string): Promise<{ count: number; prayedByMe: boolean }> {
+    const { data, error } = await this.db
+      .select('id, promoted_slot_id')
+      .eq('id', id)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    const request = data as { id: string; promoted_slot_id: string | null } | null;
+    if (!request) throw new NotFoundException('Demande introuvable.');
+    if (!request.promoted_slot_id) throw new BadRequestException("Cette demande n'est pas portée dans la salle.");
+
+    const { error: insertError } = await this.supabase.client
+      .from('prayer_request_prayers')
+      .upsert({ prayer_request_id: id, user_id: userId }, { onConflict: 'prayer_request_id,user_id', ignoreDuplicates: true });
+    if (insertError) {
+      if (['42P01', 'PGRST205'].includes(insertError.code ?? '')) {
+        throw new ServiceUnavailableException("« Je prie pour ce sujet » n'est pas encore activé : lance la migration 20261118 dans Supabase.");
+      }
+      throw new InternalServerErrorException(insertError.message);
+    }
+    const count = (await this.prayerCounts([id])).get(id)?.count ?? 1;
+    try {
+      const slot = await this.slotsService.findById(request.promoted_slot_id);
+      const program = await this.programsService.findById(slot.program_id);
+      this.gateway.emitRequestPrayed(toRoomId(program.community_id), id, count);
+    } catch {
+      // The counter is saved; the live update is a bonus.
+    }
+    return { count, prayedByMe: true };
   }
 }

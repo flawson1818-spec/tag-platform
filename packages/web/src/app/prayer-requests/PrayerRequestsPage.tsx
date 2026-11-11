@@ -206,6 +206,11 @@ export function PrayerRequestsPage() {
                       <span className="hint">{when(r.created_at)}</span>
                     </div>
                     <p>{r.description}</p>
+                    {(r.prayed_count ?? 0) > 0 && (
+                      <p className="prayed-count">
+                        <span aria-hidden="true">🙏</span> {t('prayedFor.mine', { count: r.prayed_count })}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>

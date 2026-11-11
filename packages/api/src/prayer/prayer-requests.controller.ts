@@ -53,6 +53,22 @@ export class PrayerRequestsController {
     return this.requestsService.listFlagged();
   }
 
+  /** In the room: is the current slot carrying a request? Its counter, never its author. */
+  @Get('for-slot/:slotId')
+  @UseGuards(OptionalJwtAuthGuard)
+  forSlot(@CurrentUser() currentUser: AuthenticatedUser | undefined, @Param('slotId', ParseUUIDPipe) slotId: string) {
+    return this.requestsService.forSlot(slotId, currentUser?.id).then((r) => r ?? { requestId: null, count: 0, prayedByMe: false });
+  }
+
+  /** "Je prie pour ce sujet" — once per person. */
+  @Post(':id/pray')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  pray(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.requestsService.pray(id, currentUser.id);
+  }
+
   @Get(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
