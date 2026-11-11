@@ -348,7 +348,12 @@
       "INSTRUMENTAL_ADORATION": "Adoración instrumental",
       "GOSPEL": "Gospel"
     },
-    "sharedByProgram": "Preparado por los moderadores · previsto para esta hora"
+    "sharedByProgram": "Preparado por los moderadores · previsto para esta hora",
+    "worship": {
+      "title": "Tiempo de alabanza",
+      "text": "Una breve alabanza entre dos tiempos de oración. El siguiente tiempo de oración empieza justo después.",
+      "query": "alabanza adoración cristiana"
+    }
   },
   "communities": {
     "title": "Comunidades",
@@ -1234,5 +1239,11 @@
     "matchesTopic": "tema preferido",
     "full": "completo",
     "entrust": "Confiar"
+  },
+  "worshipLinks": {
+    "title": "Alabanza entre dos tiempos de oración",
+    "intro": "Pega uno o varios enlaces de YouTube o Spotify (uno por línea). En cada tiempo de alabanza, la sala reproduce el siguiente enlace para todos.",
+    "save": "Guardar enlaces",
+    "saved": "{{count}} enlace(s) guardado(s)."
   }
 }

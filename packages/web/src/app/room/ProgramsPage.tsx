@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { CreneauImport } from './CreneauImport';
+import { WorshipLinks } from './WorshipLinks';
 import { CreateSlotPayload, PRAYER_PROGRAM_STATUSES, PrayerProgram, PrayerSlot, prayerApi } from '../../lib/api';
 
 function toTimeOfDay(iso: string): string {
@@ -274,6 +275,7 @@ export function ProgramsPage() {
           <h3>{t('programs.slotsTitle', { title: selectedProgram.title })}</h3>
           <p className="hint">{t('programs.dailyScheduleHint')}</p>
           <CreneauImport programId={selectedProgram.id} onReplaced={setSlots} />
+          <WorshipLinks programId={selectedProgram.id} />
           {slotsLoading && <p>{t('programs.loading')}</p>}
 
           <table className="slot-table">

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -14,6 +15,7 @@ import { PrayerProgram, PrayerProgramStatus } from './prayer-program.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
 import { assertProgramTransition } from './prayer-state-machines';
 import { DEFAULT_PRAYER_TIMEZONE, isValidTimeZone } from './zoned-time';
+import { WorshipTrack, defaultWorshipLinks, parseWorshipLink } from './worship-music';
 
 export type ScheduleMode = 'LOOP' | 'CALENDAR';
 const MODE_CACHE_MS = 15_000;
@@ -38,6 +40,9 @@ export class PrayerProgramsService {
 
   /** The engine asks every second; the mode only changes when créneaux are added. */
   private readonly modeCache = new Map<string, { mode: ScheduleMode; at: number }>();
+  private readonly worshipCache = new Map<string, { links: string[]; at: number }>();
+  /** Which worship link plays next, per program: each interlude takes the following one. */
+  private readonly worshipTurn = new Map<string, number>();
 
   private get db() {
     return this.supabase.client.from('prayer_programs');
@@ -55,6 +60,46 @@ export class PrayerProgramsService {
     const mode: ScheduleMode = !error && (data as { schedule_mode?: string } | null)?.schedule_mode === 'CALENDAR' ? 'CALENDAR' : 'LOOP';
     this.modeCache.set(programId, { mode, at: Date.now() });
     return mode;
+  }
+
+  /** The worship links of a program (fail-open: none before migration 20261115). */
+  async worshipLinks(programId: string): Promise<string[]> {
+    const cached = this.worshipCache.get(programId);
+    if (cached && Date.now() - cached.at < MODE_CACHE_MS) return cached.links;
+    const { data, error } = await this.db.select('worship_links').eq('id', programId).maybeSingle();
+    const links = !error ? ((data as { worship_links?: string[] | null } | null)?.worship_links ?? []) : [];
+    this.worshipCache.set(programId, { links, at: Date.now() });
+    return links;
+  }
+
+  async setWorshipLinks(programId: string, links: string[]): Promise<string[]> {
+    await this.findById(programId);
+    const clean = [...new Set(links.map((l) => l.trim()).filter(Boolean))];
+    const invalid = clean.filter((l) => !parseWorshipLink(l));
+    if (invalid.length > 0) {
+      throw new BadRequestException(`Lien non reconnu (YouTube ou Spotify attendu) : ${invalid[0]}`);
+    }
+    const { error } = await this.db.update({ worship_links: clean }).eq('id', programId);
+    if (error) {
+      if (['42703', 'PGRST204'].includes(error.code ?? '')) {
+        throw new ServiceUnavailableException(
+          "La louange entre les créneaux n'est pas encore activée : lance la migration 20261115 dans Supabase.",
+        );
+      }
+      throw new InternalServerErrorException(error.message);
+    }
+    this.worshipCache.set(programId, { links: clean, at: Date.now() });
+    return clean;
+  }
+
+  /** The next worship track for this program's interlude, rotating through its links. */
+  async nextWorshipTrack(programId: string): Promise<WorshipTrack | null> {
+    const own = await this.worshipLinks(programId);
+    const links = own.length > 0 ? own : defaultWorshipLinks();
+    if (links.length === 0) return null;
+    const turn = this.worshipTurn.get(programId) ?? 0;
+    this.worshipTurn.set(programId, turn + 1);
+    return parseWorshipLink(links[turn % links.length]);
   }
 
   async useCalendar(programId: string): Promise<void> {
@@ -150,6 +195,28 @@ export class PrayerProgramsService {
     }
 
     return data as unknown as PrayerProgram;
+  }
+
+  /**
+   * Engine-only: the program that drives each room — the most recently created active one, the
+   * same rule as findActiveByCommunity (what the room shows). Older active programs of the same
+   * room are returned apart so the engine can silence them: two programs must never speak in
+   * one room at once.
+   */
+  async listRoomPrograms(): Promise<{ driving: PrayerProgram[]; superseded: PrayerProgram[] }> {
+    const all = [...(await this.listActive())].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+    const seen = new Set<string>();
+    const driving: PrayerProgram[] = [];
+    const superseded: PrayerProgram[] = [];
+    for (const program of all) {
+      const room = program.community_id ?? 'world';
+      if (seen.has(room)) superseded.push(program);
+      else {
+        seen.add(room);
+        driving.push(program);
+      }
+    }
+    return { driving, superseded };
   }
 
   /** Engine-only: every currently active program, across all rooms. */

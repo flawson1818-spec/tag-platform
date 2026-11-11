@@ -140,6 +140,8 @@ export interface RoomSharer {
   displayName: string | null;
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const AI_SHARER: RoomSharer = { kind: 'AI', displayName: null };
 export const PROGRAM_SHARER: RoomSharer = { kind: 'PROGRAM', displayName: null };
 
@@ -153,6 +155,26 @@ export interface ReplayState {
   block: PrayerSlot[];
   index: number;
   slot: PrayerSlot;
+}
+
+/**
+ * A short time of praise between two prayer sections (or in a short gap of the calendar): shown
+ * in the room as its own moment, with worship music, never written to the database.
+ */
+export interface InterludeState {
+  programId: string;
+  slot: PrayerSlot & { kind: 'WORSHIP' };
+  /** Loop programs: the créneau's last segment, still RUNNING underneath until the hand-over. */
+  fromSlotId?: string;
+}
+
+export interface NowPlaying {
+  videoId?: string;
+  title: string;
+  embedUrl?: string;
+  provider?: 'youtube' | 'spotify';
+  /** Started by the engine for an interlude, stopped by it afterwards. */
+  auto?: boolean;
 }
 
 export interface PendingRelay {
@@ -175,7 +197,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   private readonly raisedHands = new Map<string, Map<string, string>>(); // roomId -> userId -> displayName
   private readonly pendingSpeakers = new Map<string, Map<string, string>>();
   private readonly activeSpeakers = new Map<string, Map<string, string>>();
-  private readonly nowPlaying = new Map<string, { videoId: string; title: string }>();
+  private readonly nowPlaying = new Map<string, NowPlaying>();
   private readonly eventChatHistory = new Map<string, EventChatEntry[]>(); // eventId -> recent messages
   /**
    * docs/01_FUNCTIONAL_SPECIFICATION.md section 4: the 13 topic créneaux of a program are one
@@ -197,6 +219,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   private readonly roomSharers = new Map<string, RoomSharer>();
   private readonly pendingRelays = new Map<string, PendingRelay>();
   private readonly replays = new Map<string, ReplayState>();
+  private readonly interludes = new Map<string, InterludeState>();
   /** What the engine announced as coming next, replayed to members who join mid-segment. */
   private readonly lastNext = new Map<string, { slotId: string; next: { title: string; startsNewCreneau: boolean } | null }>();
   private relayShareHandler?: (roomId: string, sharer: RoomSharer) => Promise<void>;
@@ -255,11 +278,15 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
 
     const program = await this.programsService.findActiveByCommunity(fromRoomId(payload.roomId));
     if (!program) return;
-    const slot = (await this.slotsService.findRunningSlotByProgram(program.id)) ?? this.replays.get(payload.roomId)?.slot ?? null;
+    const slot =
+      this.interludes.get(payload.roomId)?.slot ??
+      (await this.slotsService.findRunningSlotByProgram(program.id)) ??
+      this.replays.get(payload.roomId)?.slot ??
+      null;
     if (!slot) return;
 
     const userId = extractUserId(client, this.tokenService);
-    if (userId) await this.slotsService.recordAttendance(slot.id, userId);
+    if (userId && UUID_PATTERN.test(slot.id)) await this.slotsService.recordAttendance(slot.id, userId);
 
     const remainingSeconds = Math.max(0, Math.round((new Date(slot.end_at).getTime() - Date.now()) / 1000));
     const announced = this.lastNext.get(payload.roomId);
@@ -787,6 +814,30 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
 
   setSharer(roomId: string, sharer: RoomSharer): void {
     this.roomSharers.set(roomId, sharer);
+  }
+
+  getInterlude(roomId: string): InterludeState | undefined {
+    return this.interludes.get(roomId);
+  }
+
+  setInterlude(roomId: string, interlude: InterludeState | null): void {
+    if (interlude) this.interludes.set(roomId, interlude);
+    else this.interludes.delete(roomId);
+  }
+
+  /** Engine-only: worship music for an interlude — never over a song a moderator chose. */
+  startWorshipMusic(roomId: string, track: { embedUrl: string; provider: 'youtube' | 'spotify'; videoId?: string } | null): void {
+    const current = this.nowPlaying.get(roomId);
+    if (!track || (current && !current.auto)) return;
+    const state: NowPlaying = { videoId: track.videoId, embedUrl: track.embedUrl, provider: track.provider, title: 'Temps de louange', auto: true };
+    this.nowPlaying.set(roomId, state);
+    this.server?.to(roomId).emit('music:update', { roomId, playing: true, ...state });
+  }
+
+  stopWorshipMusic(roomId: string): void {
+    if (!this.nowPlaying.get(roomId)?.auto) return;
+    this.nowPlaying.delete(roomId);
+    this.server?.to(roomId).emit('music:update', { roomId, playing: false });
   }
 
   getReplay(roomId: string): ReplayState | undefined {

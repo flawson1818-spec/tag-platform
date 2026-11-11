@@ -25,6 +25,7 @@ import { CreateProgramDto } from './dto/create-program.dto';
 import { CreateSlotDto } from './dto/create-slot.dto';
 import { ReplaceScheduleDto } from './dto/replace-schedule.dto';
 import { AddCreneauxDto } from './dto/add-creneaux.dto';
+import { WorshipLinksDto } from './dto/worship-links.dto';
 import { placeCreneaux } from './dated-creneaux';
 import { UpdateProgramDto } from './dto/update-program.dto';
 import { PrayerProgramsService } from './prayer-programs.service';
@@ -167,5 +168,28 @@ export class PrayerProgramsController {
     await this.programsService.useCalendar(id);
     const slots = await this.slotsService.addCalendarSegments(id, segments);
     return { timeZone, slots };
+  }
+
+  /** The praise played between two prayer sections: YouTube or Spotify links, in turn. */
+  @Get(':id/worship-links')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async worshipLinks(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    const program = await this.programsService.findById(id);
+    await this.assertCanEditSchedule(currentUser.id, program.community_id);
+    return { links: await this.programsService.worshipLinks(id) };
+  }
+
+  @Put(':id/worship-links')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async setWorshipLinks(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: WorshipLinksDto,
+  ) {
+    const program = await this.programsService.findById(id);
+    await this.assertCanEditSchedule(currentUser.id, program.community_id);
+    return { links: await this.programsService.setWorshipLinks(id, dto.links) };
   }
 }

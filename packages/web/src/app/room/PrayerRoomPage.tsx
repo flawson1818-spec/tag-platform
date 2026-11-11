@@ -30,6 +30,7 @@ function extractYouTubeId(url: string): string | null {
 }
 
 type ConnectionState = 'connecting' | 'live' | 'empty';
+type NowPlaying = { videoId?: string; embedUrl?: string; provider?: 'youtube' | 'spotify'; title: string; auto?: boolean };
 type Sharer = { kind: 'MODERATOR' | 'AI' | 'PROGRAM'; displayName: string | null };
 type NextUp = { title: string; startsNewCreneau: boolean };
 type Relay = { nextTitle: string; deadline: string; moderators: string[] };
@@ -56,7 +57,7 @@ export function PrayerRoomPage() {
   const [musicPlatform, setMusicPlatform] = useState<MusicPlatform>('youtube');
   const [musicLinkInput, setMusicLinkInput] = useState('');
   const [musicLinkError, setMusicLinkError] = useState<string | null>(null);
-  const [nowPlaying, setNowPlaying] = useState<{ videoId: string; title: string } | null>(null);
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
   const [sharedBy, setSharedBy] = useState<Sharer | null>(null);
   const [nextUp, setNextUp] = useState<NextUp | null>(null);
   const [relay, setRelay] = useState<Relay | null>(null);
@@ -121,8 +122,10 @@ export function PrayerRoomPage() {
       setRemainingSeconds(payload.remainingSeconds);
     });
 
+    // A segment ending is immediately followed by the next one (or by a time of praise): keep the
+    // room on screen instead of flashing "connecting", which read as if the prayer had stopped.
     socket.on('slot:ended', () => {
-      setConnectionState('connecting');
+      setRemainingSeconds(0);
     });
 
     socket.on('chat:history', (payload: { messages: ChatMessage[] }) => {
@@ -177,8 +180,13 @@ export function PrayerRoomPage() {
       setRoomError(payload.message);
     });
 
-    socket.on('music:update', (payload: { playing: boolean; videoId?: string; title?: string }) => {
-      setNowPlaying(payload.playing && payload.videoId ? { videoId: payload.videoId, title: payload.title ?? '' } : null);
+    socket.on('music:update', (payload: { playing: boolean } & Partial<NowPlaying>) => {
+      const playable = payload.playing && (payload.embedUrl || payload.videoId);
+      setNowPlaying(
+        playable
+          ? { videoId: payload.videoId, embedUrl: payload.embedUrl, provider: payload.provider, title: payload.title ?? '', auto: payload.auto }
+          : null,
+      );
     });
 
     // Relay between créneaux: a moderator present shares the next créneau, else the AI does
@@ -312,6 +320,24 @@ export function PrayerRoomPage() {
 
   const relaySecondsLeft = relay ? Math.max(0, Math.round((new Date(relay.deadline).getTime() - now) / 1000)) : 0;
 
+  const isWorship = slot?.kind === 'WORSHIP';
+  const musicPlayer = nowPlaying && (
+    <div className="room-music-player">
+      <iframe
+        width="100%"
+        height={nowPlaying.provider === 'spotify' ? 152 : 200}
+        src={nowPlaying.embedUrl ?? `https://www.youtube.com/embed/${nowPlaying.videoId}?autoplay=1`}
+        title={nowPlaying.title || t('room.defaultMusicTitle')}
+        allow="autoplay; encrypted-media; clipboard-write"
+        allowFullScreen
+      />
+      {canShare && (
+        <button type="button" className="room-action" onClick={stopMusic}>
+          {t('room.stopForEveryone')}
+        </button>
+      )}
+    </div>
+  );
   const progressPct = totalSeconds > 0 ? Math.max(0, Math.min(100, (remainingSeconds / totalSeconds) * 100)) : 0;
 
   return (
@@ -351,7 +377,7 @@ export function PrayerRoomPage() {
             </div>
           )}
 
-          {relay ? (
+          {relay && !isWorship ? (
             // The closing segment carries on during the relay: no 00:00 that would read as "stopped".
             <p className="room-timer-relay">{t('room.relay.inProgress')}</p>
           ) : (
@@ -366,7 +392,23 @@ export function PrayerRoomPage() {
             <p className="hint room-ending-soon">{t('room.endingSoon', { seconds: remainingSeconds })}</p>
           )}
 
-          <h3>{slot.title}</h3>
+          <h3>{isWorship && <span aria-hidden="true">🎵 </span>}{isWorship ? t('room.worship.title') : slot.title}</h3>
+          {isWorship && (
+            <div className="room-worship">
+              <p>{t('room.worship.text')}</p>
+              {musicPlayer}
+              {!nowPlaying && (
+                <div className="room-worship-links">
+                  <a href={musicSearchUrl('youtube', t('room.worship.query'))} target="_blank" rel="noopener noreferrer">
+                    ▶ YouTube
+                  </a>
+                  <a href={musicSearchUrl('spotify', t('room.worship.query'))} target="_blank" rel="noopener noreferrer">
+                    ▶ Spotify
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
           {slot.guided_text && <p className="room-guided-text">{slot.guided_text}</p>}
 
           {slot.bible_references.length > 0 && (
@@ -475,21 +517,7 @@ export function PrayerRoomPage() {
       <div className="room-music">
         <h3>{t('room.musicTitle')}</h3>
 
-        {nowPlaying && (
-          <div className="room-music-player">
-            <iframe
-              width="100%"
-              height="200"
-              src={`https://www.youtube.com/embed/${nowPlaying.videoId}?autoplay=1`}
-              title={nowPlaying.title || t('room.defaultMusicTitle')}
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-            />
-            <button type="button" className="room-action" onClick={stopMusic}>
-              {t('room.stopForEveryone')}
-            </button>
-          </div>
-        )}
+        {nowPlaying && !isWorship && musicPlayer}
 
         <p className="hint">{t('room.musicIntro')}</p>
         <form className="room-music-form" onSubmit={submitMusicSearch}>

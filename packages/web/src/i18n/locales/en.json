@@ -348,7 +348,12 @@
       "INSTRUMENTAL_ADORATION": "Instrumental worship",
       "GOSPEL": "Gospel"
     },
-    "sharedByProgram": "Prepared by the moderators · scheduled for this hour"
+    "sharedByProgram": "Prepared by the moderators · scheduled for this hour",
+    "worship": {
+      "title": "Time of praise",
+      "text": "A short time of praise between two times of prayer. The next time of prayer starts right after.",
+      "query": "christian worship praise"
+    }
   },
   "communities": {
     "title": "Communities",
@@ -1234,5 +1239,11 @@
     "matchesTopic": "favourite topic",
     "full": "full",
     "entrust": "Entrust"
+  },
+  "worshipLinks": {
+    "title": "Praise between two times of prayer",
+    "intro": "Paste one or more YouTube or Spotify links (one per line). At each time of praise the room plays the next link, for everyone.",
+    "save": "Save links",
+    "saved": "{{count}} link(s) saved."
   }
 }

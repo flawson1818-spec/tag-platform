@@ -1,3 +1,7 @@
+vi.hoisted(() => {
+  // These tests describe the hand-overs themselves; the praise in between has its own spec.
+  process.env.PRAYER_WORSHIP_SECONDS = '0';
+});
 import { PrayerEngineService, RELAY_GRACE_SECONDS } from './prayer-engine.service';
 
 function buildSlot(overrides: Partial<Record<string, unknown>> = {}) {
@@ -36,6 +40,8 @@ function buildDeps() {
     findById: vi.fn().mockResolvedValue(buildProgram()),
     listActive: vi.fn().mockResolvedValue([]),
     scheduleMode: vi.fn().mockResolvedValue('LOOP'),
+    listRoomPrograms: vi.fn(async () => ({ driving: await programsService.listActive(), superseded: [] })),
+    nextWorshipTrack: vi.fn().mockResolvedValue(null),
   };
   let shareHandler: ((roomId: string, sharer: unknown) => Promise<void>) | undefined;
   const relays = new Map<string, Record<string, unknown>>();
@@ -59,6 +65,15 @@ function buildDeps() {
     setReplay: vi.fn(function (this: { replay: unknown }, _roomId: string, r: unknown) {
       this.replay = r ?? undefined;
     }),
+    interlude: undefined as unknown,
+    getInterlude: vi.fn(function (this: { interlude: unknown }) {
+      return this.interlude;
+    }),
+    setInterlude: vi.fn(function (this: { interlude: unknown }, _roomId: string, i: unknown) {
+      this.interlude = i ?? undefined;
+    }),
+    startWorshipMusic: vi.fn(),
+    stopWorshipMusic: vi.fn(),
   };
   const service = new PrayerEngineService(slotsService as never, programsService as never, gateway as never);
   return { service, slotsService, programsService, gateway, relays, share: (roomId: string, sharer: unknown) => (shareHandler as NonNullable<typeof shareHandler>)(roomId, sharer) };

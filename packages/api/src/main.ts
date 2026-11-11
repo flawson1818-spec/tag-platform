@@ -50,6 +50,23 @@ async function bootstrap() {
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   );
   Logger.log(`📖 Swagger docs available at: http://localhost:${port}/${globalPrefix}/docs`);
+  keepAwake(`${globalPrefix}/health`);
+}
+
+/**
+ * The prayer room never stops, so the server must never sleep. A free Render service falls
+ * asleep after 15 minutes without a visit and the room's clock stops with it; calling our own
+ * public address every 10 minutes keeps it awake. Only on Render (RENDER_EXTERNAL_URL is set
+ * there by Render itself); KEEP_AWAKE=false turns it off.
+ */
+function keepAwake(healthPath: string): void {
+  const base = process.env.RENDER_EXTERNAL_URL;
+  if (!base || process.env.KEEP_AWAKE === 'false') return;
+  const url = `${base.replace(/\/$/, '')}/${healthPath}`;
+  setInterval(() => {
+    fetch(url).catch((error) => Logger.warn(`Keep-awake ping failed: ${(error as Error).message}`));
+  }, 10 * 60 * 1000).unref();
+  Logger.log(`⏰ Keep-awake ping every 10 minutes on ${url}`);
 }
 
 bootstrap();

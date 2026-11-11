@@ -348,7 +348,12 @@
       "INSTRUMENTAL_ADORATION": "Adoração instrumental",
       "GOSPEL": "Gospel"
     },
-    "sharedByProgram": "Preparado pelos moderadores · previsto para esta hora"
+    "sharedByProgram": "Preparado pelos moderadores · previsto para esta hora",
+    "worship": {
+      "title": "Tempo de louvor",
+      "text": "Um breve louvor entre dois tempos de oração. O próximo tempo de oração começa logo a seguir.",
+      "query": "louvor adoração cristã"
+    }
   },
   "communities": {
     "title": "Comunidades",
@@ -1234,5 +1239,11 @@
     "matchesTopic": "tema preferido",
     "full": "completo",
     "entrust": "Confiar"
+  },
+  "worshipLinks": {
+    "title": "Louvor entre dois tempos de oração",
+    "intro": "Cole um ou mais links do YouTube ou Spotify (um por linha). Em cada tempo de louvor, a sala toca o link seguinte, para todos.",
+    "save": "Guardar links",
+    "saved": "{{count}} link(s) guardado(s)."
   }
 }

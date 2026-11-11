@@ -26,6 +26,7 @@ export class PrayerSlotsController {
 
     // Between two dated créneaux the AI carries on with the last one (never written to the database).
     const slot =
+      this.gateway.getInterlude(toRoomId(program.community_id))?.slot ??
       (await this.slotsService.findRunningSlotByProgram(program.id)) ??
       this.gateway.getReplay(toRoomId(program.community_id))?.slot ??
       null;

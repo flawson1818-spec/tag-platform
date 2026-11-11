@@ -139,6 +139,8 @@ export interface TrustedDevice {
 
 export interface PrayerSlot {
   id: string;
+  /** A time of praise between two prayer sections (never stored). */
+  kind?: 'WORSHIP';
   program_id: string;
   order_index: number;
   title: string;
@@ -1430,4 +1432,15 @@ export const intercessorsApi = {
     request<IntercessorProfile>('/intercessors/me', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
   recommendations: (token: string, requestId: string) =>
     request<IntercessorRecommendation[]>(`/intercessors/recommendations/${requestId}`, { headers: authHeaders(token) }),
+};
+
+export const worshipApi = {
+  links: (token: string, programId: string) =>
+    request<{ links: string[] }>(`/prayer-programs/${programId}/worship-links`, { headers: authHeaders(token) }),
+  setLinks: (token: string, programId: string, links: string[]) =>
+    request<{ links: string[] }>(`/prayer-programs/${programId}/worship-links`, {
+      method: 'PUT',
+      headers: authHeaders(token),
+      body: JSON.stringify({ links }),
+    }),
 };

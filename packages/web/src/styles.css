@@ -2994,3 +2994,17 @@ header.site-header::after {
 .recommend-score { min-width: 2.4rem; text-align: center; font-weight: 700; color: var(--accent, #c8963e); }
 .recommend-who { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .recommend-cta { font-weight: 600; color: var(--accent, #c8963e); }
+
+/* ---- Time of praise between two prayer sections ---- */
+.room-worship { margin: 0.6rem 0 1rem; display: grid; gap: 0.6rem; }
+.room-worship p { margin: 0; }
+.room-worship-links { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+.room-worship-links a {
+  border: 1px solid var(--accent, #c8963e); border-radius: 999px; padding: 0.4rem 1rem;
+  text-decoration: none; color: var(--accent, #c8963e); font-weight: 600;
+}
+.room-worship .room-music-player iframe { border: 0; border-radius: 12px; }
+.worship-links { margin: 1rem 0; display: grid; gap: 0.5rem; }
+.worship-links h4 { margin: 0; }
+.worship-links textarea { width: 100%; font-family: inherit; }
+.worship-links button { justify-self: start; }

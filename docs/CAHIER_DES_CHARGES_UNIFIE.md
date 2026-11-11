@@ -27,6 +27,10 @@ Trois piliers :
 1. **La salle de prière** ne s'arrête jamais. Les modérateurs écrivent les créneaux à l'avance
    (pour un jour, une semaine, un mois) ; chacun démarre à son heure et le suivant enchaîne ; une
    heure non écrite est prolongée par l'IA.
+   Entre deux temps de prière d'une heure, un **bref temps de louange** (5 minutes par défaut) :
+   la salle joue la louange choisie par l'administration (liens YouTube ou Spotify, pris à tour
+   de rôle), puis le temps de prière suivant commence. Un petit trou du calendrier (30 minutes
+   au plus) est rempli par la louange.
 2. **Les demandes de prière** sont reçues par l'administration, confiées à des intercesseurs,
    suivies jusqu'à l'exaucement et, si le demandeur l'accepte, portées dans la salle.
 3. **La communauté** fonctionne comme un réseau social chrétien : fil, photos, Amen,
@@ -80,6 +84,7 @@ prière du moment, les raccourcis, mes demandes, les nouvelles de la communauté
 | Rôles et permissions (8 rôles, permissions par rubrique), espace Administration, membres et rôles | ✅ |
 | Salle de prière temps réel : chat, mains levées, prise de parole, réactions, musique, relais modérateur/IA | ✅ |
 | Calendrier de prière 24 h/24 (jour, semaine, mois), collage des créneaux, fuseaux horaires | ✅ |
+| Temps de louange entre deux temps de prière, avec musique YouTube / Spotify | ✅ |
 | Demandes de prière : dépôt, confidentialité, réception par l'administration, assignation, statuts, portage dans la salle | ✅ |
 | Témoignages + modération + brouillons de publication réseaux sociaux | ✅ |
 | Communauté : fil, photos, Amen, commentaires, églises et groupes, annuaire des membres, profils | ✅ |

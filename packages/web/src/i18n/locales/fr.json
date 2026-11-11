@@ -348,7 +348,12 @@
       "INSTRUMENTAL_ADORATION": "Adoration instrumentale",
       "GOSPEL": "Gospel"
     },
-    "sharedByProgram": "Préparé par les modérateurs · au programme de cette heure"
+    "sharedByProgram": "Préparé par les modérateurs · au programme de cette heure",
+    "worship": {
+      "title": "Temps de louange",
+      "text": "Une brève louange entre deux temps de prière. Le prochain temps de prière commence juste après.",
+      "query": "louange adoration chrétienne"
+    }
   },
   "communities": {
     "title": "Communautés",
@@ -1234,5 +1239,11 @@
     "matchesTopic": "sujet de prédilection",
     "full": "complet",
     "entrust": "Confier"
+  },
+  "worshipLinks": {
+    "title": "Louange entre deux temps de prière",
+    "intro": "Colle un ou plusieurs liens YouTube ou Spotify (un par ligne). À chaque temps de louange, la salle joue le lien suivant, pour tout le monde.",
+    "save": "Enregistrer les liens",
+    "saved": "{{count}} lien(s) enregistré(s)."
   }
 }

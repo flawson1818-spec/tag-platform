@@ -5,6 +5,8 @@ import { PrayerProgramsService } from './prayer-programs.service';
 import { AI_SHARER, PROGRAM_SHARER, PrayerRealtimeGateway, RoomSharer } from './prayer-realtime.gateway';
 import { PrayerSlot } from './prayer-slot.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
+import { PrayerProgram } from './prayer-program.entity';
+import { WORSHIP_GAP_MAX_SECONDS, WORSHIP_SECONDS, WORSHIP_TITLE, startsNewSection } from './worship-music';
 
 /**
  * How long a moderator present in the room has to share the next créneau before the AI
@@ -27,12 +29,21 @@ export const RELAY_GRACE_SECONDS = Number(process.env.PRAYER_RELAY_GRACE_SECONDS
  * dated segment starts at its own hour and the next one follows without a break; in an hour
  * nobody wrote, the AI carries on with the last créneau until the next planned one — the prayer
  * never stops there either (see tickCalendar).
+ *
+ * Between two prayer sections comes a short TIME OF PRAISE (worship-music.ts): the last minutes
+ * before a new hour of prayer, a short gap of the calendar, or the hand-over of a loop créneau.
+ * Worship music (the program's YouTube/Spotify links) plays during it, then the next section
+ * starts. Only one program drives a room: the most recently created active one.
  */
 @Injectable()
 export class PrayerEngineService {
   private readonly logger = new Logger(PrayerEngineService.name);
   /** Rooms whose relay is being completed right now (tick and a click can race). */
   private readonly completing = new Set<string>();
+  /** A tick still running when the next second comes (slow database) must not run twice. */
+  private ticking = false;
+  /** Calendar segments that close a section: when their praise starts, and what comes after. */
+  private readonly sectionEnds = new Map<string, { worshipFrom: number; nextTitle: string } | null>();
 
   constructor(
     private readonly slotsService: PrayerSlotsService,
@@ -44,20 +55,99 @@ export class PrayerEngineService {
 
   @Interval(1000)
   async tick(): Promise<void> {
-    const programs = await this.programsService.listActive();
-    const calendar = new Set<string>();
+    if (this.ticking) return;
+    this.ticking = true;
+    try {
+      const { driving, superseded } = await this.programsService.listRoomPrograms();
+      await this.silenceSuperseded(superseded);
+      const calendar = new Set<string>();
+      for (const program of driving) {
+        if ((await this.programsService.scheduleMode(program.id)) !== 'CALENDAR') continue;
+        calendar.add(program.id);
+        try {
+          await this.tickCalendar(program.id, toRoomId(program.community_id));
+        } catch (error) {
+          this.logger.error(`Calendar tick failed for program ${program.id}`, error as Error);
+        }
+      }
+      await this.transitionExpiredSlots(calendar);
+      await this.resumeSilentPrograms(driving.filter((p) => !calendar.has(p.id)));
+      await this.broadcastTicks(driving);
+    } catch (error) {
+      this.logger.error('Prayer engine tick failed', error as Error);
+    } finally {
+      this.ticking = false;
+    }
+  }
+
+  /**
+   * An older program still ACTIVE in a room another program now drives would make the room jump
+   * between two prayers. It stays ACTIVE (the world room can never be paused) but stops speaking.
+   */
+  private async silenceSuperseded(programs: PrayerProgram[]): Promise<void> {
     for (const program of programs) {
-      if ((await this.programsService.scheduleMode(program.id)) !== 'CALENDAR') continue;
-      calendar.add(program.id);
       try {
-        await this.tickCalendar(program.id, toRoomId(program.community_id));
+        const running = await this.slotsService.findRunningSlotByProgram(program.id);
+        if (running) await this.slotsService.markFinished(running.id);
       } catch (error) {
-        this.logger.error(`Calendar tick failed for program ${program.id}`, error as Error);
+        this.logger.error(`Failed to silence superseded program ${program.id}`, error as Error);
       }
     }
-    await this.transitionExpiredSlots(calendar);
-    await this.resumeSilentPrograms(calendar);
-    await this.broadcastTicks();
+  }
+
+  /** Opens a time of praise in the room, with worship music, until `endsAt`. */
+  private async startInterlude(
+    roomId: string,
+    programId: string,
+    endsAt: number,
+    nextTitle: string | null,
+    base: PrayerSlot,
+    fromSlotId?: string,
+  ): Promise<void> {
+    const now = Date.now();
+    const slot = {
+      ...base,
+      id: `worship-${base.id}`,
+      kind: 'WORSHIP' as const,
+      title: WORSHIP_TITLE,
+      guided_text: null,
+      bible_references: [],
+      status: 'RUNNING' as const,
+      start_at: new Date(now).toISOString(),
+      end_at: new Date(endsAt).toISOString(),
+    };
+    this.gateway.setInterlude(roomId, { programId, slot, fromSlotId });
+    this.gateway.setSharer(roomId, AI_SHARER);
+    this.gateway.emitSlotStarted(roomId, slot, secondsUntil(slot.end_at), nextTitle ? { title: nextTitle, startsNewCreneau: true } : null);
+    try {
+      this.gateway.startWorshipMusic(roomId, await this.programsService.nextWorshipTrack(programId));
+    } catch (error) {
+      this.logger.warn(`No worship music for program ${programId}: ${(error as Error).message}`);
+    }
+  }
+
+  private endInterlude(roomId: string): void {
+    const interlude = this.gateway.getInterlude(roomId);
+    if (!interlude) return;
+    this.gateway.setInterlude(roomId, null);
+    this.gateway.stopWorshipMusic(roomId);
+    this.gateway.emitSlotEnded(roomId, interlude.slot.id);
+  }
+
+  /** For a calendar segment: does a new section follow it, and when does its praise begin? */
+  private async sectionEndOf(programId: string, slot: PrayerSlot): Promise<{ worshipFrom: number; nextTitle: string } | null> {
+    if (this.sectionEnds.has(slot.id)) return this.sectionEnds.get(slot.id) ?? null;
+    let info: { worshipFrom: number; nextTitle: string } | null = null;
+    const end = Date.parse(slot.end_at);
+    const following = await this.slotsService.findNextPlanned(programId, new Date(end - 1));
+    if (following && Math.abs(Date.parse(following.start_at) - end) < 1000 && startsNewSection(following)) {
+      // The praise takes the last minutes of the closing segment, at most half of it.
+      const length = Math.min(WORSHIP_SECONDS * 1000, (end - Date.parse(slot.start_at)) / 2);
+      if (length >= 30_000) info = { worshipFrom: end - length, nextTitle: following.title };
+    }
+    this.sectionEnds.set(slot.id, info);
+    if (this.sectionEnds.size > 500) this.sectionEnds.delete(this.sectionEnds.keys().next().value as string);
+    return info;
   }
 
   /**
@@ -67,24 +157,38 @@ export class PrayerEngineService {
    */
   private async tickCalendar(programId: string, roomId: string): Promise<void> {
     const now = new Date();
+    const interlude = this.gateway.getInterlude(roomId);
+    if (interlude?.programId === programId) {
+      if (Date.parse(interlude.slot.end_at) > now.getTime()) return; // the praise goes on
+      this.endInterlude(roomId);
+    }
+
     const running = await this.slotsService.findRunningSlotByProgram(programId);
     const planned = await this.slotsService.findPlannedAt(programId, now);
 
     if (planned) {
       this.gateway.setReplay(roomId, null);
-      if (running?.id === planned.id) return;
-      if (running) await this.finish(roomId, running);
-      this.gateway.closeRelay(roomId);
-      this.gateway.setSharer(roomId, PROGRAM_SHARER);
-      const activated = await this.slotsService.markRunning(planned.id);
-      const following = await this.slotsService.findNextPlanned(programId, new Date(Date.parse(activated.end_at) - 1));
-      const continues = following && Math.abs(Date.parse(following.start_at) - Date.parse(activated.end_at)) < 1000;
-      this.gateway.emitSlotStarted(
-        roomId,
-        activated,
-        secondsUntil(activated.end_at),
-        continues ? { title: following.title, startsNewCreneau: false } : null,
-      );
+      if (running?.id !== planned.id) {
+        if (running) await this.finish(roomId, running);
+        this.gateway.closeRelay(roomId);
+        this.gateway.setSharer(roomId, PROGRAM_SHARER);
+        const activated = await this.slotsService.markRunning(planned.id);
+        const following = await this.slotsService.findNextPlanned(programId, new Date(Date.parse(activated.end_at) - 1));
+        const continues = following && Math.abs(Date.parse(following.start_at) - Date.parse(activated.end_at)) < 1000;
+        this.gateway.emitSlotStarted(
+          roomId,
+          activated,
+          secondsUntil(activated.end_at),
+          continues ? { title: following.title, startsNewCreneau: startsNewSection(following) } : null,
+        );
+      }
+      // The last minutes before a new hour of prayer: a time of praise.
+      if (WORSHIP_SECONDS > 0) {
+        const section = await this.sectionEndOf(programId, planned);
+        if (section && now.getTime() >= section.worshipFrom && Date.parse(planned.end_at) - now.getTime() > 1000) {
+          await this.startInterlude(roomId, programId, Date.parse(planned.end_at), section.nextTitle, planned);
+        }
+      }
       return;
     }
 
@@ -94,6 +198,20 @@ export class PrayerEngineService {
     const replay = this.gateway.getReplay(roomId);
     if (replay && replay.programId === programId && Date.parse(replay.slot.end_at) > now.getTime()) return;
 
+    const nextPlanned = await this.slotsService.findNextPlanned(programId, now);
+    // A short gap before the next section: praise fills it.
+    if (
+      WORSHIP_SECONDS > 0 &&
+      nextPlanned &&
+      Date.parse(nextPlanned.start_at) - now.getTime() <= WORSHIP_GAP_MAX_SECONDS * 1000 &&
+      Date.parse(nextPlanned.start_at) - now.getTime() > 1000
+    ) {
+      if (replay) this.gateway.emitSlotEnded(roomId, replay.slot.id);
+      this.gateway.setReplay(roomId, null);
+      await this.startInterlude(roomId, programId, Date.parse(nextPlanned.start_at), nextPlanned.title, running ?? nextPlanned);
+      return;
+    }
+
     const block = replay?.programId === programId ? replay.block : await this.slotsService.findReplayBlock(programId, now);
     if (block.length === 0) {
       this.gateway.setReplay(roomId, null);
@@ -101,7 +219,6 @@ export class PrayerEngineService {
     }
     const index = replay?.programId === programId ? (replay.index + 1) % block.length : 0;
     const segment = block[index];
-    const nextPlanned = await this.slotsService.findNextPlanned(programId, now);
     const ownEnd = now.getTime() + (await this.slotsService.intendedDurationSeconds(segment)) * 1000;
     const endsAt = nextPlanned ? Math.min(ownEnd, Date.parse(nextPlanned.start_at)) : ownEnd;
     const slot: PrayerSlot = { ...segment, status: 'RUNNING', start_at: now.toISOString(), end_at: new Date(endsAt).toISOString() };
@@ -120,14 +237,13 @@ export class PrayerEngineService {
    * Self-healing continuity guard: the room must never stay silent. If a program has no RUNNING
    * segment at all (the process was down when one ended), restart from the first segment.
    */
-  private async resumeSilentPrograms(calendar: Set<string>): Promise<void> {
-    const activePrograms = await this.programsService.listActive();
-    for (const program of activePrograms) {
-      if (calendar.has(program.id)) continue;
+  private async resumeSilentPrograms(programs: PrayerProgram[]): Promise<void> {
+    for (const program of programs) {
       try {
         const running = await this.slotsService.findRunningSlotByProgram(program.id);
         if (running) continue;
         const roomId = toRoomId(program.community_id);
+        if (this.gateway.getInterlude(roomId)) continue;
         this.gateway.closeRelay(roomId);
         const first = await this.slotsService.findFirstByProgram(program.id);
         await this.start(roomId, first);
@@ -151,6 +267,36 @@ export class PrayerEngineService {
           // Inside a créneau: straight on to the next segment, same sharer.
           await this.finish(roomId, slot);
           await this.start(roomId, next);
+          continue;
+        }
+
+        // End of the créneau: first a time of praise, then the hand-over.
+        const interlude = this.gateway.getInterlude(roomId);
+        if (WORSHIP_SECONDS > 0 && interlude?.fromSlotId !== slot.id) {
+          const endsAt = Date.now() + WORSHIP_SECONDS * 1000;
+          await this.startInterlude(roomId, slot.program_id, endsAt, next.title, slot, slot.id);
+          if (this.gateway.hasModerator(roomId)) {
+            // A moderator may share the next créneau during the praise; otherwise the AI does at its end.
+            this.gateway.openRelay(roomId, {
+              fromSlotId: slot.id,
+              nextSlotId: next.id,
+              nextTitle: next.title,
+              programId: slot.program_id,
+              deadline: endsAt,
+            });
+          }
+          continue;
+        }
+        if (interlude?.fromSlotId === slot.id) {
+          if (Date.parse(interlude.slot.end_at) > Date.now()) continue;
+          if (this.gateway.getPendingRelay(roomId)?.fromSlotId === slot.id) {
+            await this.completeRelay(roomId, AI_SHARER);
+          } else {
+            this.endInterlude(roomId);
+            this.gateway.setSharer(roomId, AI_SHARER);
+            await this.finish(roomId, slot);
+            await this.start(roomId, next);
+          }
           continue;
         }
 
@@ -192,6 +338,7 @@ export class PrayerEngineService {
     this.completing.add(roomId);
     try {
       this.gateway.closeRelay(roomId);
+      this.endInterlude(roomId);
       const closing = await this.slotsService.findById(relay.fromSlotId);
       let next = await this.slotsService.findById(relay.nextSlotId).catch(() => null);
       if (!next || next.status === 'ARCHIVED') next = await this.slotsService.findFirstByProgram(relay.programId);
@@ -206,6 +353,7 @@ export class PrayerEngineService {
   }
 
   private async finish(roomId: string, slot: PrayerSlot): Promise<void> {
+    this.sectionEnds.delete(slot.id);
     await this.slotsService.markFinished(slot.id);
     this.gateway.emitSlotEnded(roomId, slot.id);
     this.gateway.clearActiveSpeakers(roomId);
@@ -224,12 +372,14 @@ export class PrayerEngineService {
     );
   }
 
-  private async broadcastTicks(): Promise<void> {
-    const activePrograms = await this.programsService.listActive();
-    for (const program of activePrograms) {
+  private async broadcastTicks(programs: PrayerProgram[]): Promise<void> {
+    for (const program of programs) {
       const roomId = toRoomId(program.community_id);
       const running =
-        (await this.slotsService.findRunningSlotByProgram(program.id)) ?? this.gateway.getReplay(roomId)?.slot ?? null;
+        this.gateway.getInterlude(roomId)?.slot ??
+        (await this.slotsService.findRunningSlotByProgram(program.id)) ??
+        this.gateway.getReplay(roomId)?.slot ??
+        null;
       if (!running) continue;
       this.gateway.emitSlotTick(roomId, secondsUntil(running.end_at));
     }
