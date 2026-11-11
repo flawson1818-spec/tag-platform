@@ -591,7 +591,8 @@
     "PRAYER_REMINDER": "C'est l'heure de ton rappel de prière",
     "EVENT_CREATED": "Un nouvel événement a été créé dans une communauté dont tu es membre",
     "EVENT_REMINDER": "Un événement auquel tu es inscrit commence bientôt",
-    "PRAYER_TOPIC_STARTED": "Un sujet de prière que tu suis vient de commencer"
+    "PRAYER_TOPIC_STARTED": "Un sujet de prière que tu suis vient de commencer",
+    "GROUP_LIVE_STARTED": "Un direct commence dans ton groupe"
   },
   "creneauImport": {
     "open": "Ajouter des créneaux",
@@ -1279,5 +1280,136 @@
     "intro": "Colle un ou plusieurs liens YouTube ou Spotify (un par ligne). À chaque temps de louange, la salle joue le lien suivant, pour tout le monde.",
     "save": "Enregistrer les liens",
     "saved": "{{count}} lien(s) enregistré(s)."
+  },
+  "composer": {
+    "invite": "Quoi de neuf, {{name}} ? Partage une grâce, une photo…",
+    "inviteGroup": "Écris quelque chose au groupe {{name}}…",
+    "photo": "Photo",
+    "kindLabel": "Ce que tu partages",
+    "kinds": {
+      "MESSAGE": "Message",
+      "EXPERIENCE": "Expérience",
+      "WRITING": "Écrit"
+    },
+    "placeholders": {
+      "MESSAGE": "Un message, une nouvelle, un sujet de louange…",
+      "EXPERIENCE": "Raconte ce que Dieu a fait : une prière exaucée, une grâce vécue…",
+      "WRITING": "Une méditation, un enseignement, un poème, une réflexion sur la Parole…"
+    },
+    "toEveryone": "🌍 Tout le monde",
+    "toGroup": "⛪ {{name}}",
+    "cancel": "Annuler"
+  },
+  "feed": {
+    "filtersLabel": "Ce que tu veux voir",
+    "views": {
+      "all": "Tout",
+      "groups": "Mes groupes",
+      "photos": "Photos",
+      "EXPERIENCE": "Expériences",
+      "WRITING": "Écrits"
+    },
+    "empty": {
+      "all": "Aucune publication pour l'instant. Sois le premier à partager !",
+      "groups": "Rien de nouveau dans tes églises et groupes.",
+      "photos": "Aucune photo partagée pour l'instant.",
+      "EXPERIENCE": "Aucune expérience partagée pour l'instant. Raconte ce que Dieu a fait !",
+      "WRITING": "Aucun écrit pour l'instant. Partage une méditation !"
+    },
+    "findGroup": "Trouver une église ou un groupe",
+    "myGroups": "Mes églises et groupes",
+    "seeAll": "Tout voir",
+    "noGroup": "Tu n'as pas encore rejoint d'église ou de groupe.",
+    "findMembers": "Retrouve tes frères et sœurs"
+  },
+  "groups": {
+    "members_one": "{{count}} membre",
+    "members_other": "{{count}} membres",
+    "member": "Membre",
+    "pending": "Demande envoyée",
+    "join": "Rejoindre",
+    "askToJoin": "Demander à rejoindre",
+    "policyOpen": "Ouvert à tous",
+    "policyApproval": "Sur demande",
+    "policyHelp": {
+      "OPEN": "Chacun rejoint en un clic.",
+      "APPROVAL": "Un responsable accepte chaque demande."
+    },
+    "create": "Créer une église ou un groupe",
+    "register": "Inscrire mon église ou mon groupe",
+    "createTitle": "Nouvelle église ou nouveau groupe",
+    "typeLabel": "Type",
+    "namePlaceholder": "Nom (ex. : Église de la Grâce, Cellule de Bè…)",
+    "createSubmit": "Créer",
+    "mine": "Mes églises et groupes",
+    "discover": "Découvrir",
+    "results": "Résultats",
+    "allTypes": "Tous",
+    "noResult": "Aucune église ou groupe ne correspond."
+  },
+  "groupPage": {
+    "tabsLabel": "Rubriques du groupe",
+    "tabs": {
+      "posts": "Publications",
+      "members": "Membres",
+      "announcements": "Annonces",
+      "documents": "Documents",
+      "groups": "Sous-groupes",
+      "live": "Salle en direct"
+    },
+    "leave": "Quitter",
+    "leaveConfirm": "Quitter {{name}} ?",
+    "approved": "Demande acceptée.",
+    "noPosts": "Aucune publication dans ce groupe. Lance la conversation !",
+    "joinToSee": "Rejoins ce groupe pour voir et partager ses publications.",
+    "pendingHint": "Ta demande est envoyée : un responsable va l'accepter.",
+    "pendingTitle_one": "{{count}} demande à accepter",
+    "pendingTitle_other": "{{count}} demandes à accepter",
+    "noSubGroups": "Aucun sous-groupe (cellule, équipe…) pour l'instant."
+  },
+  "live": {
+    "joinToEnter": "Rejoins ce groupe pour entrer dans sa salle en direct.",
+    "connecting": "Connexion à la salle…",
+    "startTitle": "Réunir les membres en direct",
+    "editTitle": "Modifier le direct",
+    "startHint": "Formation, information, prédication, louange : les membres du groupe sont prévenus et te rejoignent ici.",
+    "kindLabel": "Type de rencontre",
+    "kinds": {
+      "TRAINING": "Formation",
+      "INFORMATION": "Information",
+      "PREACHING": "Prédication",
+      "WORSHIP": "Louange",
+      "PRAYER": "Prière"
+    },
+    "titlePlaceholder": "Titre (ex. : Formation des responsables de cellule)",
+    "videoPlaceholder": "Lien vidéo (facultatif) : YouTube Live, Facebook Live, Zoom, Google Meet…",
+    "newVisio": "Créer une salle visio gratuite (Jitsi) pour se voir et se parler",
+    "start": "Démarrer le direct",
+    "update": "Mettre à jour",
+    "noneTitle": "Pas de direct en ce moment",
+    "noneHint": "Quand un responsable lance une formation, une prédication ou une louange, tu es prévenu et tu la suis ici.",
+    "onAir": "EN DIRECT",
+    "hostedBy": "animé par {{name}}",
+    "present_one": "{{count}} présent",
+    "present_other": "{{count}} présents",
+    "joinVisio": "Rejoindre la visio",
+    "noVideo": "Direct sans vidéo : suis le texte, la louange et la discussion.",
+    "react": "Réagir {{emoji}}",
+    "raiseHand": "Lever la main",
+    "lowerHand": "Baisser la main",
+    "worship": "Louange",
+    "musicPlaceholder": "Lien de louange YouTube ou Spotify",
+    "playMusic": "Jouer pour tous",
+    "stopMusic": "Arrêter la musique",
+    "edit": "Modifier",
+    "end": "Terminer le direct",
+    "endConfirm": "Terminer le direct pour tout le monde ?",
+    "handsTitle_one": "{{count}} main levée",
+    "handsTitle_other": "{{count}} mains levées",
+    "answered": "Répondu",
+    "chatTitle": "Discussion",
+    "chatEmpty": "Écris le premier message : une question, un amen…",
+    "chatPlaceholder": "Écrire à tous…",
+    "joinNow": "Rejoindre le direct"
   }
 }

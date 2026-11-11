@@ -8,7 +8,7 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { Post } from './post.entity';
 
 const POST_COLUMNS = 'id, community_id, author_id, content, status, created_at, updated_at, deleted_at';
-const COMMENT_COLUMNS = 'id, post_id, author_id, content, status, created_at, updated_at, deleted_at';
+const COMMENT_COLUMNS = 'id, post_id, author_id, content, status, created_at, updated_at, deleted_at, author:author_id(id, display_name)';
 
 @Injectable()
 export class PostsService {

@@ -591,7 +591,8 @@
     "PRAYER_REMINDER": "It's time for your prayer reminder",
     "EVENT_CREATED": "A new event was created in a community you belong to",
     "EVENT_REMINDER": "An event you're registered for starts soon",
-    "PRAYER_TOPIC_STARTED": "A prayer topic you follow has just started"
+    "PRAYER_TOPIC_STARTED": "A prayer topic you follow has just started",
+    "GROUP_LIVE_STARTED": "A live is starting in your group"
   },
   "creneauImport": {
     "open": "Add créneaux",
@@ -1279,5 +1280,136 @@
     "intro": "Paste one or more YouTube or Spotify links (one per line). At each time of praise the room plays the next link, for everyone.",
     "save": "Save links",
     "saved": "{{count}} link(s) saved."
+  },
+  "composer": {
+    "invite": "What's new, {{name}}? Share a grace, a photo…",
+    "inviteGroup": "Write something to {{name}}…",
+    "photo": "Photo",
+    "kindLabel": "What you share",
+    "kinds": {
+      "MESSAGE": "Message",
+      "EXPERIENCE": "Experience",
+      "WRITING": "Writing"
+    },
+    "placeholders": {
+      "MESSAGE": "A message, some news, a reason to praise…",
+      "EXPERIENCE": "Tell what God has done: an answered prayer, a grace received…",
+      "WRITING": "A meditation, a teaching, a poem, a reflection on the Word…"
+    },
+    "toEveryone": "🌍 Everyone",
+    "toGroup": "⛪ {{name}}",
+    "cancel": "Cancel"
+  },
+  "feed": {
+    "filtersLabel": "What you want to see",
+    "views": {
+      "all": "All",
+      "groups": "My groups",
+      "photos": "Photos",
+      "EXPERIENCE": "Experiences",
+      "WRITING": "Writings"
+    },
+    "empty": {
+      "all": "No posts yet. Be the first to share!",
+      "groups": "Nothing new in your churches and groups.",
+      "photos": "No photos shared yet.",
+      "EXPERIENCE": "No experiences shared yet. Tell what God has done!",
+      "WRITING": "No writings yet. Share a meditation!"
+    },
+    "findGroup": "Find a church or group",
+    "myGroups": "My churches and groups",
+    "seeAll": "See all",
+    "noGroup": "You haven't joined a church or group yet.",
+    "findMembers": "Find your brothers and sisters"
+  },
+  "groups": {
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "member": "Member",
+    "pending": "Request sent",
+    "join": "Join",
+    "askToJoin": "Ask to join",
+    "policyOpen": "Open to all",
+    "policyApproval": "On request",
+    "policyHelp": {
+      "OPEN": "Anyone joins in one click.",
+      "APPROVAL": "A leader accepts each request."
+    },
+    "create": "Create a church or group",
+    "register": "Register my church or group",
+    "createTitle": "New church or group",
+    "typeLabel": "Type",
+    "namePlaceholder": "Name (e.g. Grace Church, Bè cell…)",
+    "createSubmit": "Create",
+    "mine": "My churches and groups",
+    "discover": "Discover",
+    "results": "Results",
+    "allTypes": "All",
+    "noResult": "No church or group matches."
+  },
+  "groupPage": {
+    "tabsLabel": "Group sections",
+    "tabs": {
+      "posts": "Posts",
+      "members": "Members",
+      "announcements": "Announcements",
+      "documents": "Documents",
+      "groups": "Sub-groups",
+      "live": "Live room"
+    },
+    "leave": "Leave",
+    "leaveConfirm": "Leave {{name}}?",
+    "approved": "Request accepted.",
+    "noPosts": "No posts in this group yet. Start the conversation!",
+    "joinToSee": "Join this group to see and share its posts.",
+    "pendingHint": "Your request is sent: a leader will accept it.",
+    "pendingTitle_one": "{{count}} request to accept",
+    "pendingTitle_other": "{{count}} requests to accept",
+    "noSubGroups": "No sub-groups (cell, team…) yet."
+  },
+  "live": {
+    "joinToEnter": "Join this group to enter its live room.",
+    "connecting": "Connecting to the room…",
+    "startTitle": "Gather the members live",
+    "editTitle": "Edit the live",
+    "startHint": "Training, news, preaching, worship: the group's members are notified and join you here.",
+    "kindLabel": "Kind of meeting",
+    "kinds": {
+      "TRAINING": "Training",
+      "INFORMATION": "Information",
+      "PREACHING": "Preaching",
+      "WORSHIP": "Worship",
+      "PRAYER": "Prayer"
+    },
+    "titlePlaceholder": "Title (e.g. Training for cell leaders)",
+    "videoPlaceholder": "Video link (optional): YouTube Live, Facebook Live, Zoom, Google Meet…",
+    "newVisio": "Create a free video room (Jitsi) to see and talk to each other",
+    "start": "Go live",
+    "update": "Update",
+    "noneTitle": "No live right now",
+    "noneHint": "When a leader starts a training, a preaching or worship, you are notified and follow it here.",
+    "onAir": "LIVE",
+    "hostedBy": "hosted by {{name}}",
+    "present_one": "{{count}} present",
+    "present_other": "{{count}} present",
+    "joinVisio": "Join the video call",
+    "noVideo": "Live without video: follow the text, the worship and the chat.",
+    "react": "React {{emoji}}",
+    "raiseHand": "Raise hand",
+    "lowerHand": "Lower hand",
+    "worship": "Worship",
+    "musicPlaceholder": "YouTube or Spotify worship link",
+    "playMusic": "Play for all",
+    "stopMusic": "Stop the music",
+    "edit": "Edit",
+    "end": "End the live",
+    "endConfirm": "End the live for everyone?",
+    "handsTitle_one": "{{count}} raised hand",
+    "handsTitle_other": "{{count}} raised hands",
+    "answered": "Answered",
+    "chatTitle": "Chat",
+    "chatEmpty": "Write the first message: a question, an amen…",
+    "chatPlaceholder": "Write to everyone…",
+    "joinNow": "Join the live"
   }
 }

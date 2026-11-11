@@ -26,8 +26,19 @@ export interface MemberSummary {
   avatarUrl: string | null;
 }
 
+/** What a member shares: a message, an experience (a grace lived), a longer writing. */
+export const POST_KINDS = ['MESSAGE', 'EXPERIENCE', 'WRITING'] as const;
+export type PostKind = (typeof POST_KINDS)[number];
+
+/** all · my groups only · one group · posts with photos · one kind. */
+export interface FeedFilter {
+  view?: 'all' | 'groups' | 'photos' | PostKind;
+  communityId?: string;
+}
+
 export interface FeedPost {
   id: string;
+  kind: PostKind;
   content: string;
   createdAt: string;
   edited: boolean;
@@ -89,22 +100,36 @@ export class SocialService {
 
   // ---- Feed ----
 
-  async feed(viewerId: string, page = 1, limit = 20): Promise<PaginatedResult<FeedPost>> {
+  async feed(viewerId: string, page = 1, limit = 20, filter: FeedFilter = {}): Promise<PaginatedResult<FeedPost>> {
     const size = Math.min(MAX_PAGE, Math.max(1, limit));
     const { from, to } = paginationRange(page, size);
     const communities = await this.memberCommunityIds(viewerId);
-    const scope = communities.length
-      ? `community_id.is.null,community_id.in.(${communities.join(',')})`
-      : 'community_id.is.null';
+    const empty = { data: [], meta: buildPaginationMeta(page, size, 0) };
+    // A group's wall is for its members.
+    if (filter.communityId && !communities.includes(filter.communityId)) return empty;
+    if (!filter.communityId && filter.view === 'groups' && communities.length === 0) return empty;
 
-    const { data, error, count } = await this.db
+    let query = this.db
       .from('posts')
-      .select(POST_SELECT, { count: 'exact' })
-      .is('deleted_at', null)
-      .or(scope)
-      .order('created_at', { ascending: false })
-      .range(from, to);
-    if (error) throw new InternalServerErrorException(error.message);
+      .select(filter.view === 'photos' ? `${POST_SELECT}, post_photos!inner(post_id)` : POST_SELECT, { count: 'exact' })
+      .is('deleted_at', null);
+    if (filter.communityId) {
+      query = query.eq('community_id', filter.communityId);
+    } else if (filter.view === 'groups') {
+      query = query.in('community_id', communities);
+    } else {
+      query = query.or(
+        communities.length ? `community_id.is.null,community_id.in.(${communities.join(',')})` : 'community_id.is.null',
+      );
+    }
+    if (filter.view && (POST_KINDS as readonly string[]).includes(filter.view)) query = query.eq('kind', filter.view);
+
+    const { data, error, count } = await query.order('created_at', { ascending: false }).range(from, to);
+    if (error) {
+      // A filter on something not migrated yet (kinds, photos) simply finds nothing.
+      if (filter.view && filter.view !== 'all' && MISSING_CODES.has(error.code ?? '')) return empty;
+      throw new InternalServerErrorException(error.message);
+    }
 
     return {
       data: await this.decorate((data ?? []) as unknown as PostRow[], viewerId),
@@ -147,18 +172,23 @@ export class SocialService {
       }
     }
 
-    const { data, error } = await this.db
+    const row = {
+      community_id: dto.communityId ?? null,
+      author_id: authorId,
+      content,
+      status: 'PUBLISHED',
+      created_by: authorId,
+      updated_by: authorId,
+    };
+    let { data, error } = await this.db
       .from('posts')
-      .insert({
-        community_id: dto.communityId ?? null,
-        author_id: authorId,
-        content,
-        status: 'PUBLISHED',
-        created_by: authorId,
-        updated_by: authorId,
-      })
+      .insert({ ...row, kind: dto.kind ?? 'MESSAGE' })
       .select('id')
       .single();
+    if (error && MISSING_CODES.has(error.code ?? '')) {
+      // Before migration 20261116: no kind yet, everything is a message.
+      ({ data, error } = await this.db.from('posts').insert(row).select('id').single());
+    }
     if (error) {
       if (error.code === NOT_NULL_VIOLATION) throw new ServiceUnavailableException(UNAVAILABLE);
       throw new InternalServerErrorException(error.message);
@@ -314,11 +344,14 @@ export class SocialService {
     if (rows.length === 0) return [];
     const ids = rows.map((r) => r.id);
 
-    const [photos, amens, comments] = await Promise.all([
+    const [photos, amens, comments, kinds] = await Promise.all([
       this.db.from('post_photos').select('post_id, file_id, position').in('post_id', ids),
       this.db.from('post_amens').select('post_id, user_id').in('post_id', ids),
       this.db.from('comments').select('post_id').in('post_id', ids).is('deleted_at', null),
+      this.db.from('posts').select('id, kind').in('id', ids),
     ]);
+    const kindRows = !kinds.error && Array.isArray(kinds.data) ? (kinds.data as { id: string; kind: PostKind }[]) : [];
+    const kindOf = new Map(kindRows.map((k) => [k.id, k.kind]));
     // Before migration 20261107 photos/amens simply don't exist yet.
     const photoRows = (photos.error ? [] : (photos.data ?? [])) as { post_id: string; file_id: string; position: number }[];
     const amenRows = (amens.error ? [] : (amens.data ?? [])) as { post_id: string; user_id: string }[];
@@ -339,6 +372,7 @@ export class SocialService {
       const postAmens = amenRows.filter((a) => a.post_id === row.id);
       return {
         id: row.id,
+        kind: kindOf.get(row.id) ?? 'MESSAGE',
         content: row.content,
         createdAt: row.created_at,
         edited: row.status === 'EDITED',

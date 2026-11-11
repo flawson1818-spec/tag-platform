@@ -124,6 +124,10 @@ function resourceLink(notification: AppNotification): string | null {
       return '/events';
     case 'PRAYER_TOPIC_STARTED':
       return '/room';
+    case 'GROUP_LIVE_STARTED': {
+      const communityId = (notification.payload as { communityId?: string } | null)?.communityId;
+      return communityId ? `/communities/${communityId}?tab=live` : '/communaute/groupes';
+    }
     default:
       return null;
   }

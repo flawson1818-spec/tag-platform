@@ -156,4 +156,27 @@ describe('SocialService', () => {
       expect(found).toEqual([{ id: 'u2', displayName: 'Paul', avatarUrl: null, churchName: 'Église de la Grâce', city: 'Lomé' }]);
     });
   });
+
+  describe('feed filters', () => {
+    it("shows a group's wall to its members only", async () => {
+      const { service, db } = build({ community_members: [{ data: [{ community_id: 'c1' }] }], posts: [{ data: [], count: 0 }] });
+      await service.feed('u1', 1, 20, { communityId: 'c1' });
+      const posts = db.calls.find((c) => c.table === 'posts');
+      expect(posts?.ops).toContainEqual(['eq', ['community_id', 'c1']]);
+
+      const outsider = build({ community_members: [{ data: [] }] });
+      const res = await outsider.service.feed('u2', 1, 20, { communityId: 'c1' });
+      expect(res.data).toEqual([]);
+      expect(outsider.db.calls.some((c) => c.table === 'posts')).toBe(false);
+    });
+
+    it('filters by kind, and finds nothing (no error) before the migration', async () => {
+      const { service, db } = build({ community_members: [{ data: [] }], posts: [{ data: [], count: 0 }] });
+      await service.feed('u1', 1, 20, { view: 'EXPERIENCE' });
+      expect(db.calls.find((c) => c.table === 'posts')?.ops).toContainEqual(['eq', ['kind', 'EXPERIENCE']]);
+
+      const before = build({ community_members: [{ data: [] }], posts: [{ error: { code: '42703', message: 'no kind' } }] });
+      await expect(before.service.feed('u1', 1, 20, { view: 'WRITING' })).resolves.toMatchObject({ data: [] });
+    });
+  });
 });

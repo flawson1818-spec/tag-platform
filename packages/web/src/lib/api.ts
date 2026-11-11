@@ -527,6 +527,8 @@ export interface Community {
 
 export type MembershipStatus = 'ACTIVE' | 'PENDING' | 'NONE';
 
+export type CommunityCard = Community & { memberCount: number; myStatus: MembershipStatus };
+
 export interface CommunityMember {
   id: string;
   community_id: string;
@@ -553,6 +555,7 @@ export interface Comment {
   content: string;
   status: string;
   created_at: string;
+  author?: { id: string; display_name: string } | null;
 }
 
 export const communitiesApi = {
@@ -590,7 +593,23 @@ export const communitiesApi = {
     }),
   /** The caller's own membership state — lets the UI show "en attente" explicitly on reload. */
   getMembership: (token: string, communityId: string) =>
-    request<{ status: MembershipStatus }>(`/communities/${communityId}/membership`, { headers: authHeaders(token) }),
+    request<{ status: MembershipStatus; canManage?: boolean; canManageMembers?: boolean }>(
+      `/communities/${communityId}/membership`,
+      { headers: authHeaders(token) },
+    ),
+  /** Cards: member count and where I stand, for the "Églises et groupes" page. */
+  directory: (token: string, page = 1, search?: string, type?: string) =>
+    request<PaginatedResult<CommunityCard>>(
+      `/communities/directory?page=${page}&limit=24${search ? `&search=${encodeURIComponent(search)}` : ''}${type ? `&type=${type}` : ''}`,
+      { headers: authHeaders(token) },
+    ),
+  mine: (token: string) => request<CommunityCard[]>('/communities/mine', { headers: authHeaders(token) }),
+  /** Churches and groups live right now. */
+  live: (token: string) =>
+    request<{ communityId: string; title: string; kind: string; startedAt: string }[]>('/communities/live', { headers: authHeaders(token) }),
+  leave: (token: string, communityId: string) =>
+    request<void>(`/communities/${communityId}/membership`, { method: 'DELETE', headers: authHeaders(token) }),
+  canCreate: (token: string) => request<{ canCreate: boolean }>('/communities/can-create', { headers: authHeaders(token) }),
 };
 
 export const postsApi = {
@@ -1254,8 +1273,13 @@ export interface MemberSummary {
   avatarUrl: string | null;
 }
 
+export const POST_KINDS = ['MESSAGE', 'EXPERIENCE', 'WRITING'] as const;
+export type PostKind = (typeof POST_KINDS)[number];
+export type FeedView = 'all' | 'groups' | 'photos' | 'EXPERIENCE' | 'WRITING';
+
 export interface FeedPost {
   id: string;
+  kind?: PostKind;
   content: string;
   createdAt: string;
   edited: boolean;
@@ -1279,9 +1303,14 @@ export interface MemberProfile extends MemberSummary {
 }
 
 export const socialApi = {
-  feed: (token: string, page = 1) =>
-    request<PaginatedResult<FeedPost>>(`/social/feed?page=${page}&limit=20`, { headers: authHeaders(token) }),
-  createPost: (token: string, data: { content?: string; photoFileIds?: string[]; communityId?: string }) =>
+  feed: (token: string, page = 1, opts: { view?: FeedView; communityId?: string } = {}) =>
+    request<PaginatedResult<FeedPost>>(
+      `/social/feed?page=${page}&limit=20${opts.view && opts.view !== 'all' ? `&view=${opts.view}` : ''}${
+        opts.communityId ? `&communityId=${opts.communityId}` : ''
+      }`,
+      { headers: authHeaders(token) },
+    ),
+  createPost: (token: string, data: { content?: string; photoFileIds?: string[]; communityId?: string; kind?: PostKind }) =>
     request<FeedPost>('/social/posts', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   amen: (token: string, postId: string, amen: boolean) =>
     request<{ amenCount: number; amenedByMe: boolean }>(`/social/posts/${postId}/amen`, {

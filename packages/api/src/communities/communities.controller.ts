@@ -27,6 +27,7 @@ import { CreateCommunityDto } from './dto/create-community.dto';
 import { ListCommunitiesQueryDto } from './dto/list-communities.query.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { CommunitiesService } from './communities.service';
+import { GroupLiveGateway } from './group-live.gateway';
 import { CommunityDocumentsService } from './community-documents.service';
 
 const COMMUNITY_MANAGE = 'community.manage';
@@ -42,6 +43,7 @@ export class CommunitiesController {
     private readonly postsService: PostsService,
     private readonly permissionsService: PermissionsService,
     private readonly communityDocumentsService: CommunityDocumentsService,
+    private readonly liveGateway: GroupLiveGateway,
   ) {}
 
   private async assertPermission(
@@ -64,6 +66,32 @@ export class CommunitiesController {
   @Get()
   list(@Query() query: ListCommunitiesQueryDto) {
     return this.communitiesService.list(query);
+  }
+
+  /** Cards with member counts and the viewer's place in each (the "Églises et groupes" page). */
+  @Get('directory')
+  directory(@CurrentUser() currentUser: AuthenticatedUser, @Query() query: ListCommunitiesQueryDto) {
+    return this.communitiesService.directory(query, currentUser.id);
+  }
+
+  /** Churches and groups live right now: { communityId, title, kind, startedAt }. */
+  @Get('live')
+  live() {
+    return this.liveGateway
+      .liveSessions()
+      .map((s) => ({ communityId: s.communityId, title: s.title, kind: s.kind, startedAt: s.startedAt }));
+  }
+
+  @Get('mine')
+  mine(@CurrentUser() currentUser: AuthenticatedUser) {
+    return this.communitiesService.mine(currentUser.id);
+  }
+
+  /** May the viewer create churches and groups directly (otherwise: an application)? */
+  @Get('can-create')
+  async canCreate(@CurrentUser() currentUser: AuthenticatedUser) {
+    const permissions = await this.permissionsService.getUserPermissionCodes(currentUser.id);
+    return { canCreate: permissions.has(COMMUNITY_MANAGE) };
   }
 
   @Get(':id')
@@ -94,10 +122,25 @@ export class CommunitiesController {
   }
 
   /** So the UI can show "en attente" explicitly on reload, not just right after clicking join. */
+  /** Leaving a church or group (or withdrawing a request) is always one's own choice. */
+  @Delete(':id/membership')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async leave(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    await this.communitiesService.removeMember(id, currentUser.id);
+  }
+
   @Get(':id/membership')
   async getMembership(@CurrentUser() currentUser: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
-    const status = await this.communitiesService.getMembershipStatus(id, currentUser.id);
-    return { status };
+    const [status, permissions] = await Promise.all([
+      this.communitiesService.getMembershipStatus(id, currentUser.id),
+      this.permissionsService.getUserPermissionCodes(currentUser.id, id),
+    ]);
+    // What the page offers: announcements, documents, sub-groups (manage) and requests (members).
+    return {
+      status,
+      canManage: permissions.has(COMMUNITY_MANAGE),
+      canManageMembers: permissions.has(COMMUNITY_MANAGE_MEMBERS),
+    };
   }
 
   @Get(':id/members/pending')

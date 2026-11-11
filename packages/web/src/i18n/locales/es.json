@@ -591,7 +591,8 @@
     "PRAYER_REMINDER": "Es hora de tu recordatorio de oración",
     "EVENT_CREATED": "Se creó un nuevo evento en una comunidad a la que perteneces",
     "EVENT_REMINDER": "Un evento en el que estás inscrito comienza pronto",
-    "PRAYER_TOPIC_STARTED": "Un tema de oración que sigues acaba de comenzar"
+    "PRAYER_TOPIC_STARTED": "Un tema de oración que sigues acaba de comenzar",
+    "GROUP_LIVE_STARTED": "Un directo empieza en tu grupo"
   },
   "creneauImport": {
     "open": "Añadir turnos",
@@ -1279,5 +1280,136 @@
     "intro": "Pega uno o varios enlaces de YouTube o Spotify (uno por línea). En cada tiempo de alabanza, la sala reproduce el siguiente enlace para todos.",
     "save": "Guardar enlaces",
     "saved": "{{count}} enlace(s) guardado(s)."
+  },
+  "composer": {
+    "invite": "¿Qué hay de nuevo, {{name}}? Comparte una gracia, una foto…",
+    "inviteGroup": "Escribe algo al grupo {{name}}…",
+    "photo": "Foto",
+    "kindLabel": "Lo que compartes",
+    "kinds": {
+      "MESSAGE": "Mensaje",
+      "EXPERIENCE": "Experiencia",
+      "WRITING": "Escrito"
+    },
+    "placeholders": {
+      "MESSAGE": "Un mensaje, una noticia, un motivo de alabanza…",
+      "EXPERIENCE": "Cuenta lo que Dios ha hecho: una oración contestada, una gracia vivida…",
+      "WRITING": "Una meditación, una enseñanza, un poema, una reflexión sobre la Palabra…"
+    },
+    "toEveryone": "🌍 Todos",
+    "toGroup": "⛪ {{name}}",
+    "cancel": "Cancelar"
+  },
+  "feed": {
+    "filtersLabel": "Lo que quieres ver",
+    "views": {
+      "all": "Todo",
+      "groups": "Mis grupos",
+      "photos": "Fotos",
+      "EXPERIENCE": "Experiencias",
+      "WRITING": "Escritos"
+    },
+    "empty": {
+      "all": "Aún no hay publicaciones. ¡Sé el primero en compartir!",
+      "groups": "Nada nuevo en tus iglesias y grupos.",
+      "photos": "Aún no hay fotos.",
+      "EXPERIENCE": "Aún no hay experiencias. ¡Cuenta lo que Dios ha hecho!",
+      "WRITING": "Aún no hay escritos. ¡Comparte una meditación!"
+    },
+    "findGroup": "Encontrar una iglesia o un grupo",
+    "myGroups": "Mis iglesias y grupos",
+    "seeAll": "Ver todo",
+    "noGroup": "Aún no te has unido a ninguna iglesia o grupo.",
+    "findMembers": "Encuentra a tus hermanos y hermanas"
+  },
+  "groups": {
+    "members_one": "{{count}} miembro",
+    "members_other": "{{count}} miembros",
+    "member": "Miembro",
+    "pending": "Solicitud enviada",
+    "join": "Unirse",
+    "askToJoin": "Pedir unirse",
+    "policyOpen": "Abierto a todos",
+    "policyApproval": "Con solicitud",
+    "policyHelp": {
+      "OPEN": "Cualquiera se une con un clic.",
+      "APPROVAL": "Un responsable acepta cada solicitud."
+    },
+    "create": "Crear una iglesia o un grupo",
+    "register": "Inscribir mi iglesia o grupo",
+    "createTitle": "Nueva iglesia o nuevo grupo",
+    "typeLabel": "Tipo",
+    "namePlaceholder": "Nombre (p. ej.: Iglesia de la Gracia…)",
+    "createSubmit": "Crear",
+    "mine": "Mis iglesias y grupos",
+    "discover": "Descubrir",
+    "results": "Resultados",
+    "allTypes": "Todos",
+    "noResult": "Ninguna iglesia o grupo coincide."
+  },
+  "groupPage": {
+    "tabsLabel": "Secciones del grupo",
+    "tabs": {
+      "posts": "Publicaciones",
+      "members": "Miembros",
+      "announcements": "Anuncios",
+      "documents": "Documentos",
+      "groups": "Subgrupos",
+      "live": "Sala en directo"
+    },
+    "leave": "Salir",
+    "leaveConfirm": "¿Salir de {{name}}?",
+    "approved": "Solicitud aceptada.",
+    "noPosts": "Aún no hay publicaciones en este grupo. ¡Empieza la conversación!",
+    "joinToSee": "Únete a este grupo para ver y compartir sus publicaciones.",
+    "pendingHint": "Tu solicitud fue enviada: un responsable la aceptará.",
+    "pendingTitle_one": "{{count}} solicitud por aceptar",
+    "pendingTitle_other": "{{count}} solicitudes por aceptar",
+    "noSubGroups": "Aún no hay subgrupos (célula, equipo…)."
+  },
+  "live": {
+    "joinToEnter": "Únete a este grupo para entrar en su sala en directo.",
+    "connecting": "Conectando con la sala…",
+    "startTitle": "Reunir a los miembros en directo",
+    "editTitle": "Modificar el directo",
+    "startHint": "Formación, información, predicación, alabanza: los miembros del grupo son avisados y se unen aquí.",
+    "kindLabel": "Tipo de encuentro",
+    "kinds": {
+      "TRAINING": "Formación",
+      "INFORMATION": "Información",
+      "PREACHING": "Predicación",
+      "WORSHIP": "Alabanza",
+      "PRAYER": "Oración"
+    },
+    "titlePlaceholder": "Título (p. ej.: Formación de líderes de célula)",
+    "videoPlaceholder": "Enlace de vídeo (opcional): YouTube Live, Facebook Live, Zoom, Google Meet…",
+    "newVisio": "Crear una sala de videollamada gratuita (Jitsi)",
+    "start": "Empezar el directo",
+    "update": "Actualizar",
+    "noneTitle": "No hay directo en este momento",
+    "noneHint": "Cuando un responsable inicia una formación, una predicación o una alabanza, recibes un aviso y la sigues aquí.",
+    "onAir": "EN DIRECTO",
+    "hostedBy": "animado por {{name}}",
+    "present_one": "{{count}} presente",
+    "present_other": "{{count}} presentes",
+    "joinVisio": "Unirse a la videollamada",
+    "noVideo": "Directo sin vídeo: sigue el texto, la alabanza y el chat.",
+    "react": "Reaccionar {{emoji}}",
+    "raiseHand": "Levantar la mano",
+    "lowerHand": "Bajar la mano",
+    "worship": "Alabanza",
+    "musicPlaceholder": "Enlace de alabanza YouTube o Spotify",
+    "playMusic": "Reproducir para todos",
+    "stopMusic": "Detener la música",
+    "edit": "Modificar",
+    "end": "Terminar el directo",
+    "endConfirm": "¿Terminar el directo para todos?",
+    "handsTitle_one": "{{count}} mano levantada",
+    "handsTitle_other": "{{count}} manos levantadas",
+    "answered": "Respondido",
+    "chatTitle": "Chat",
+    "chatEmpty": "Escribe el primer mensaje: una pregunta, un amén…",
+    "chatPlaceholder": "Escribir a todos…",
+    "joinNow": "Unirse al directo"
   }
 }

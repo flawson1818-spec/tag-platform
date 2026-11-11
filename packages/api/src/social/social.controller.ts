@@ -20,7 +20,7 @@ import { JwtAuthGuard } from '../access/jwt-auth.guard';
 import type { AuthenticatedUser } from '../access/interfaces/authenticated-user.interface';
 import { CreateSocialPostDto } from './dto/create-social-post.dto';
 import { UpdateMemberProfileDto } from './dto/update-member-profile.dto';
-import { SocialService } from './social.service';
+import { FeedFilter, POST_KINDS, SocialService } from './social.service';
 
 /** Members only: the feed and profiles are for signed-in members of the platform. */
 @ApiTags('social')
@@ -35,8 +35,15 @@ export class SocialController {
     @CurrentUser() user: AuthenticatedUser,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('view') view?: string,
+    @Query('communityId') communityId?: string,
   ) {
-    return this.socialService.feed(user.id, Math.max(1, page), limit);
+    const views = ['all', 'groups', 'photos', ...POST_KINDS];
+    const filter: FeedFilter = {
+      view: views.includes(view ?? '') ? (view as FeedFilter['view']) : 'all',
+      communityId: communityId && /^[0-9a-f-]{36}$/i.test(communityId) ? communityId : undefined,
+    };
+    return this.socialService.feed(user.id, Math.max(1, page), limit, filter);
   }
 
   @Post('posts')

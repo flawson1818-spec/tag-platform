@@ -39,8 +39,17 @@ Trois piliers :
    au plus) est rempli par la louange.
 2. **Les demandes de prière** sont reçues par l'administration, confiées à des intercesseurs,
    suivies jusqu'à l'exaucement et, si le demandeur l'accepte, portées dans la salle.
-3. **La communauté** fonctionne comme un réseau social chrétien : fil, photos, Amen,
-   commentaires, églises et groupes, membres, messages privés.
+3. **La communauté** fonctionne comme un réseau social chrétien : on partage un message, une
+   **expérience** vécue, un **écrit** (méditation, enseignement) et des photos ; le fil se filtre
+   (tout, mes groupes, photos, expériences, écrits) ; Amen, commentaires, membres, messages privés.
+   **Églises et groupes** : mes groupes d'abord, puis « Découvrir » (recherche, filtre par type,
+   cartes avec nombre de membres et un seul bouton Rejoindre / Demander). Chaque groupe a sa page :
+   Salle en direct · Publications · Membres · Annonces · Documents · Sous-groupes ; les outils de
+   gestion n'apparaissent qu'à ses responsables. **Salle en direct** de chaque groupe : un
+   responsable réunit les membres (formation, information, prédication, louange, prière) avec une
+   vidéo (YouTube / Facebook Live dans la page, ou lien Zoom / Meet / visio Jitsi gratuite), une
+   louange jouée pour tous (YouTube / Spotify), et les membres interagissent : discussion,
+   réactions, mains levées ; les membres sont prévenus quand le direct commence.
 
 ---
 

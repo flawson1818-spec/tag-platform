@@ -2,7 +2,10 @@ import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
-import { Comment, FeedPost, postsApi, socialApi } from '../../lib/api';
+import { Comment, FeedPost, PostKind, postsApi, socialApi } from '../../lib/api';
+
+/** What a member shares, each with its picture. */
+export const KIND_ICONS: Record<PostKind, string> = { MESSAGE: '💬', EXPERIENCE: '✨', WRITING: '📖' };
 
 export function Avatar({ name, url, size = 40 }: { name: string; url: string | null; size?: number }) {
   const initials = name
@@ -87,21 +90,35 @@ export function SocialPostCard({ post }: { post: FeedPost }) {
   };
 
   return (
-    <article className="social-post">
+    <article className={`social-post kind-${(post.kind ?? 'MESSAGE').toLowerCase()}`}>
       <div className="social-post-head">
-        <Link to={`/membres/${post.author.id}`} className="social-author">
+        <Link to={`/membres/${post.author.id}`} className="social-author" aria-label={post.author.displayName}>
           <Avatar name={post.author.displayName} url={post.author.avatarUrl} />
-          <span>
-            <strong>{post.author.displayName}</strong>
-            <span className="hint">
-              {formatWhen(post.createdAt, i18n.language)}
-              {post.community && <> · {t('social.inCommunity', { name: post.community.name })}</>}
-              {post.edited && <> · {t('posts.edited')}</>}
-            </span>
-          </span>
         </Link>
+        <span className="social-author-meta">
+          <Link to={`/membres/${post.author.id}`} className="social-author-name">
+            <strong>{post.author.displayName}</strong>
+          </Link>
+          <span className="hint">
+            {formatWhen(post.createdAt, i18n.language)}
+            {post.community && (
+              <>
+                {' · '}
+                <Link to={`/communities/${post.community.id}`} className="social-post-group">
+                  {t('social.inCommunity', { name: post.community.name })}
+                </Link>
+              </>
+            )}
+            {post.edited && <> · {t('posts.edited')}</>}
+          </span>
+        </span>
       </div>
 
+      {post.kind && post.kind !== 'MESSAGE' && (
+        <span className={`social-kind social-kind-${post.kind.toLowerCase()}`}>
+          <span aria-hidden="true">{KIND_ICONS[post.kind]}</span> {t(`composer.kinds.${post.kind}`)}
+        </span>
+      )}
       {post.content && <p className="social-post-text">{post.content}</p>}
 
       {post.photos.length > 0 && (
@@ -133,7 +150,14 @@ export function SocialPostCard({ post }: { post: FeedPost }) {
           ) : (
             <ul>
               {comments.map((c) => (
-                <li key={c.id}>{c.content}</li>
+                <li key={c.id}>
+                  {c.author && (
+                    <Link to={`/membres/${c.author.id}`} className="social-comment-author">
+                      {c.author.display_name}
+                    </Link>
+                  )}{' '}
+                  {c.content}
+                </li>
               ))}
             </ul>
           )}

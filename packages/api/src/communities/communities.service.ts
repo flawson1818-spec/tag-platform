@@ -17,6 +17,8 @@ const COMMUNITY_COLUMNS =
   'id, type, name, parent_id, language, timezone, join_policy, created_at, updated_at, deleted_at';
 const MEMBER_COLUMNS = 'id, community_id, user_id, internal_role, status, joined_at, users(id, display_name, avatar_file_id)';
 
+export type CommunityCard = Community & { memberCount: number; myStatus: MembershipStatus | 'NONE' };
+
 @Injectable()
 export class CommunitiesService {
   constructor(private readonly supabase: SupabaseService) {}
@@ -116,6 +118,55 @@ export class CommunitiesService {
   }
 
   /** "NONE" (no row at all) is a valid, common result — not an error. */
+  /**
+   * Cards for the "Églises et groupes" page: each community with its number of members and
+   * where the viewer stands (member, request sent, not yet).
+   */
+  async directory(
+    query: ListCommunitiesQueryDto,
+    viewerId: string,
+  ): Promise<PaginatedResult<CommunityCard>> {
+    const page = await this.list(query);
+    return { data: await this.toCards(page.data, viewerId), meta: page.meta };
+  }
+
+  /** The viewer's own churches and groups (member or request sent), as cards. */
+  async mine(viewerId: string): Promise<CommunityCard[]> {
+    const { data, error } = await this.supabase.client
+      .from('community_members')
+      .select('community_id')
+      .eq('user_id', viewerId);
+    if (error) throw new InternalServerErrorException(error.message);
+    const ids = ((data ?? []) as { community_id: string }[]).map((r) => r.community_id);
+    if (ids.length === 0) return [];
+    const { data: rows, error: listError } = await this.db
+      .select(COMMUNITY_COLUMNS)
+      .in('id', ids)
+      .is('deleted_at', null)
+      .order('name', { ascending: true });
+    if (listError) throw new InternalServerErrorException(listError.message);
+    return this.toCards(rows as unknown as Community[], viewerId);
+  }
+
+  private async toCards(communities: Community[], viewerId: string): Promise<CommunityCard[]> {
+    if (communities.length === 0) return [];
+    const ids = communities.map((c) => c.id);
+    const { data, error } = await this.supabase.client
+      .from('community_members')
+      .select('community_id, user_id, status')
+      .in('community_id', ids);
+    if (error) throw new InternalServerErrorException(error.message);
+    const rows = (data ?? []) as { community_id: string; user_id: string; status: MembershipStatus }[];
+    return communities.map((c) => {
+      const own = rows.filter((r) => r.community_id === c.id);
+      return {
+        ...c,
+        memberCount: own.filter((r) => r.status === 'ACTIVE').length,
+        myStatus: own.find((r) => r.user_id === viewerId)?.status ?? 'NONE',
+      };
+    });
+  }
+
   async getMembershipStatus(communityId: string, userId: string): Promise<MembershipStatus | 'NONE'> {
     const { data, error } = await this.supabase.client
       .from('community_members')

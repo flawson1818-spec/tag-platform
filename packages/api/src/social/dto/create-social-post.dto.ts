@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { POST_KINDS } from '../social.service';
 
 export class CreateSocialPostDto {
   /** May be empty when the post is photos only; at least one of the two is required. */
@@ -20,4 +21,9 @@ export class CreateSocialPostDto {
   @IsOptional()
   @IsUUID()
   communityId?: string;
+
+  /** A message, an experience lived, or a longer writing. */
+  @IsOptional()
+  @IsIn(POST_KINDS)
+  kind?: (typeof POST_KINDS)[number];
 }
