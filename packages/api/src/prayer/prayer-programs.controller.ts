@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -26,7 +27,7 @@ import { CreateSlotDto } from './dto/create-slot.dto';
 import { ReplaceScheduleDto } from './dto/replace-schedule.dto';
 import { AddCreneauxDto } from './dto/add-creneaux.dto';
 import { WorshipLinksDto } from './dto/worship-links.dto';
-import { placeCreneaux } from './dated-creneaux';
+import { MAX_PLACED_SEGMENTS, placeCreneaux, repeatCreneaux } from './dated-creneaux';
 import { UpdateProgramDto } from './dto/update-program.dto';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { PrayerSlotsService } from './prayer-slots.service';
@@ -86,9 +87,29 @@ export class PrayerProgramsController {
     return this.programsService.findById(id);
   }
 
+  /** ?from=&to= (ISO instants): one page of a calendar program, e.g. a week. */
   @Get(':id/slots')
-  listSlots(@Param('id', ParseUUIDPipe) id: string) {
-    return this.slotsService.listForProgram(id);
+  listSlots(@Param('id', ParseUUIDPipe) id: string, @Query('from') from?: string, @Query('to') to?: string) {
+    const window = from && to && !Number.isNaN(Date.parse(from)) && !Number.isNaN(Date.parse(to));
+    return window ? this.slotsService.listForProgram(id, new Date(from), new Date(to)) : this.slotsService.listForProgram(id);
+  }
+
+  /** Cancels the planned créneaux of a period (a day, a week…); the AI keeps the room praying. */
+  @Delete(':id/creneaux')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async cancelPeriod(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    const program = await this.programsService.findById(id);
+    await this.assertCanEditSchedule(currentUser.id, program.community_id);
+    if (!from || !to || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to))) {
+      throw new BadRequestException('Période invalide.');
+    }
+    return { cancelled: await this.slotsService.cancelPeriod(id, new Date(from), new Date(to)) };
   }
 
   @Post()
@@ -164,10 +185,15 @@ export class PrayerProgramsController {
     const program = await this.programsService.findById(id);
     await this.assertCanEditSchedule(currentUser.id, program.community_id);
     const timeZone = await this.programsService.timeZoneOf(program);
-    const segments = placeCreneaux(dto.creneaux, timeZone);
+    const creneaux = repeatCreneaux(dto.creneaux, dto.repeatDays ?? 1);
+    const total = creneaux.reduce((n, c) => n + c.segments.length, 0);
+    if (total > MAX_PLACED_SEGMENTS) {
+      throw new BadRequestException(`Trop de segments en une fois (${total}). Programme une période plus courte.`);
+    }
+    const segments = placeCreneaux(creneaux, timeZone);
     await this.programsService.useCalendar(id);
     const slots = await this.slotsService.addCalendarSegments(id, segments);
-    return { timeZone, slots };
+    return { timeZone, slots, days: new Set(creneaux.map((c) => c.date)).size, segments: segments.length };
   }
 
   /** The praise played between two prayer sections: YouTube or Spotify links, in turn. */

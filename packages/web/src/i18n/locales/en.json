@@ -353,6 +353,22 @@
       "title": "Time of praise",
       "text": "A short time of praise between two times of prayer. The next time of prayer starts right after.",
       "query": "christian worship praise"
+    },
+    "takeover": {
+      "byAi": "The AI is leading the prayer right now.",
+      "byModerator": "The prayer follows the program.",
+      "hint": "You can take over anytime: you lead live, then hand it back.",
+      "take": "Take over",
+      "titlePlaceholder": "Prayer subject (e.g. Prayer for the nations)",
+      "textPlaceholder": "Prayer text or intention (optional)",
+      "duration": "For",
+      "start": "Lead now",
+      "update": "Update",
+      "edit": "Edit the subject",
+      "release": "Hand back",
+      "liveTitle": "{{name}} is leading the prayer live.",
+      "liveHint": "The program carries on in the background: when you hand back, the room picks it up where it is.",
+      "liveChip": "Live · {{name}}"
     }
   },
   "communities": {
@@ -598,7 +614,19 @@
     "saveDays_one": "Add {{count}} créneau",
     "saveDays_other": "Add {{count}} créneaux",
     "saved_one": "{{count}} créneau added to the calendar.",
-    "saved_other": "{{count}} créneaux added to the calendar."
+    "saved_other": "{{count}} créneaux added to the calendar.",
+    "repeatLabel": "Schedule over",
+    "repeat": {
+      "none": "these days only",
+      "week": "1 week",
+      "twoWeeks": "2 weeks",
+      "month": "1 month",
+      "twoMonths": "2 months",
+      "threeMonths": "3 months"
+    },
+    "repeatHint": "The pasted days repeat to fill {{days}} days, from the first one.",
+    "saveRepeat": "Schedule over {{days}} days",
+    "savedPeriod": "{{days}} day(s) scheduled, {{segments}} segments. You can change or replace them anytime: paste a day again to replace it."
   },
   "notificationStatuses": {
     "DELIVERED": "Unread",
@@ -740,7 +768,13 @@
     "save": "Save",
     "addSlot": "Add the slot",
     "cancel": "Cancel",
-    "loopDay": "Looping créneau (former mode)"
+    "loopDay": "Looping créneau (former mode)",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week",
+    "thisWeek": "Back to this week",
+    "cancelDay": "Cancel this day",
+    "cancelDayConfirm": "Cancel all upcoming slots on {{day}}? The AI will keep the prayer going instead.",
+    "cancelDayDone": "{{count}} segment(s) cancelled on {{day}}. The AI keeps the prayer going."
   },
   "adminUsers": {
     "title": "Members and roles",

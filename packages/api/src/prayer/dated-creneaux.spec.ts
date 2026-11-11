@@ -1,4 +1,4 @@
-import { placeCreneaux } from './dated-creneaux';
+import { placeCreneaux, repeatCreneaux } from './dated-creneaux';
 
 describe('placeCreneaux', () => {
   it('places a créneau at its real hours in the community time zone', () => {
@@ -24,5 +24,24 @@ describe('placeCreneaux', () => {
     expect(() =>
       placeCreneaux([{ date: '2026-11-05', segments: [{ start: '12:00', end: '12:00', title: 'X' }] }], 'Africa/Lome'),
     ).toThrow();
+  });
+});
+
+describe('repeatCreneaux', () => {
+  const day = (date: string) => ({ date, segments: [{ start: '12:00', end: '13:00', title: 'Prière' }] });
+
+  it('turns one day into every day of the period', () => {
+    const out = repeatCreneaux([day('2026-11-12')], 7);
+    expect(out.map((c) => c.date)).toEqual(['2026-11-12', '2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16', '2026-11-17', '2026-11-18']);
+  });
+
+  it('repeats a pasted week week after week, stopping at the end of the period', () => {
+    const week = ['2026-11-12', '2026-11-14', '2026-11-18'].map(day);
+    const out = repeatCreneaux(week, 10);
+    expect(out.map((c) => c.date)).toEqual(['2026-11-12', '2026-11-14', '2026-11-18', '2026-11-19', '2026-11-21']);
+  });
+
+  it('never goes beyond three months', () => {
+    expect(repeatCreneaux([day('2026-11-12')], 400)).toHaveLength(92);
   });
 });

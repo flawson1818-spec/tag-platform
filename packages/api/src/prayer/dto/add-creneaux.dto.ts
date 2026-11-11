@@ -3,6 +3,9 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsInt,
+  Max,
+  Min,
   IsOptional,
   IsString,
   Matches,
@@ -62,4 +65,12 @@ export class AddCreneauxDto {
   @ValidateNested({ each: true })
   @Type(() => DatedCreneauDto)
   creneaux!: DatedCreneauDto[];
+
+  /** Repeat the pasted days over 7, 30 or up to 92 days (three months) from the first one. */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(92)
+  repeatDays?: number;
 }

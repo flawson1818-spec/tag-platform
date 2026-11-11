@@ -4,6 +4,16 @@ import { getAccessToken } from '../auth/AuthContext';
 import { PrayerSlot, prayerApi } from '../../lib/api';
 import { formatVerse, parseCreneauxByDate } from '../../lib/creneau-parser';
 
+/** Programming horizon: a week, a month, up to three months. */
+const REPEATS = [
+  { days: 1, key: 'none' },
+  { days: 7, key: 'week' },
+  { days: 14, key: 'twoWeeks' },
+  { days: 30, key: 'month' },
+  { days: 61, key: 'twoMonths' },
+  { days: 92, key: 'threeMonths' },
+];
+
 function minutes(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -32,7 +42,8 @@ export function CreneauImport({ programId, onReplaced }: { programId: string; on
   const [fallbackDate, setFallbackDate] = useState(today);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<number | null>(null);
+  const [done, setDone] = useState<{ days: number; segments: number } | null>(null);
+  const [repeatDays, setRepeatDays] = useState(1);
 
   const creneaux = useMemo(() => parseCreneauxByDate(text), [text]);
   const segmentCount = creneaux.reduce((n, c) => n + c.segments.length, 0);
@@ -57,10 +68,11 @@ export function CreneauImport({ programId, onReplaced }: { programId: string; on
             bibleReferences: s.verses.map(formatVerse),
           })),
         })),
+        repeatDays > 1 ? repeatDays : undefined,
       )
       .then((res) => {
         onReplaced(res.slots);
-        setDone(creneaux.length);
+        setDone({ days: res.days ?? creneaux.length, segments: res.segments ?? segmentCount });
         setText('');
         setOpen(false);
       })
@@ -74,7 +86,7 @@ export function CreneauImport({ programId, onReplaced }: { programId: string; on
         <button type="button" onClick={() => { setOpen(true); setDone(null); }}>
           {t('creneauImport.open')}
         </button>
-        {done !== null && <p className="hint">{t('creneauImport.saved', { count: done })}</p>}
+        {done !== null && <p className="hint">{t('creneauImport.savedPeriod', { days: done.days, segments: done.segments })}</p>}
       </div>
     );
   }
@@ -95,6 +107,20 @@ export function CreneauImport({ programId, onReplaced }: { programId: string; on
         <label className="creneau-date">
           {t('creneauImport.dateLabel')}
           <input type="date" value={fallbackDate} onChange={(e) => setFallbackDate(e.target.value)} required />
+        </label>
+      )}
+
+      {creneaux.length > 0 && (
+        <label className="creneau-repeat">
+          {t('creneauImport.repeatLabel')}
+          <select value={repeatDays} onChange={(e) => setRepeatDays(Number(e.target.value))}>
+            {REPEATS.map((r) => (
+              <option key={r.days} value={r.days}>
+                {t(`creneauImport.repeat.${r.key}`)}
+              </option>
+            ))}
+          </select>
+          {repeatDays > 1 && <span className="hint">{t('creneauImport.repeatHint', { days: repeatDays })}</span>}
         </label>
       )}
 
@@ -140,7 +166,11 @@ export function CreneauImport({ programId, onReplaced }: { programId: string; on
 
       <div className="creneau-import-actions">
         <button type="button" onClick={save} disabled={saving || creneaux.length === 0}>
-          {saving ? t('creneauImport.saving') : t('creneauImport.saveDays', { count: creneaux.length })}
+          {saving
+            ? t('creneauImport.saving')
+            : repeatDays > 1
+              ? t('creneauImport.saveRepeat', { days: repeatDays })
+              : t('creneauImport.saveDays', { count: creneaux.length })}
         </button>
         <button type="button" className="link-button" onClick={() => setOpen(false)}>
           {t('creneauImport.cancel')}

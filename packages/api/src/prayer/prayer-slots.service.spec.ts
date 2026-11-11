@@ -257,7 +257,7 @@ describe('PrayerSlotsService', () => {
       const service = new PrayerSlotsService(supabase as never);
 
       await expect(service.update('slot-a', { startTime: '09:00' } as never)).rejects.toThrow(
-        /can be changed/,
+        /peuvent changer/,
       );
     });
 

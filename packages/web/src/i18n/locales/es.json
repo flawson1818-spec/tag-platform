@@ -353,6 +353,22 @@
       "title": "Tiempo de alabanza",
       "text": "Una breve alabanza entre dos tiempos de oración. El siguiente tiempo de oración empieza justo después.",
       "query": "alabanza adoración cristiana"
+    },
+    "takeover": {
+      "byAi": "La IA dirige la oración en este momento.",
+      "byModerator": "La oración sigue el programa.",
+      "hint": "Puedes tomar el control en cualquier momento: diriges en directo y luego lo devuelves.",
+      "take": "Tomar el control",
+      "titlePlaceholder": "Tema de oración (p. ej.: Oración por las naciones)",
+      "textPlaceholder": "Texto o intención de oración (opcional)",
+      "duration": "Durante",
+      "start": "Dirigir ahora",
+      "update": "Actualizar",
+      "edit": "Cambiar el tema",
+      "release": "Devolver el control",
+      "liveTitle": "{{name}} dirige la oración en directo.",
+      "liveHint": "El programa continúa en segundo plano: al devolver el control, la sala lo retoma donde está.",
+      "liveChip": "En directo · {{name}}"
     }
   },
   "communities": {
@@ -598,7 +614,19 @@
     "saveDays_one": "Añadir {{count}} turno",
     "saveDays_other": "Añadir {{count}} turnos",
     "saved_one": "{{count}} turno añadido al calendario.",
-    "saved_other": "{{count}} turnos añadidos al calendario."
+    "saved_other": "{{count}} turnos añadidos al calendario.",
+    "repeatLabel": "Programar durante",
+    "repeat": {
+      "none": "solo estos días",
+      "week": "1 semana",
+      "twoWeeks": "2 semanas",
+      "month": "1 mes",
+      "twoMonths": "2 meses",
+      "threeMonths": "3 meses"
+    },
+    "repeatHint": "Los días pegados se repiten para llenar {{days}} días, desde el primero.",
+    "saveRepeat": "Programar {{days}} días",
+    "savedPeriod": "{{days}} día(s) programado(s), {{segments}} segmentos. Puedes cambiarlos en cualquier momento: vuelve a pegar un día para reemplazarlo."
   },
   "notificationStatuses": {
     "DELIVERED": "No leída",
@@ -740,7 +768,13 @@
     "save": "Guardar",
     "addSlot": "Añadir el turno",
     "cancel": "Cancelar",
-    "loopDay": "Turno en bucle (modo anterior)"
+    "loopDay": "Turno en bucle (modo anterior)",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "thisWeek": "Volver a esta semana",
+    "cancelDay": "Anular este día",
+    "cancelDayConfirm": "¿Anular todas las franjas próximas del {{day}}? La IA continuará la oración en su lugar.",
+    "cancelDayDone": "{{count}} segmento(s) anulado(s) el {{day}}. La IA continúa la oración."
   },
   "adminUsers": {
     "title": "Miembros y roles",

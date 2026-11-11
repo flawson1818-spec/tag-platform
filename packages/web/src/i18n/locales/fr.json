@@ -353,6 +353,22 @@
       "title": "Temps de louange",
       "text": "Une brève louange entre deux temps de prière. Le prochain temps de prière commence juste après.",
       "query": "louange adoration chrétienne"
+    },
+    "takeover": {
+      "byAi": "L'IA dirige la prière en ce moment.",
+      "byModerator": "La prière suit le programme.",
+      "hint": "Tu peux reprendre la main à tout moment : tu diriges en direct, puis tu la rends.",
+      "take": "Reprendre la main",
+      "titlePlaceholder": "Sujet de prière (ex. : Prière pour les nations)",
+      "textPlaceholder": "Texte ou intention de prière (facultatif)",
+      "duration": "Pendant",
+      "start": "Diriger maintenant",
+      "update": "Mettre à jour",
+      "edit": "Modifier le sujet",
+      "release": "Rendre la main",
+      "liveTitle": "{{name}} dirige la prière en direct.",
+      "liveHint": "Le programme continue en arrière-plan : quand tu rends la main, la salle le reprend là où il en est.",
+      "liveChip": "En direct · {{name}}"
     }
   },
   "communities": {
@@ -598,7 +614,19 @@
     "saveDays_one": "Ajouter {{count}} créneau",
     "saveDays_other": "Ajouter {{count}} créneaux",
     "saved_one": "{{count}} créneau ajouté au calendrier.",
-    "saved_other": "{{count}} créneaux ajoutés au calendrier."
+    "saved_other": "{{count}} créneaux ajoutés au calendrier.",
+    "repeatLabel": "Programmer sur",
+    "repeat": {
+      "none": "ces jours seulement",
+      "week": "1 semaine",
+      "twoWeeks": "2 semaines",
+      "month": "1 mois",
+      "twoMonths": "2 mois",
+      "threeMonths": "3 mois"
+    },
+    "repeatHint": "Les jours collés se répètent pour remplir {{days}} jours, à partir du premier.",
+    "saveRepeat": "Programmer sur {{days}} jours",
+    "savedPeriod": "{{days}} jour(s) programmé(s), {{segments}} segments. Tu peux modifier ou remplacer à tout moment : recolle un jour pour le remplacer."
   },
   "notificationStatuses": {
     "DELIVERED": "Non lue",
@@ -740,7 +768,13 @@
     "save": "Enregistrer",
     "addSlot": "Ajouter le créneau",
     "cancel": "Annuler",
-    "loopDay": "Créneau en boucle (ancien mode)"
+    "loopDay": "Créneau en boucle (ancien mode)",
+    "prevWeek": "Semaine précédente",
+    "nextWeek": "Semaine suivante",
+    "thisWeek": "Revenir à cette semaine",
+    "cancelDay": "Annuler ce jour",
+    "cancelDayConfirm": "Annuler tous les créneaux à venir du {{day}} ? L'IA continuera la prière à leur place.",
+    "cancelDayDone": "{{count}} segment(s) annulé(s) le {{day}}. L'IA continue la prière à leur place."
   },
   "adminUsers": {
     "title": "Membres et rôles",

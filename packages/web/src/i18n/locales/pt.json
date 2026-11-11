@@ -353,6 +353,22 @@
       "title": "Tempo de louvor",
       "text": "Um breve louvor entre dois tempos de oração. O próximo tempo de oração começa logo a seguir.",
       "query": "louvor adoração cristã"
+    },
+    "takeover": {
+      "byAi": "A IA está a dirigir a oração neste momento.",
+      "byModerator": "A oração segue o programa.",
+      "hint": "Pode retomar o controlo a qualquer momento: dirige em direto e depois devolve-o.",
+      "take": "Retomar o controlo",
+      "titlePlaceholder": "Tema de oração (ex.: Oração pelas nações)",
+      "textPlaceholder": "Texto ou intenção de oração (opcional)",
+      "duration": "Durante",
+      "start": "Dirigir agora",
+      "update": "Atualizar",
+      "edit": "Alterar o tema",
+      "release": "Devolver o controlo",
+      "liveTitle": "{{name}} está a dirigir a oração em direto.",
+      "liveHint": "O programa continua em segundo plano: ao devolver, a sala retoma-o onde está.",
+      "liveChip": "Em direto · {{name}}"
     }
   },
   "communities": {
@@ -598,7 +614,19 @@
     "saveDays_one": "Adicionar {{count}} turno",
     "saveDays_other": "Adicionar {{count}} turnos",
     "saved_one": "{{count}} turno adicionado ao calendário.",
-    "saved_other": "{{count}} turnos adicionados ao calendário."
+    "saved_other": "{{count}} turnos adicionados ao calendário.",
+    "repeatLabel": "Programar durante",
+    "repeat": {
+      "none": "só estes dias",
+      "week": "1 semana",
+      "twoWeeks": "2 semanas",
+      "month": "1 mês",
+      "twoMonths": "2 meses",
+      "threeMonths": "3 meses"
+    },
+    "repeatHint": "Os dias colados repetem-se para preencher {{days}} dias, a partir do primeiro.",
+    "saveRepeat": "Programar {{days}} dias",
+    "savedPeriod": "{{days}} dia(s) programado(s), {{segments}} segmentos. Pode alterá-los a qualquer momento: cole de novo um dia para o substituir."
   },
   "notificationStatuses": {
     "DELIVERED": "Não lida",
@@ -740,7 +768,13 @@
     "save": "Salvar",
     "addSlot": "Adicionar o turno",
     "cancel": "Cancelar",
-    "loopDay": "Turno em loop (modo anterior)"
+    "loopDay": "Turno em loop (modo anterior)",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana seguinte",
+    "thisWeek": "Voltar a esta semana",
+    "cancelDay": "Cancelar este dia",
+    "cancelDayConfirm": "Cancelar todos os horários futuros de {{day}}? A IA continuará a oração no lugar deles.",
+    "cancelDayDone": "{{count}} segmento(s) cancelado(s) em {{day}}. A IA continua a oração."
   },
   "adminUsers": {
     "title": "Membros e funções",

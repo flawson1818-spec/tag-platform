@@ -19,7 +19,7 @@ import { ChatMessagesService } from './chat-messages.service';
 import { ChatMessage } from './chat-message.entity';
 import { PrayerSlotsService } from './prayer-slots.service';
 import { PrayerProgramsService } from './prayer-programs.service';
-import { fromRoomId, PRAYER_LEADER_ELIGIBLE_ROLES } from './prayer-constants';
+import { fromRoomId, PRAYER_CATEGORIES, PRAYER_LEADER_ELIGIBLE_ROLES } from './prayer-constants';
 import { PrayerSlot } from './prayer-slot.entity';
 import { webOrigins } from '../common/web-origin';
 
@@ -168,6 +168,28 @@ export interface InterludeState {
   fromSlotId?: string;
 }
 
+/**
+ * A moderator takes the room back from the AI ("Reprendre la main"): they lead live, with the
+ * subject they write, for the time they chose or until they give it back. Meanwhile the program
+ * carries on underneath; the room shows it again the moment the moderator lets go.
+ */
+export interface TakeoverState {
+  slot: PrayerSlot & { kind: 'LIVE' };
+  userId: string;
+  socketId: string;
+  displayName: string;
+}
+
+export interface TakeoverPayload {
+  roomId: string;
+  title?: string;
+  text?: string;
+  minutes?: number;
+}
+
+/** A moderator may lead for up to three hours in one go (then renews or gives back). */
+export const TAKEOVER_MAX_MINUTES = 180;
+
 export interface NowPlaying {
   videoId?: string;
   title: string;
@@ -220,6 +242,9 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   private readonly pendingRelays = new Map<string, PendingRelay>();
   private readonly replays = new Map<string, ReplayState>();
   private readonly interludes = new Map<string, InterludeState>();
+  private readonly takeovers = new Map<string, TakeoverState>();
+  /** The program's latest slot:started, replayed when a moderator gives the room back. */
+  private readonly lastStarted = new Map<string, { slot: PrayerSlot; sharedBy: RoomSharer; next: { title: string; startsNewCreneau: boolean } | null }>();
   /** What the engine announced as coming next, replayed to members who join mid-segment. */
   private readonly lastNext = new Map<string, { slotId: string; next: { title: string; startsNewCreneau: boolean } | null }>();
   private relayShareHandler?: (roomId: string, sharer: RoomSharer) => Promise<void>;
@@ -279,6 +304,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     const program = await this.programsService.findActiveByCommunity(fromRoomId(payload.roomId));
     if (!program) return;
     const slot =
+      this.takeovers.get(payload.roomId)?.slot ??
       this.interludes.get(payload.roomId)?.slot ??
       (await this.slotsService.findRunningSlotByProgram(program.id)) ??
       this.replays.get(payload.roomId)?.slot ??
@@ -703,6 +729,10 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
       if (this.pendingSpeakers.get(roomId)?.delete(userId)) this.broadcastSpeakUpdate(roomId);
     }
     for (const moderators of this.roomModerators.values()) moderators.delete(userId);
+    // The moderator who took the room back left: the program and the AI carry on at once.
+    for (const [roomId, takeover] of this.takeovers) {
+      if (takeover.socketId === client.id) this.endTakeover(roomId);
+    }
     for (const roomId of this.roomLeaders.keys()) {
       const leaders = this.roomLeaders.get(roomId);
       if (!leaders?.has(userId)) continue;
@@ -783,6 +813,8 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     next?: { title: string; startsNewCreneau: boolean } | null,
   ): void {
     this.lastNext.set(roomId, { slotId: slot.id, next: next ?? null });
+    this.lastStarted.set(roomId, { slot, sharedBy: this.sharerOf(roomId), next: next ?? null });
+    if (this.takeovers.has(roomId)) return; // a moderator leads: the program carries on underneath
     this.server
       ?.to(roomId)
       .emit('slot:started', { roomId, slot, remainingSeconds, sharedBy: this.sharerOf(roomId), next: next ?? null });
@@ -816,6 +848,78 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     this.roomSharers.set(roomId, sharer);
   }
 
+  getTakeover(roomId: string): TakeoverState | undefined {
+    return this.takeovers.get(roomId);
+  }
+
+  /** "Reprendre la main": a moderator present leads the room live, now. */
+  @SubscribeMessage('room:takeover')
+  async handleTakeover(@ConnectedSocket() client: Socket, @MessageBody() payload: TakeoverPayload): Promise<void> {
+    if (!payload?.roomId) return;
+    if (!(await this.isModerator(client, payload.roomId))) {
+      client.emit('room:error', { roomId: payload.roomId, message: 'Seul un modérateur peut reprendre la main.' });
+      return;
+    }
+    const userId = extractUserId(client, this.tokenService);
+    if (!userId) return;
+    const program = await this.programsService.findActiveByCommunity(fromRoomId(payload.roomId));
+    const displayName = await this.displayNameFor(userId);
+    const current = this.takeovers.get(payload.roomId);
+    const now = Date.now();
+    const minutes = Math.min(TAKEOVER_MAX_MINUTES, Math.max(5, Math.round(Number(payload.minutes) || 60)));
+    // Updating one's own live prayer keeps its start; anyone else taking over starts a new one.
+    const keep = current && current.userId === userId;
+    const slot: TakeoverState['slot'] = {
+      id: keep ? current.slot.id : `live-${now}`,
+      kind: 'LIVE',
+      program_id: program?.id ?? '',
+      order_index: 0,
+      title: (payload.title ?? '').trim().slice(0, 150) || `Prière dirigée par ${displayName}`,
+      category: PRAYER_CATEGORIES[0],
+      importance: 'Normal' as PrayerSlot['importance'],
+      start_at: keep ? current.slot.start_at : new Date(now).toISOString(),
+      end_at: new Date(now + minutes * 60_000).toISOString(),
+      guided_text: (payload.text ?? '').trim().slice(0, 4000) || null,
+      bible_references: [],
+      recommended_songs: [],
+      leader_user_id: userId,
+      leader_display_name: displayName,
+      status: 'RUNNING',
+      created_at: new Date(now).toISOString(),
+      updated_at: new Date(now).toISOString(),
+    };
+    this.takeovers.set(payload.roomId, { slot, userId, socketId: client.id, displayName });
+    this.stopWorshipMusic(payload.roomId);
+    this.server?.to(payload.roomId).emit('slot:started', {
+      roomId: payload.roomId,
+      slot,
+      remainingSeconds: minutes * 60,
+      sharedBy: { kind: 'MODERATOR', displayName },
+      next: null,
+    });
+  }
+
+  /** "Rendre la main": the program (or the AI) carries on from where it is now. */
+  @SubscribeMessage('room:release')
+  async handleRelease(@ConnectedSocket() client: Socket, @MessageBody() payload: RoomJoinPayload): Promise<void> {
+    if (!payload?.roomId || !this.takeovers.has(payload.roomId)) return;
+    if (!(await this.isModerator(client, payload.roomId))) return;
+    this.endTakeover(payload.roomId);
+  }
+
+  /** Ends a live takeover and shows the program again, exactly where it is now. */
+  endTakeover(roomId: string): void {
+    const takeover = this.takeovers.get(roomId);
+    if (!takeover) return;
+    this.takeovers.delete(roomId);
+    this.server?.to(roomId).emit('slot:ended', { roomId, slotId: takeover.slot.id });
+    const last = this.lastStarted.get(roomId);
+    if (!last) return;
+    this.roomSharers.set(roomId, last.sharedBy);
+    const remainingSeconds = Math.max(0, Math.round((Date.parse(last.slot.end_at) - Date.now()) / 1000));
+    this.server?.to(roomId).emit('slot:started', { roomId, slot: last.slot, remainingSeconds, sharedBy: last.sharedBy, next: last.next });
+  }
+
   getInterlude(roomId: string): InterludeState | undefined {
     return this.interludes.get(roomId);
   }
@@ -828,7 +932,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   /** Engine-only: worship music for an interlude — never over a song a moderator chose. */
   startWorshipMusic(roomId: string, track: { embedUrl: string; provider: 'youtube' | 'spotify'; videoId?: string } | null): void {
     const current = this.nowPlaying.get(roomId);
-    if (!track || (current && !current.auto)) return;
+    if (!track || (current && !current.auto) || this.takeovers.has(roomId)) return;
     const state: NowPlaying = { videoId: track.videoId, embedUrl: track.embedUrl, provider: track.provider, title: 'Temps de louange', auto: true };
     this.nowPlaying.set(roomId, state);
     this.server?.to(roomId).emit('music:update', { roomId, playing: true, ...state });
@@ -867,6 +971,7 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
   }
 
   emitSlotEnded(roomId: string, slotId: string): void {
+    if (this.takeovers.has(roomId)) return;
     this.server?.to(roomId).emit('slot:ended', { roomId, slotId });
   }
 

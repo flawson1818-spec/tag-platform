@@ -63,6 +63,8 @@ export function PrayerRoomPage() {
   const [relay, setRelay] = useState<Relay | null>(null);
   const [canShare, setCanShare] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [takeoverOpen, setTakeoverOpen] = useState(false);
+  const [takeoverForm, setTakeoverForm] = useState({ title: '', text: '', minutes: 60 });
   const [now, setNow] = useState(() => Date.now());
   const socketRef = useRef<Socket | null>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
@@ -313,6 +315,17 @@ export function PrayerRoomPage() {
     return () => clearInterval(interval);
   }, [relay]);
 
+  /** "Reprendre la main": a moderator leads live with the subject they write, then gives it back. */
+  function takeOver(e: FormEvent) {
+    e.preventDefault();
+    socketRef.current?.emit('room:takeover', { roomId: ROOM_ID, ...takeoverForm });
+    setTakeoverOpen(false);
+  }
+
+  function giveBack() {
+    socketRef.current?.emit('room:release', { roomId: ROOM_ID });
+  }
+
   function shareCreneau() {
     setSharing(true);
     socketRef.current?.emit('relay:share', { roomId: ROOM_ID });
@@ -348,6 +361,81 @@ export function PrayerRoomPage() {
         <p className="room-status">
           {connectionState === 'connecting' ? t('room.connecting') : t('room.empty')}
         </p>
+      )}
+
+      {canShare && (
+        <section className={`room-takeover${slot?.kind === 'LIVE' ? ' is-live' : ''}`}>
+          {slot?.kind === 'LIVE' ? (
+            <>
+              <p>
+                <strong>{t('room.takeover.liveTitle', { name: slot.leader_display_name ?? '' })}</strong>
+                <br />
+                <span className="hint">{t('room.takeover.liveHint')}</span>
+              </p>
+              <div className="room-takeover-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTakeoverForm({ title: slot.title, text: slot.guided_text ?? '', minutes: takeoverForm.minutes });
+                    setTakeoverOpen(!takeoverOpen);
+                  }}
+                >
+                  {t('room.takeover.edit')}
+                </button>
+                <button type="button" className="room-takeover-release" onClick={giveBack}>
+                  {t('room.takeover.release')}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p>
+                <strong>
+                  {sharedBy?.kind === 'MODERATOR' ? t('room.takeover.byModerator') : t('room.takeover.byAi')}
+                </strong>
+                <br />
+                <span className="hint">{t('room.takeover.hint')}</span>
+              </p>
+              <button type="button" className="room-takeover-take" onClick={() => setTakeoverOpen(!takeoverOpen)}>
+                <span aria-hidden="true">✋</span> {t('room.takeover.take')}
+              </button>
+            </>
+          )}
+          {takeoverOpen && (
+            <form className="room-takeover-form" onSubmit={takeOver}>
+              <input
+                type="text"
+                maxLength={150}
+                value={takeoverForm.title}
+                onChange={(e) => setTakeoverForm({ ...takeoverForm, title: e.target.value })}
+                placeholder={t('room.takeover.titlePlaceholder')}
+                aria-label={t('room.takeover.titlePlaceholder')}
+              />
+              <textarea
+                rows={3}
+                maxLength={4000}
+                value={takeoverForm.text}
+                onChange={(e) => setTakeoverForm({ ...takeoverForm, text: e.target.value })}
+                placeholder={t('room.takeover.textPlaceholder')}
+                aria-label={t('room.takeover.textPlaceholder')}
+              />
+              <label>
+                {t('room.takeover.duration')}
+                <select
+                  value={takeoverForm.minutes}
+                  onChange={(e) => setTakeoverForm({ ...takeoverForm, minutes: Number(e.target.value) })}
+                >
+                  {[15, 30, 60, 120, 180].map((m) => (
+                    <option key={m} value={m}>
+                      {m < 60 ? `${m} min` : `${m / 60} h`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit">{slot?.kind === 'LIVE' ? t('room.takeover.update') : t('room.takeover.start')}</button>
+            </form>
+          )}
+        </section>
       )}
 
       {relay && (
@@ -392,6 +480,13 @@ export function PrayerRoomPage() {
             <p className="hint room-ending-soon">{t('room.endingSoon', { seconds: remainingSeconds })}</p>
           )}
 
+          {slot.kind === 'LIVE' && (
+            <div className="room-chips">
+              <span className="chip chip-live">
+                <span aria-hidden="true">🎙️</span> {t('room.takeover.liveChip', { name: slot.leader_display_name ?? '' })}
+              </span>
+            </div>
+          )}
           <h3>{isWorship && <span aria-hidden="true">🎵 </span>}{isWorship ? t('room.worship.title') : slot.title}</h3>
           {isWorship && (
             <div className="room-worship">

@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { DatedCreneauDto } from './dto/add-creneaux.dto';
-import { addDays, zonedToUtc } from './zoned-time';
+import { addDays, daysBetween, zonedToUtc } from './zoned-time';
 
 export interface PlacedSegment {
   startAt: Date;
@@ -45,6 +45,32 @@ export function placeCreneaux(creneaux: DatedCreneauDto[], timeZone: string): Pl
         guidedText: segment.guidedText,
         bibleReferences: segment.bibleReferences,
       });
+    }
+  }
+  return out;
+}
+
+/** Programming horizon: up to three months ahead in one go. */
+export const MAX_REPEAT_DAYS = 92;
+/** Safety net for one request (3 months of 24 h/24 hourly créneaux of ~13 segments). */
+export const MAX_PLACED_SEGMENTS = 40_000;
+
+/**
+ * Repeats the pasted days to fill `repeatDays` days from the first one: a single day becomes
+ * every day; a pasted week repeats week after week. Undated text has already been given a date.
+ */
+export function repeatCreneaux(creneaux: DatedCreneauDto[], repeatDays: number): DatedCreneauDto[] {
+  if (creneaux.length === 0 || repeatDays <= 1) return creneaux;
+  const days = Math.min(repeatDays, MAX_REPEAT_DAYS);
+  const dates = creneaux.map((c) => c.date).sort();
+  const first = dates[0];
+  const span = daysBetween(first, dates[dates.length - 1]) + 1;
+  const out: DatedCreneauDto[] = [];
+  for (let offset = 0; offset < days; offset += span) {
+    for (const creneau of creneaux) {
+      const shift = daysBetween(first, creneau.date) + offset;
+      if (shift >= days) continue;
+      out.push({ ...creneau, date: addDays(first, shift) });
     }
   }
   return out;

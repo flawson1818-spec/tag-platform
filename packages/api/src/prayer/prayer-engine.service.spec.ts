@@ -73,6 +73,8 @@ function buildDeps() {
       this.interlude = i ?? undefined;
     }),
     startWorshipMusic: vi.fn(),
+    getTakeover: vi.fn(),
+    endTakeover: vi.fn(),
     stopWorshipMusic: vi.fn(),
   };
   const service = new PrayerEngineService(slotsService as never, programsService as never, gateway as never);

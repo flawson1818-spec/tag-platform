@@ -25,6 +25,23 @@ function byDay(slots: PrayerSlot[]): { day: string; slots: PrayerSlot[] }[] {
   return groups;
 }
 
+/** Monday 00:00 → next Monday 00:00 (local time), `offset` weeks from this one. */
+function weekWindow(offset: number): { from: Date; to: Date } {
+  const from = new Date();
+  from.setHours(0, 0, 0, 0);
+  from.setDate(from.getDate() - ((from.getDay() + 6) % 7) + offset * 7);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 7);
+  return { from, to };
+}
+
+function weekLabel(offset: number, lang: string): string {
+  const { from, to } = weekWindow(offset);
+  const last = new Date(to.getTime() - 86_400_000);
+  const fmt = (d: Date) => d.toLocaleDateString(lang, { day: 'numeric', month: 'short' });
+  return `${fmt(from)} – ${fmt(last)}`;
+}
+
 function formatDay(iso: string, lang: string, loopLabel: string): string {
   // Segments of a looping créneau (the older mode) carry a reference date, not a real day.
   if (new Date(iso).getFullYear() < 2001) return loopLabel;
@@ -69,6 +86,9 @@ export function ProgramsPage() {
   const [slotForm, setSlotForm] = useState(EMPTY_SLOT_FORM);
   const [slotSaving, setSlotSaving] = useState(false);
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  /** The calendar is shown one week at a time (0 = this week). */
+  const [week, setWeek] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const refreshPrograms = () => {
     setLoading(true);
@@ -81,10 +101,11 @@ export function ProgramsPage() {
 
   useEffect(refreshPrograms, []);
 
-  const refreshSlots = (programId: string) => {
+  const refreshSlots = (programId: string, weekOffset = week) => {
     setSlotsLoading(true);
+    const { from, to } = weekWindow(weekOffset);
     prayerApi
-      .listProgramSlots(programId)
+      .listProgramSlots(programId, from, to)
       .then(setSlots)
       .catch((err) => setError((err as Error).message))
       .finally(() => setSlotsLoading(false));
@@ -92,9 +113,33 @@ export function ProgramsPage() {
 
   const selectProgram = (id: string) => {
     setSelectedId(id);
+    setWeek(0);
     setEditingSlotId(null);
     setSlotForm(EMPTY_SLOT_FORM);
-    refreshSlots(id);
+    refreshSlots(id, 0);
+  };
+
+  const goToWeek = (offset: number) => {
+    setWeek(offset);
+    if (selectedId) refreshSlots(selectedId, offset);
+  };
+
+  const cancelDay = (iso: string) => {
+    const token = getAccessToken();
+    if (!token || !selectedId) return;
+    const start = new Date(iso);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    const label = start.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' });
+    if (!window.confirm(t('programs.cancelDayConfirm', { day: label }))) return;
+    prayerApi
+      .cancelPeriod(token, selectedId, start, end)
+      .then((res) => {
+        setNotice(t('programs.cancelDayDone', { count: res.cancelled, day: label }));
+        refreshSlots(selectedId);
+      })
+      .catch((err) => setError((err as Error).message));
   };
 
   const handleCreateProgram = async (e: FormEvent) => {
@@ -274,8 +319,24 @@ export function ProgramsPage() {
         <>
           <h3>{t('programs.slotsTitle', { title: selectedProgram.title })}</h3>
           <p className="hint">{t('programs.dailyScheduleHint')}</p>
-          <CreneauImport programId={selectedProgram.id} onReplaced={setSlots} />
+          <CreneauImport programId={selectedProgram.id} onReplaced={() => refreshSlots(selectedProgram.id)} />
           <WorshipLinks programId={selectedProgram.id} />
+
+          <div className="week-nav">
+            <button type="button" onClick={() => goToWeek(week - 1)} aria-label={t('programs.prevWeek')}>
+              ◀
+            </button>
+            <strong>{weekLabel(week, i18n.language)}</strong>
+            <button type="button" onClick={() => goToWeek(week + 1)} aria-label={t('programs.nextWeek')} disabled={week >= 14}>
+              ▶
+            </button>
+            {week !== 0 && (
+              <button type="button" className="link-button" onClick={() => goToWeek(0)}>
+                {t('programs.thisWeek')}
+              </button>
+            )}
+          </div>
+          {notice && <p className="admin-notice">{notice}</p>}
           {slotsLoading && <p>{t('programs.loading')}</p>}
 
           <table className="slot-table">
@@ -290,7 +351,14 @@ export function ProgramsPage() {
             <tbody>
               {byDay(slots).map(({ day, slots: daySlots }) => [
                 <tr key={`day-${day}`} className="slot-day-row">
-                  <td colSpan={4}>{formatDay(daySlots[0].start_at, i18n.language, t('programs.loopDay'))}</td>
+                  <td colSpan={4}>
+                    {formatDay(daySlots[0].start_at, i18n.language, t('programs.loopDay'))}
+                    {new Date(daySlots[0].start_at).getFullYear() > 2000 && daySlots.some((x) => x.status === 'SCHEDULED') && (
+                      <button type="button" className="link-button slot-day-cancel" onClick={() => cancelDay(daySlots[0].start_at)}>
+                        {t('programs.cancelDay')}
+                      </button>
+                    )}
+                  </td>
                 </tr>,
                 ...daySlots.map((slot) => (
                 <tr key={slot.id} className={slot.status === 'RUNNING' ? 'slot-row-live' : ''}>

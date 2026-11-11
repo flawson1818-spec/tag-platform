@@ -54,3 +54,18 @@ export function addDays(date: string, days: number): string {
   const next = new Date(Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3]) + days));
   return next.toISOString().slice(0, 10);
 }
+
+/** The local date ("2026-11-05") of an instant in `tz`. */
+export function localDateOf(instant: Date, tz: string = DEFAULT_PRAYER_TIMEZONE): string {
+  return new Date(instant.getTime() + offsetMinutes(instant, tz) * 60000).toISOString().slice(0, 10);
+}
+
+/** Whole days from `from` to `to` ("2026-11-05" → "2026-11-08" = 3). */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+}
+
+/** The local wall-clock time ("12:05") of an instant in `tz`. */
+export function localTimeOf(instant: Date, tz: string = DEFAULT_PRAYER_TIMEZONE): string {
+  return new Date(instant.getTime() + offsetMinutes(instant, tz) * 60000).toISOString().slice(11, 16);
+}

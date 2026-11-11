@@ -26,6 +26,7 @@ export class PrayerSlotsController {
 
     // Between two dated créneaux the AI carries on with the last one (never written to the database).
     const slot =
+      this.gateway.getTakeover(toRoomId(program.community_id))?.slot ??
       this.gateway.getInterlude(toRoomId(program.community_id))?.slot ??
       (await this.slotsService.findRunningSlotByProgram(program.id)) ??
       this.gateway.getReplay(toRoomId(program.community_id))?.slot ??
@@ -53,8 +54,11 @@ export class PrayerSlotsController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @RequirePermission('prayer_program.create')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSlotDto) {
-    return this.slotsService.update(id, dto);
+  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSlotDto) {
+    const slot = await this.slotsService.findById(id);
+    const program = await this.programsService.findById(slot.program_id);
+    const calendar = (await this.programsService.scheduleMode(program.id)) === 'CALENDAR';
+    return this.slotsService.update(id, dto, calendar ? await this.programsService.timeZoneOf(program) : undefined);
   }
 
   @Delete(':id')

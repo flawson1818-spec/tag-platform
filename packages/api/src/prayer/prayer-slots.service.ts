@@ -10,7 +10,10 @@ import { CreateSlotDto } from './dto/create-slot.dto';
 import { UpdateSlotDto } from './dto/update-slot.dto';
 import { PrayerSlot } from './prayer-slot.entity';
 import { toDailySlotRange } from './daily-slot-time';
+import { addDays, localDateOf, localTimeOf, zonedToUtc } from './zoned-time';
 import { PRAYER_LEADER_ELIGIBLE_ROLES } from './prayer-constants';
+
+const INSERT_BATCH = 500;
 
 const SLOT_COLUMNS =
   'id, program_id, order_index, title, category, importance, start_at, end_at, guided_text, bible_references, recommended_songs, leader_user_id, status, created_at, updated_at, leader:leader_user_id(display_name)';
@@ -93,25 +96,58 @@ export class PrayerSlotsService {
     return mapSlot(data as unknown as SlotRow);
   }
 
-  async listForProgram(programId: string): Promise<PrayerSlot[]> {
-    const { data, error } = await this.db
-      .select(SLOT_COLUMNS)
-      .eq('program_id', programId)
-      .neq('status', 'ARCHIVED')
-      .order('order_index', { ascending: true });
+  /**
+   * A program's segments. With a window (a calendar program over weeks or months), only the
+   * segments starting inside it, in time order — never more than one page of the calendar.
+   */
+  async listForProgram(programId: string, from?: Date, to?: Date): Promise<PrayerSlot[]> {
+    let query = this.db.select(SLOT_COLUMNS).eq('program_id', programId).neq('status', 'ARCHIVED');
+    if (from && to) {
+      // Loop créneaux carry a reference date (1970), not a real day: they are always listed.
+      query = query
+        .or(`start_at.lt.2001-01-01T00:00:00Z,and(start_at.gte.${from.toISOString()},start_at.lt.${to.toISOString()})`)
+        .order('start_at', { ascending: true });
+    } else {
+      query = query.order('order_index', { ascending: true });
+    }
+    const { data, error } = await query.limit(5000);
     if (error) throw new InternalServerErrorException(error.message);
     return (data as unknown as SlotRow[]).map(mapSlot);
   }
 
-  async update(id: string, dto: UpdateSlotDto): Promise<PrayerSlot> {
+  /**
+   * Cancels what was planned between two instants (a day, a week…): those segments are archived,
+   * never deleted. The one running now is left alone; the engine fills the hole so the prayer
+   * never stops.
+   */
+  async cancelPeriod(programId: string, from: Date, to: Date): Promise<number> {
+    if (to <= from) throw new BadRequestException('La fin de la période doit être après son début.');
+    const { data, error } = await this.db
+      .update({ status: 'ARCHIVED' })
+      .eq('program_id', programId)
+      .eq('status', 'SCHEDULED')
+      .gte('start_at', from.toISOString())
+      .lt('start_at', to.toISOString())
+      .select('id');
+    if (error) throw new InternalServerErrorException(error.message);
+    return (data ?? []).length;
+  }
+
+  /**
+   * `calendarTimeZone`: the slot belongs to a calendar program — new hours stay on the slot's own
+   * local date (a dated segment never jumps to another day by being edited).
+   */
+  async update(id: string, dto: UpdateSlotDto, calendarTimeZone?: string): Promise<PrayerSlot> {
     const existing = await this.findById(id);
     let startAt: string | undefined;
     let endAt: string | undefined;
     if (dto.startTime || dto.endTime) {
       if (existing.status !== 'SCHEDULED') {
-        throw new ConflictException('Only a SCHEDULED slot\'s time can be changed — this one has already run or is running');
+        throw new ConflictException('Seules les heures d\'un créneau à venir peuvent changer — celui-ci a déjà eu lieu ou est en cours (son texte, lui, peut toujours être modifié).');
       }
-      const range = toDailySlotRange(dto.startTime ?? existing.start_at.slice(11, 16), dto.endTime ?? existing.end_at.slice(11, 16));
+      const range = calendarTimeZone
+        ? datedRange(existing, dto.startTime, dto.endTime, calendarTimeZone)
+        : toDailySlotRange(dto.startTime ?? existing.start_at.slice(11, 16), dto.endTime ?? existing.end_at.slice(11, 16));
       await this.assertNoOverlap(existing.program_id, range.startAt, range.endAt, id);
       startAt = range.startAt;
       endAt = range.endAt;
@@ -130,6 +166,9 @@ export class PrayerSlotsService {
       .select(SLOT_COLUMNS)
       .single();
     if (error) throw new InternalServerErrorException(error.message);
+    if (startAt && endAt && calendarTimeZone) {
+      await this.writeDuration(id, Math.round((Date.parse(endAt) - Date.parse(startAt)) / 1000));
+    }
     return mapSlot(data as unknown as SlotRow);
   }
 
@@ -436,6 +475,7 @@ export class PrayerSlotsService {
     let query = this.db
       .select('title, start_at, end_at')
       .eq('program_id', programId)
+      .neq('status', 'ARCHIVED')
       .lt('start_at', endAt)
       .gt('end_at', startAt);
     if (excludeSlotId) query = query.neq('id', excludeSlotId);
@@ -493,29 +533,31 @@ export class PrayerSlotsService {
     }
 
     let order = await this.nextOrderIndex(programId);
-    const created: string[] = [];
-    for (const segment of sorted) {
-      const { data, error } = await this.db
-        .insert({
-          program_id: programId,
-          order_index: order++,
-          title: segment.title,
-          guided_text: segment.guidedText ?? null,
-          bible_references: segment.bibleReferences ?? [],
-          recommended_songs: [],
-          importance: 'Normal',
-          start_at: segment.startAt.toISOString(),
-          end_at: segment.endAt.toISOString(),
-          status: 'SCHEDULED',
-        })
-        .select('id')
-        .single();
+    const rows = sorted.map((segment) => ({
+      program_id: programId,
+      order_index: order++,
+      title: segment.title,
+      guided_text: segment.guidedText ?? null,
+      bible_references: segment.bibleReferences ?? [],
+      recommended_songs: [],
+      importance: 'Normal',
+      start_at: segment.startAt.toISOString(),
+      end_at: segment.endAt.toISOString(),
+      status: 'SCHEDULED',
+      duration_seconds: segment.durationSeconds,
+    }));
+    // In batches: three months of créneaux are tens of thousands of segments.
+    for (let i = 0; i < rows.length; i += INSERT_BATCH) {
+      const batch = rows.slice(i, i + INSERT_BATCH);
+      let { error } = await this.db.insert(batch);
+      if (error && ['42703', 'PGRST204'].includes(error.code ?? '')) {
+        // Before migration 20261106: no stored duration, the window is the duration.
+        ({ error } = await this.db.insert(batch.map(({ duration_seconds: _d, ...row }) => row)));
+      }
       if (error) throw new InternalServerErrorException(error.message);
-      const id = (data as { id: string }).id;
-      created.push(id);
-      await this.writeDuration(id, segment.durationSeconds);
     }
-    return this.listForProgram(programId);
+    const first = sorted[0].startAt;
+    return this.listForProgram(programId, first, new Date(first.getTime() + 7 * 86_400_000));
   }
 
   /** The segment planned for `at` (the latest-starting one wins: an urgent topic beats the plan). */
@@ -615,4 +657,15 @@ export function contiguousFrom(slots: PrayerSlot[], from: 'start' | 'end'): Pray
   let j = 0;
   while (j < slots.length - 1 && touches(slots[j], slots[j + 1])) j++;
   return slots.slice(0, j + 1);
+}
+
+/** New local hours for a dated segment, on its own local date (end before start → next day). */
+function datedRange(slot: PrayerSlot, startTime: string | undefined, endTime: string | undefined, tz: string) {
+  const day = localDateOf(new Date(slot.start_at), tz);
+  const start = startTime ?? localTimeOf(new Date(slot.start_at), tz);
+  const end = endTime ?? localTimeOf(new Date(slot.end_at), tz);
+  const startAt = zonedToUtc(day, start, tz);
+  let endAt = zonedToUtc(day, end, tz);
+  if (endAt <= startAt) endAt = zonedToUtc(addDays(day, 1), end, tz);
+  return { startAt: startAt.toISOString(), endAt: endAt.toISOString() };
 }

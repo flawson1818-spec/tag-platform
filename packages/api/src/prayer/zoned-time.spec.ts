@@ -1,4 +1,4 @@
-import { addDays, zonedToUtc } from './zoned-time';
+import { addDays, localDateOf, localTimeOf, zonedToUtc } from './zoned-time';
 
 describe('zonedToUtc', () => {
   it('Lomé is UTC all year', () => {
@@ -15,5 +15,14 @@ describe('zonedToUtc', () => {
   });
   it('adds days across months', () => {
     expect(addDays('2026-11-30', 1)).toBe('2026-12-01');
+  });
+});
+
+describe('localDateOf / localTimeOf', () => {
+  it('reads an instant back in local time', () => {
+    const instant = zonedToUtc('2026-11-12', '00:30', 'Europe/Paris');
+    expect(localDateOf(instant, 'Europe/Paris')).toBe('2026-11-12');
+    expect(localTimeOf(instant, 'Europe/Paris')).toBe('00:30');
+    expect(localDateOf(instant, 'Africa/Lome')).toBe('2026-11-11');
   });
 });

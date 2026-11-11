@@ -139,8 +139,8 @@ export interface TrustedDevice {
 
 export interface PrayerSlot {
   id: string;
-  /** A time of praise between two prayer sections (never stored). */
-  kind?: 'WORSHIP';
+  /** Never stored: a time of praise between two sections, or a moderator leading live. */
+  kind?: 'WORSHIP' | 'LIVE';
   program_id: string;
   order_index: number;
   title: string;
@@ -228,7 +228,15 @@ function authHeaders(token: string): HeadersInit {
 export const prayerApi = {
   active: (roomId = 'world') =>
     request<ActivePrayerSlot>(`/prayer-slots/active?roomId=${encodeURIComponent(roomId)}`),
-  listProgramSlots: (programId: string) => request<PrayerSlot[]>(`/prayer-programs/${programId}/slots`),
+  listProgramSlots: (programId: string, from?: Date, to?: Date) =>
+    request<PrayerSlot[]>(
+      `/prayer-programs/${programId}/slots${from && to ? `?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}` : ''}`,
+    ),
+  cancelPeriod: (token: string, programId: string, from: Date, to: Date) =>
+    request<{ cancelled: number }>(
+      `/prayer-programs/${programId}/creneaux?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`,
+      { method: 'DELETE', headers: authHeaders(token) },
+    ),
   leaderCandidates: (token: string, search?: string) =>
     request<LeaderCandidate[]>(
       `/prayer-slots/leader-candidates${search ? `?search=${encodeURIComponent(search)}` : ''}`,
@@ -264,11 +272,12 @@ export const prayerApi = {
       date: string;
       segments: { start: string; end: string; title: string; guidedText?: string; bibleReferences?: string[] }[];
     }[],
+    repeatDays?: number,
   ) =>
-    request<{ timeZone: string; slots: PrayerSlot[] }>(`/prayer-programs/${programId}/creneaux`, {
+    request<{ timeZone: string; slots: PrayerSlot[]; days: number; segments: number }>(`/prayer-programs/${programId}/creneaux`, {
       method: 'POST',
       headers: authHeaders(token),
-      body: JSON.stringify({ creneaux }),
+      body: JSON.stringify({ creneaux, repeatDays }),
     }),
   replaceSchedule: (
     token: string,

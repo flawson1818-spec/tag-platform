@@ -375,7 +375,10 @@ export class PrayerEngineService {
   private async broadcastTicks(programs: PrayerProgram[]): Promise<void> {
     for (const program of programs) {
       const roomId = toRoomId(program.community_id);
+      const takeover = this.gateway.getTakeover(roomId);
+      if (takeover && Date.parse(takeover.slot.end_at) <= Date.now()) this.gateway.endTakeover(roomId);
       const running =
+        this.gateway.getTakeover(roomId)?.slot ??
         this.gateway.getInterlude(roomId)?.slot ??
         (await this.slotsService.findRunningSlotByProgram(program.id)) ??
         this.gateway.getReplay(roomId)?.slot ??

@@ -58,6 +58,8 @@ function deps(mode: 'LOOP' | 'CALENDAR') {
     getInterlude: vi.fn(() => state.interlude),
     setInterlude: vi.fn((_r: string, v: typeof state.interlude | null) => (state.interlude = v ?? undefined)),
     startWorshipMusic: vi.fn(),
+    getTakeover: vi.fn(),
+    endTakeover: vi.fn(),
     stopWorshipMusic: vi.fn(),
   };
   const service = new PrayerEngineService(slotsService as never, programsService as never, gateway as never);

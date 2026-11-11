@@ -27,6 +27,12 @@ Trois piliers :
 1. **La salle de prière** ne s'arrête jamais. Les modérateurs écrivent les créneaux à l'avance
    (pour un jour, une semaine, un mois) ; chacun démarre à son heure et le suivant enchaîne ; une
    heure non écrite est prolongée par l'IA.
+   Les créneaux se programment **sur une semaine, un mois et jusqu'à trois mois** (une journée
+   collée se répète chaque jour ; une semaine collée se répète semaine après semaine), se
+   modifient ou s'annulent à tout moment (recoller un jour le remplace ; « Annuler ce jour »).
+   Un modérateur présent peut **reprendre la main à tout moment** sur l'IA : il dirige en direct
+   avec le sujet qu'il écrit, pendant la durée choisie (3 h au plus), puis rend la main ; le
+   programme continue en arrière-plan et la salle le reprend là où il en est.
    Entre deux temps de prière d'une heure, un **bref temps de louange** (5 minutes par défaut) :
    la salle joue la louange choisie par l'administration (liens YouTube ou Spotify, pris à tour
    de rôle), puis le temps de prière suivant commence. Un petit trou du calendrier (30 minutes
