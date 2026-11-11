@@ -12,6 +12,7 @@ import { SocialModule } from '../social/social.module';
 import { MessagesModule } from '../messages/messages.module';
 import { WatchModule } from '../watch/watch.module';
 import { ApplicationsModule } from '../applications/applications.module';
+import { MobilizationsModule } from '../mobilizations/mobilizations.module';
 import { IntercessorsModule } from '../intercessors/intercessors.module';
 import { RolesModule } from '../roles/roles.module';
 import { CommunitiesModule } from '../communities/communities.module';
@@ -45,6 +46,7 @@ import { HealthController } from './health.controller';
     WatchModule,
     ApplicationsModule,
     IntercessorsModule,
+    MobilizationsModule,
     RolesModule,
     CommunitiesModule,
     PostsModule,

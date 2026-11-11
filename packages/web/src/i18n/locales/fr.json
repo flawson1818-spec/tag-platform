@@ -592,7 +592,9 @@
     "EVENT_CREATED": "Un nouvel événement a été créé dans une communauté dont tu es membre",
     "EVENT_REMINDER": "Un événement auquel tu es inscrit commence bientôt",
     "PRAYER_TOPIC_STARTED": "Un sujet de prière que tu suis vient de commencer",
-    "GROUP_LIVE_STARTED": "Un direct commence dans ton groupe"
+    "GROUP_LIVE_STARTED": "Un direct commence dans ton groupe",
+    "PRAYER_MOBILIZATION_INVITED": "Une demande de prière est confiée à ton groupe",
+    "PRAYER_MOBILIZATION_ANSWERED": "Un groupe a répondu à une mobilisation"
   },
   "creneauImport": {
     "open": "Ajouter des créneaux",
@@ -1355,7 +1357,8 @@
       "announcements": "Annonces",
       "documents": "Documents",
       "groups": "Sous-groupes",
-      "live": "Salle en direct"
+      "live": "Salle en direct",
+      "requests": "Sujets confiés"
     },
     "leave": "Quitter",
     "leaveConfirm": "Quitter {{name}} ?",
@@ -1411,5 +1414,38 @@
     "chatEmpty": "Écris le premier message : une question, un amen…",
     "chatPlaceholder": "Écrire à tous…",
     "joinNow": "Rejoindre le direct"
+  },
+  "mobilization": {
+    "mobilize": "Mobiliser un groupe",
+    "invite": "Confier",
+    "withdraw": "Retirer {{name}}",
+    "status": {
+      "INVITED": "invité",
+      "ACCEPTED": "accepté",
+      "DECLINED": "décliné",
+      "DONE": "terminé"
+    },
+    "leaderIntro": "Demandes que l'administration confie à ton groupe : accepte-les pour que tout le groupe prie, puis indique quand elles ont été portées.",
+    "memberIntro": "Demandes que ton groupe porte dans la prière. Prie pour elles avec tes frères et sœurs.",
+    "none": "Aucune demande confiée à ce groupe pour l'instant.",
+    "accept": "Accepter et prier",
+    "decline": "Décliner",
+    "done": "Portée dans la prière"
+  },
+  "share": {
+    "button": "Partager l'application",
+    "hint": "Invite tes proches à prier avec toi : envoie-leur le lien par WhatsApp, SMS ou e-mail.",
+    "text": "Rejoins-moi sur Tour d'avant-garde : une prière s'élève à chaque instant, 24 h/24.",
+    "message": "Rejoins-moi sur Tour d'avant-garde : une prière s'élève à chaque instant, 24 h/24. 🙏 {{url}}",
+    "via": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "E-mail",
+      "facebook": "Facebook",
+      "telegram": "Telegram"
+    },
+    "copy": "Copier le lien",
+    "copied": "Lien copié !",
+    "copyPrompt": "Copie ce lien :"
   }
 }

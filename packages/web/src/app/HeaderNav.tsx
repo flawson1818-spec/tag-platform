@@ -5,6 +5,7 @@ import { useAuth } from './auth/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { InstallPwaButton } from './InstallPwaButton';
+import { ShareAppButton } from './ShareAppButton';
 import { useUnreadMessages } from './social/useUnreadMessages';
 import { useAccess } from './auth/AccessContext';
 import { ADMIN_PERMISSIONS } from './admin/adminSections';
@@ -207,6 +208,7 @@ export function HeaderNav() {
                   <ThemeToggle />
                 </div>
                 <InstallPwaButton />
+                <ShareAppButton />
                 <button type="button" className="nav-logout" onClick={handleLogout}>
                   {t('nav.logout')}
                 </button>

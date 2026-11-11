@@ -147,7 +147,7 @@ aucune assignation automatique.
 - Écrans : Demande de prière → « Mon profil d'intercesseur » (intercesseurs et plus) ;
   Administration → Demandes de prière → « ✨ Recommandés » puis « Confier ».
 
-### 5.6 Mobilisation d'un groupe sur une demande (pilote V13) — 🔨
+### 5.6 Mobilisation d'un groupe sur une demande (pilote V13) — ✅
 L'administration peut confier une demande à un **groupe** (église, cellule, équipe) en plus d'un
 intercesseur : invité → accepté / décliné → terminé. Le responsable du groupe est notifié.
 

@@ -1,3 +1,4 @@
+import { ShareAppButton } from '../ShareAppButton';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -665,6 +666,7 @@ export function ProfilePage() {
   return (
     <div className="auth-page">
       <h2>{t('profile.main.title')}</h2>
+      <ShareAppButton variant="card" />
       <AvatarUpload avatarFileId={user.avatar_file_id} />
       <form onSubmit={handleSubmit} className="auth-form">
         <input

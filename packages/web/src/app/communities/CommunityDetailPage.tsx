@@ -20,8 +20,9 @@ import { SocialComposer } from '../social/SocialComposer';
 import { Avatar, SocialPostCard } from '../social/SocialPostCard';
 import { communityIcon } from './communityIcons';
 import { GroupLiveRoom, LIVE_ICONS } from './GroupLiveRoom';
+import { GroupRequests } from './GroupRequests';
 
-type Tab = 'live' | 'posts' | 'members' | 'announcements' | 'documents' | 'groups';
+type Tab = 'live' | 'requests' | 'posts' | 'members' | 'announcements' | 'documents' | 'groups';
 
 /** Parents up to the top (cellule → église → pays): a short breadcrumb. */
 async function fetchAncestors(token: string, community: Community): Promise<Community[]> {
@@ -45,7 +46,8 @@ export function CommunityDetailPage() {
   const { id } = useParams<{ id: string }>();
 
   const [params] = useSearchParams();
-  const [tab, setTab] = useState<Tab>(params.get('tab') === 'live' ? 'live' : 'posts');
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'live' ? 'live' : params.get('tab') === 'requests' ? 'requests' : 'posts');
+  const [invited, setInvited] = useState(0);
   const [live, setLive] = useState<{ title: string; kind: string } | null>(null);
   const [memberTotal, setMemberTotal] = useState(0);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -270,6 +272,7 @@ export function CommunityDetailPage() {
   const tabs: { key: Tab; label: string; count?: number; badge?: number }[] = [
     { key: 'live', label: `${live ? '🔴' : '📡'} ${t('groupPage.tabs.live')}` },
     { key: 'posts', label: t('groupPage.tabs.posts') },
+    { key: 'requests', label: `🙏 ${t('groupPage.tabs.requests')}`, badge: invited },
     { key: 'members', label: t('groupPage.tabs.members'), count: memberTotal, badge: pending.length },
     { key: 'announcements', label: t('groupPage.tabs.announcements'), count: announcements.length },
     { key: 'documents', label: t('groupPage.tabs.documents'), count: documents.length },
@@ -341,6 +344,11 @@ export function CommunityDetailPage() {
           </button>
         ))}
       </div>
+
+      {tab === 'requests' && (isMember || canManage) && <GroupRequests communityId={community.id} onCount={setInvited} />}
+      {tab === 'requests' && !isMember && !canManage && (
+        <p className="social-empty group-locked">{t('groupPage.joinToSee')}</p>
+      )}
 
       {tab === 'live' && (
         <GroupLiveRoom

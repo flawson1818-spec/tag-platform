@@ -1482,3 +1482,33 @@ export const worshipApi = {
       body: JSON.stringify({ links }),
     }),
 };
+
+// ---- Mobilising a group on a prayer request (§5.6) ----
+
+export type MobilizationStatus = 'INVITED' | 'ACCEPTED' | 'DECLINED' | 'DONE';
+
+export interface Mobilization {
+  id: string;
+  status: MobilizationStatus;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  community: { id: string; name: string; type: string };
+  request: { id: string; category: string; description: string; status: string };
+}
+
+export const mobilizationsApi = {
+  invite: (token: string, requestId: string, communityId: string, note?: string) =>
+    request<Mobilization>(`/prayer-requests/${requestId}/mobilizations`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ communityId, note }),
+    }),
+  forRequest: (token: string, requestId: string) =>
+    request<Mobilization[]>(`/prayer-requests/${requestId}/mobilizations`, { headers: authHeaders(token) }),
+  forCommunity: (token: string, communityId: string) =>
+    request<{ canAnswer: boolean; items: Mobilization[] }>(`/communities/${communityId}/mobilizations`, { headers: authHeaders(token) }),
+  answer: (token: string, id: string, status: MobilizationStatus, note?: string) =>
+    request<Mobilization>(`/mobilizations/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ status, note }) }),
+  withdraw: (token: string, id: string) => request<void>(`/mobilizations/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+};

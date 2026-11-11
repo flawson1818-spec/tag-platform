@@ -592,7 +592,9 @@
     "EVENT_CREATED": "Se creó un nuevo evento en una comunidad a la que perteneces",
     "EVENT_REMINDER": "Un evento en el que estás inscrito comienza pronto",
     "PRAYER_TOPIC_STARTED": "Un tema de oración que sigues acaba de comenzar",
-    "GROUP_LIVE_STARTED": "Un directo empieza en tu grupo"
+    "GROUP_LIVE_STARTED": "Un directo empieza en tu grupo",
+    "PRAYER_MOBILIZATION_INVITED": "Se confía una petición de oración a tu grupo",
+    "PRAYER_MOBILIZATION_ANSWERED": "Un grupo respondió a una movilización"
   },
   "creneauImport": {
     "open": "Añadir turnos",
@@ -1355,7 +1357,8 @@
       "announcements": "Anuncios",
       "documents": "Documentos",
       "groups": "Subgrupos",
-      "live": "Sala en directo"
+      "live": "Sala en directo",
+      "requests": "Peticiones confiadas"
     },
     "leave": "Salir",
     "leaveConfirm": "¿Salir de {{name}}?",
@@ -1411,5 +1414,38 @@
     "chatEmpty": "Escribe el primer mensaje: una pregunta, un amén…",
     "chatPlaceholder": "Escribir a todos…",
     "joinNow": "Unirse al directo"
+  },
+  "mobilization": {
+    "mobilize": "Movilizar un grupo",
+    "invite": "Confiar",
+    "withdraw": "Quitar {{name}}",
+    "status": {
+      "INVITED": "invitado",
+      "ACCEPTED": "aceptado",
+      "DECLINED": "rechazado",
+      "DONE": "terminado"
+    },
+    "leaderIntro": "Peticiones que la administración confía a tu grupo: acéptalas para que todo el grupo ore, y luego indica cuándo se llevaron en oración.",
+    "memberIntro": "Peticiones que tu grupo lleva en oración. Ora por ellas con tus hermanos y hermanas.",
+    "none": "Aún no hay peticiones confiadas a este grupo.",
+    "accept": "Aceptar y orar",
+    "decline": "Rechazar",
+    "done": "Llevada en oración"
+  },
+  "share": {
+    "button": "Compartir la aplicación",
+    "hint": "Invita a tus seres queridos a orar contigo: envíales el enlace por WhatsApp, SMS o correo.",
+    "text": "Únete a mí en Tour d'avant-garde: una oración se eleva a cada instante, 24 h/24.",
+    "message": "Únete a mí en Tour d'avant-garde: una oración se eleva a cada instante, 24 h/24. 🙏 {{url}}",
+    "via": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "Correo",
+      "facebook": "Facebook",
+      "telegram": "Telegram"
+    },
+    "copy": "Copiar el enlace",
+    "copied": "¡Enlace copiado!",
+    "copyPrompt": "Copia este enlace:"
   }
 }

@@ -592,7 +592,9 @@
     "EVENT_CREATED": "A new event was created in a community you belong to",
     "EVENT_REMINDER": "An event you're registered for starts soon",
     "PRAYER_TOPIC_STARTED": "A prayer topic you follow has just started",
-    "GROUP_LIVE_STARTED": "A live is starting in your group"
+    "GROUP_LIVE_STARTED": "A live is starting in your group",
+    "PRAYER_MOBILIZATION_INVITED": "A prayer request is entrusted to your group",
+    "PRAYER_MOBILIZATION_ANSWERED": "A group answered a mobilisation"
   },
   "creneauImport": {
     "open": "Add créneaux",
@@ -1355,7 +1357,8 @@
       "announcements": "Announcements",
       "documents": "Documents",
       "groups": "Sub-groups",
-      "live": "Live room"
+      "live": "Live room",
+      "requests": "Entrusted requests"
     },
     "leave": "Leave",
     "leaveConfirm": "Leave {{name}}?",
@@ -1411,5 +1414,38 @@
     "chatEmpty": "Write the first message: a question, an amen…",
     "chatPlaceholder": "Write to everyone…",
     "joinNow": "Join the live"
+  },
+  "mobilization": {
+    "mobilize": "Mobilise a group",
+    "invite": "Entrust",
+    "withdraw": "Remove {{name}}",
+    "status": {
+      "INVITED": "invited",
+      "ACCEPTED": "accepted",
+      "DECLINED": "declined",
+      "DONE": "done"
+    },
+    "leaderIntro": "Requests the administration entrusts to your group: accept them so the whole group prays, then say when they were carried.",
+    "memberIntro": "Requests your group carries in prayer. Pray for them with your brothers and sisters.",
+    "none": "No request entrusted to this group yet.",
+    "accept": "Accept and pray",
+    "decline": "Decline",
+    "done": "Carried in prayer"
+  },
+  "share": {
+    "button": "Share the app",
+    "hint": "Invite your loved ones to pray with you: send them the link by WhatsApp, SMS or e-mail.",
+    "text": "Join me on Tour d'avant-garde: a prayer rises at every moment, 24/7.",
+    "message": "Join me on Tour d'avant-garde: a prayer rises at every moment, 24/7. 🙏 {{url}}",
+    "via": {
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "email": "E-mail",
+      "facebook": "Facebook",
+      "telegram": "Telegram"
+    },
+    "copy": "Copy the link",
+    "copied": "Link copied!",
+    "copyPrompt": "Copy this link:"
   }
 }

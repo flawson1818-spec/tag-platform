@@ -3277,3 +3277,44 @@ header.site-header::after {
 .live-chat-list p.is-mine a { color: var(--color-primary); }
 .live-chat-form { display: flex; gap: 0.4rem; padding: 0.6rem; border-top: 1px solid var(--color-border); }
 .live-chat-form input { flex: 1; min-width: 0; }
+
+/* ---- Mobilising groups on a prayer request (§5.6) ---- */
+.mobilize { width: 100%; display: grid; gap: 0.4rem; }
+.mobilize-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.mobilize-chip {
+  display: inline-flex; gap: 0.3rem; align-items: center; border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.82rem;
+  font-weight: 600; background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.mobilize-chip button { background: transparent; border: none; color: inherit; padding: 0 0.2rem; font-size: 1rem; line-height: 1; }
+.mobilize-chip.st-accepted { background: color-mix(in srgb, #16a34a 16%, transparent); color: #15803d; }
+.mobilize-chip.st-declined { background: color-mix(in srgb, #6b7280 16%, transparent); color: #4b5563; }
+.mobilize-chip.st-done { background: color-mix(in srgb, var(--color-accent) 25%, transparent); }
+.recommend-panel input[type='search'] { width: 100%; margin-bottom: 0.4rem; }
+.mobilize-item.st-invited { border-color: var(--color-accent); }
+.group-requests { display: flex; flex-direction: column; gap: 0.8rem; }
+
+/* ---- Share the app with one's contacts ---- */
+.share-app { position: relative; }
+.share-app-button { display: inline-flex; gap: 0.4rem; align-items: center; font-weight: 600; }
+.share-app-menu .share-app-button { width: 100%; background: transparent; color: inherit; border: none; padding: 0.5rem 0.6rem; text-align: left; }
+.share-app-card {
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface)); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 0.9rem 1rem; margin-bottom: 1rem;
+}
+.share-app-card .share-app-button { background: var(--color-primary); color: #fff; border-radius: 999px; padding: 0.55rem 1.1rem; }
+.share-app-card .hint { margin: 0.5rem 0 0; }
+.share-app-panel {
+  position: absolute; z-index: 60; top: calc(100% + 0.3rem); left: 0; min-width: 220px; display: grid; gap: 0.15rem;
+  background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.15)); padding: 0.4rem;
+}
+.share-app-panel a, .share-app-panel button {
+  display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem 0.6rem; border-radius: 8px; text-decoration: none;
+  color: var(--color-text); background: transparent; border: none; font-weight: 600; text-align: left; width: 100%;
+}
+.share-app-panel a:hover, .share-app-panel button:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+.share-app-menu .share-app-panel { position: static; box-shadow: none; border: none; padding: 0 0 0 0.8rem; }
+nav .nav-dropdown-panel .share-app-button,
+nav .nav-dropdown-panel .share-app-panel button { color: var(--color-text); background: transparent; box-shadow: none; }
+nav .nav-dropdown-panel .share-app-button:hover,
+nav .nav-dropdown-panel .share-app-panel button:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }

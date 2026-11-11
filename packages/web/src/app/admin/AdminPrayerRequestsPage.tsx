@@ -5,6 +5,7 @@ import { useAccess } from '../auth/AccessContext';
 import { LeaderCandidate, PRAYER_REQUEST_CATEGORIES, PrayerProgram, PrayerRequest, prayerApi, prayerRequestsApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 import { RecommendedIntercessors } from './RecommendedIntercessors';
+import { MobilizeGroup } from './MobilizeGroup';
 import { RequestPhoto, RequestStatus } from '../prayer-requests/PrayerRequestsPage';
 
 const STATUSES = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'WAITING', 'ANSWERED', 'ARCHIVED'];
@@ -143,6 +144,7 @@ export function AdminPrayerRequestsPage() {
               {['NEW', 'ASSIGNED', 'RESTORED'].includes(r.status) && (
                 <RecommendedIntercessors requestId={r.id} onPick={(userId) => act((token) => prayerRequestsApi.assign(token, r.id, userId))} />
               )}
+              {r.status !== 'ARCHIVED' && <MobilizeGroup requestId={r.id} />}
               <span className="admin-status-actions">
                 {(NEXT[r.status] ?? []).map((s) => (
                   <button key={s} type="button" className="admin-status-button admin-status-button-visible" onClick={() => act((token) => prayerRequestsApi.updateStatus(token, r.id, s))}>
