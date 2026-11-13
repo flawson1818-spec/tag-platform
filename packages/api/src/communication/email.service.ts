@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { SupabaseService } from '../supabase/supabase.service';
 import { Email } from './email.entity';
 import { redact, SendOptions } from './redact';
+import { isPhoneAccountEmail } from '../common/phone-account';
 
 const EMAIL_COLUMNS = 'id, user_id, to_email, subject, body, status, sent_at, created_at';
 
@@ -77,6 +78,7 @@ export class EmailService {
 
   /** true sent, false failed, null no provider configured. Never throws: the caller's flow goes on. */
   private async deliver(toEmail: string, subject: string, body: string): Promise<boolean | null> {
+    if (isPhoneAccountEmail(toEmail)) return null; // a phone-only account has no mailbox
     const config = this.config();
     if (!config) {
       this.logger.warn(`Email to ${maskEmail(toEmail)} recorded but NOT sent — no provider configured: ${subject}`);

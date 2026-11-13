@@ -19,7 +19,7 @@ interface AuthContextValue {
   completeMfaRecovery: (mfaToken: string, recoveryCode: string, trustDevice?: boolean) => Promise<void>;
   requestMfaOtp: (mfaToken: string, channel: MfaOtpChannel) => Promise<void>;
   completeMfaOtp: (mfaToken: string, code: string, trustDevice?: boolean) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
+  register: (contact: { email?: string; phone?: string }, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -128,8 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, displayName: string) => {
-      const res = await authApi.register({ email, password, displayName });
+    async (contact: { email?: string; phone?: string }, password: string, displayName: string) => {
+      const res = await authApi.register({ ...contact, password, displayName });
       persistSession(res.access_token, res.refresh_token, res.user);
     },
     [persistSession],

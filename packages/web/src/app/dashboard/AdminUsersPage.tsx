@@ -4,6 +4,7 @@ import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { useAccess } from '../auth/AccessContext';
 import { AdminUser, ROLE_HIERARCHY, rolesApi, usersApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
+import { isPhoneAccountEmail } from '../../lib/features';
 
 type Status = 'ACTIVE' | 'LOCKED' | 'SUSPENDED';
 /** The role most often given: someone who joins the prayer watch. */
@@ -116,7 +117,7 @@ export function AdminUsersPage() {
                 <div>
                   <strong>{u.display_name}</strong>
                   {isMe && <span className="hint"> · {t('adminUsers.you')}</span>}
-                  <div className="hint">{u.email}</div>
+                  <div className="hint">{isPhoneAccountEmail(u.email) ? `📱 ${u.phone ?? ''}` : u.email}</div>
                 </div>
                 <span className={`chip admin-status admin-status-${u.status.toLowerCase()}`}>
                   {t(`userStatuses.${u.status}`, u.status)}

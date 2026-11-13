@@ -1,9 +1,11 @@
 import { IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from '../password-policy';
 
+/** E-mail OR phone number (international, e.g. +22890000000): at least one of the two. */
 export class RegisterDto {
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
 
   @IsString()
   @Matches(PASSWORD_POLICY_REGEX, { message: PASSWORD_POLICY_MESSAGE })

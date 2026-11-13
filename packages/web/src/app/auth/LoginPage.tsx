@@ -1,3 +1,4 @@
+import { normalizeIdentifier } from './PhoneInput';
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +44,7 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const result = await login(email, password);
+      const result = await login(normalizeIdentifier(email), password);
       if (result.mfaRequired && result.mfaToken) {
         setMfaToken(result.mfaToken);
       } else {
@@ -207,12 +208,16 @@ export function LoginPage() {
       <h2>{t('auth.login.title')}</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <input
-          type="email"
-          placeholder={t('auth.login.emailPlaceholder')}
+          type="text"
+          inputMode="email"
+          autoComplete="username"
+          placeholder={t('auth.login.identifierPlaceholder')}
+          aria-label={t('auth.login.identifierPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <p className="hint">{t('auth.login.identifierHint')}</p>
         <input
           type="password"
           placeholder={t('auth.login.passwordPlaceholder')}

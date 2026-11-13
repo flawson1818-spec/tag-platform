@@ -4,8 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from './AuthContext';
 import { Community, communitiesApi, authApi, aiApi } from '../../lib/api';
 import { AiChatWidget } from '../ai/AiChatWidget';
+import { EMAIL_VERIFICATION_ON } from '../../lib/features';
 
-const STEP_KEYS = ['verification', 'discovery', 'community'] as const;
+const ALL_STEPS = ['verification', 'discovery', 'community'] as const;
+/** The validation code is paused for now: onboarding starts at discovery. */
+const STEP_KEYS = EMAIL_VERIFICATION_ON ? ALL_STEPS : ALL_STEPS.slice(1);
 
 function VerificationStep({ onNext }: { onNext: () => void }) {
   const { t } = useTranslation();
@@ -161,9 +164,9 @@ export function OnboardingPage() {
           name: t(`onboarding.steps.${STEP_KEYS[step]}`),
         })}
       </p>
-      {step === 0 && <VerificationStep onNext={() => setStep(1)} />}
-      {step === 1 && <DiscoveryStep onNext={() => setStep(2)} />}
-      {step === 2 && <CommunityStep onDone={() => navigate('/dashboard')} />}
+      {STEP_KEYS[step] === 'verification' && <VerificationStep onNext={() => setStep(step + 1)} />}
+      {STEP_KEYS[step] === 'discovery' && <DiscoveryStep onNext={() => setStep(step + 1)} />}
+      {STEP_KEYS[step] === 'community' && <CommunityStep onDone={() => navigate('/dashboard')} />}
     </div>
   );
 }

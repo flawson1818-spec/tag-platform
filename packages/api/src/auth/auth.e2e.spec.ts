@@ -146,14 +146,14 @@ describe('Auth (e2e)', () => {
       expect(res.body.message).toBe('Invalid credentials');
     });
 
-    it('rejects a malformed email at the DTO layer without touching the database', async () => {
+    it('refuses an identifier that is neither an e-mail nor a phone number, without touching the database', async () => {
       app = await buildApp({});
 
       const res = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({ email: 'not-an-email', password: 'whatever123!' });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
     });
 
     it('returns an MFA challenge instead of tokens for an MFA-enabled account, with correct credentials', async () => {

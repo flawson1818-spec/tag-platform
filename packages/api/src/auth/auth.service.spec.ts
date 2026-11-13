@@ -25,6 +25,7 @@ function buildUser(overrides: Partial<User> = {}): User {
 function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
   const usersService = {
     findByEmail: vi.fn(),
+    findByPhone: vi.fn().mockResolvedValue(null),
     findById: vi.fn(),
     create: vi.fn(),
     updatePasswordHash: vi.fn(),
@@ -88,6 +89,7 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     mfaOtpService,
     passwordHistoryService,
     supabase,
+    smsService: { isConfigured: vi.fn().mockReturnValue(true), send: vi.fn().mockResolvedValue(undefined) },
     ...overrides,
   };
   const service = new AuthService(
@@ -102,11 +104,54 @@ function buildDeps(overrides: Partial<Record<string, unknown>> = {}) {
     deps.mfaOtpService as never,
     deps.passwordHistoryService as never,
     deps.supabase as never,
+    deps.smsService as never,
   );
   return { service, ...deps };
 }
 
 describe('AuthService', () => {
+  describe('register and log in with a phone number', () => {
+    it('creates a phone-only account with an address that never receives mail', async () => {
+      const { service, usersService, passwordService, emailService } = buildDeps();
+      passwordService.hash.mockResolvedValue('argon2-hash');
+      usersService.create.mockImplementation(async (input: { email: string; phone?: string }) =>
+        buildUser({ email: input.email, phone: input.phone ?? null } as never),
+      );
+      await service.register({ phone: '+228 90 00 00 00', password: 'plain-password', displayName: 'Kossi' } as never);
+      expect(usersService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: '+22890000000', email: '22890000000@telephone.tour-avant-garde.invalid' }),
+      );
+      expect(emailService.send).not.toHaveBeenCalled();
+    });
+
+    it('needs an e-mail or a phone, refuses a number without country code or already used', async () => {
+      const { service, usersService } = buildDeps();
+      await expect(service.register({ password: 'x', displayName: 'B' } as never)).rejects.toThrow(/e-mail ou un numéro/);
+      await expect(service.register({ phone: '90000000', password: 'x', displayName: 'B' } as never)).rejects.toThrow(/indicatif/);
+      usersService.findByPhone.mockResolvedValue(buildUser());
+      await expect(service.register({ phone: '+22890000000', password: 'x', displayName: 'B' } as never)).rejects.toThrow(/déjà un compte/);
+    });
+
+    it('logs in with the phone number, written any way', async () => {
+      const { service, usersService, passwordService } = buildDeps();
+      usersService.findByPhone.mockResolvedValue(buildUser());
+      passwordService.verify.mockResolvedValue(true);
+      const res = await service.login({ email: '00228 90-00-00-00', password: 'p' } as never);
+      expect(usersService.findByPhone).toHaveBeenCalledWith('+22890000000');
+      expect(res).toHaveProperty('access_token');
+    });
+
+    it('sends the reset code of a phone account by SMS, never by e-mail', async () => {
+      const { service, usersService, emailService, smsService } = buildDeps();
+      usersService.findByPhone.mockResolvedValue(
+        buildUser({ phone: '+22890000000', email: '22890000000@telephone.tour-avant-garde.invalid' } as never),
+      );
+      await service.forgotPassword({ email: '+22890000000' });
+      expect(smsService.send).toHaveBeenCalledWith('+22890000000', expect.stringContaining('code de réinitialisation'));
+      expect(emailService.send).not.toHaveBeenCalled();
+    });
+  });
+
   describe('register', () => {
     it('rejects a duplicate email', async () => {
       const { service, usersService } = buildDeps();

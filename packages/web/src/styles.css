@@ -3415,3 +3415,13 @@ nav .nav-dropdown-panel .share-app-panel button:hover { background: color-mix(in
 .share-app-panel.is-floating { position: fixed; width: 230px; min-width: 0; z-index: 200; }
 nav .share-app-panel a, nav .share-app-panel button { color: var(--color-text); background: transparent; box-shadow: none; }
 nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+
+/* ---- Sign up by e-mail or phone ---- */
+.auth-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.auth-switch button {
+  border-radius: var(--radius-md); background: transparent; color: var(--color-text); border: 1px solid var(--color-border);
+  font-weight: 600; padding: 0.55rem;
+}
+.auth-switch button.is-on { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.phone-input { display: grid; grid-template-columns: minmax(0, 11rem) 1fr; gap: 0.4rem; }
+.phone-input select, .phone-input input { min-width: 0; }

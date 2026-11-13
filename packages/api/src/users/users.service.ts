@@ -47,6 +47,12 @@ export class UsersService {
     return data as unknown as User | null;
   }
 
+  async findByPhone(phone: string): Promise<User | null> {
+    const { data, error } = await this.db.select(USER_COLUMNS).eq('phone', phone).is('deleted_at', null).limit(1).maybeSingle();
+    if (error) throw new InternalServerErrorException(error.message);
+    return data as unknown as User | null;
+  }
+
   async create(input: CreateUserData): Promise<User> {
     const { data, error } = await this.db
       .insert({

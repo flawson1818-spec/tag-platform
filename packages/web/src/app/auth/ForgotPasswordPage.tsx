@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../../lib/api';
+import { normalizeIdentifier } from './PhoneInput';
 
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export function ForgotPasswordPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await authApi.forgotPassword(email);
+      await authApi.forgotPassword(normalizeIdentifier(email));
       setSent(true);
     } catch (err) {
       setError((err as Error).message);
@@ -32,12 +33,15 @@ export function ForgotPasswordPage() {
       ) : (
         <form onSubmit={handleSubmit} className="auth-form">
           <input
-            type="email"
-            placeholder={t('forgotPassword.emailPlaceholder')}
+            type="text"
+            inputMode="email"
+            aria-label={t('forgotPassword.identifierPlaceholder')}
+            placeholder={t('forgotPassword.identifierPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+          <p className="hint">{t('forgotPassword.phoneHint')}</p>
           <button type="submit" disabled={submitting}>
             {submitting ? t('forgotPassword.sending') : t('forgotPassword.send')}
           </button>

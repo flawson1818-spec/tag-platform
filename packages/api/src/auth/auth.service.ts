@@ -1,3 +1,5 @@
+import { isPhoneAccountEmail, looksLikeEmail, normalizePhone, phoneAccountEmail } from '../common/phone-account';
+import { SmsService } from '../communication/sms.service';
 import {
   BadRequestException,
   ConflictException,
@@ -48,28 +50,47 @@ export class AuthService {
     private readonly mfaOtpService: MfaOtpService,
     private readonly passwordHistoryService: PasswordHistoryService,
     private readonly supabase: SupabaseService,
+    private readonly smsService: SmsService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) throw new ConflictException('Email already registered');
+    // By e-mail or by phone number (cahier des charges: inscription par e-mail ou téléphone).
+    const email = dto.email?.trim().toLowerCase() || null;
+    const phone = dto.phone?.trim() ? normalizePhone(dto.phone) : null;
+    if (dto.phone?.trim() && !phone) {
+      throw new BadRequestException('Numéro de téléphone invalide : écris-le avec l’indicatif du pays, par exemple +228 90 00 00 00.');
+    }
+    if (!email && !phone) throw new BadRequestException('Donne une adresse e-mail ou un numéro de téléphone.');
+    if (email && (await this.usersService.findByEmail(email))) throw new ConflictException('Email already registered');
+    if (phone && (await this.usersService.findByPhone(phone))) {
+      throw new ConflictException('Ce numéro de téléphone a déjà un compte. Connecte-toi avec lui.');
+    }
     if (isBlacklistedPassword(dto.password)) {
       throw new BadRequestException('This password is too common — choose a less predictable one');
     }
 
     const passwordHash = await this.passwordService.hash(dto.password);
     const user = await this.usersService.create({
-      email: dto.email,
+      email: email ?? phoneAccountEmail(phone as string),
       passwordHash,
       displayName: dto.displayName,
-      phone: dto.phone,
+      phone: phone ?? undefined,
       locale: dto.locale,
       timezone: dto.timezone,
     });
     await this.rolesService.assignSystemDefaultRole(user.id);
-    await this.sendVerificationEmail(user);
+    // The validation code is paused for now (owner's decision, 13/11/2026); EMAIL_VERIFICATION=on restores it.
+    if (process.env.EMAIL_VERIFICATION === 'on' && !isPhoneAccountEmail(user.email)) await this.sendVerificationEmail(user);
 
     return this.issueTokens(user);
+  }
+
+  /** An e-mail (any case) or a phone number, as typed on the login or reset screen. */
+  private async findByIdentifier(identifier: string): Promise<User | null> {
+    const value = identifier.trim();
+    if (looksLikeEmail(value)) return this.usersService.findByEmail(value.toLowerCase()).then((u) => u ?? this.usersService.findByEmail(value));
+    const phone = normalizePhone(value);
+    return phone ? this.usersService.findByPhone(phone) : null;
   }
 
   /**
@@ -127,7 +148,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto | MfaRequiredResponseDto> {
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = await this.findByIdentifier(dto.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const validPassword = await this.passwordService.verify(user.password_hash, dto.password);
@@ -331,8 +352,9 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = await this.findByIdentifier(dto.email);
     if (user && user.status === 'ACTIVE') {
+      const byPhone = !looksLikeEmail(dto.email) || isPhoneAccountEmail(user.email);
       const raw = this.tokenService.createRefreshTokenPair().token;
       const hash = this.tokenService.hashToken(raw);
       const { error } = await this.supabase.client.from('password_reset_tokens').insert({
@@ -341,13 +363,24 @@ export class AuthService {
         expires_at: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS).toISOString(),
       });
       if (error) throw new InternalServerErrorException(error.message);
-      await this.emailService.send(
-        user.email,
-        "Réinitialisation de votre mot de passe Tour d'avant-garde",
-        `Voici votre code de réinitialisation : ${raw} (valable 1 heure).`,
-        user.id,
-        { secret: raw },
-      );
+      if (byPhone && user.phone) {
+        // By SMS when the SMS provider is set up; otherwise nothing leaves (same answer either way).
+        if (this.smsService.isConfigured()) {
+          await this.smsService
+            .send(user.phone, `Tour d'avant-garde : ton code de réinitialisation est ${raw} (valable 1 heure).`)
+            .catch((err) => this.logger.error(`Reset SMS failed for user ${user.id}`, err as Error));
+        } else {
+          this.logger.warn(`Password reset by phone requested for user ${user.id}, but no SMS provider is configured`);
+        }
+      } else {
+        await this.emailService.send(
+          user.email,
+          "Réinitialisation de votre mot de passe Tour d'avant-garde",
+          `Voici votre code de réinitialisation : ${raw} (valable 1 heure).`,
+          user.id,
+          { secret: raw },
+        );
+      }
     }
     // Always resolve the same way regardless of whether the email exists.
   }

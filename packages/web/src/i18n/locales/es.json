@@ -49,7 +49,9 @@
       "submitting": "Iniciando sesión…",
       "noAccount": "¿Todavía no tienes una cuenta?",
       "createAccount": "Crear una cuenta",
-      "forgotPassword": "¿Olvidaste tu contraseña?"
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "identifierPlaceholder": "Correo o número de teléfono",
+      "identifierHint": "Con un número de Togo, escribe tus 8 cifras; si no, empieza por el prefijo (+229…)."
     },
     "mfa": {
       "title": "Verificación en dos pasos",
@@ -84,7 +86,33 @@
       "submit": "Crear mi cuenta",
       "submitting": "Creando…",
       "alreadyRegistered": "¿Ya tienes una cuenta?",
-      "login": "Iniciar sesión"
+      "login": "Iniciar sesión",
+      "withLabel": "Registrarse con",
+      "withEmail": "Correo",
+      "withPhone": "Teléfono"
+    },
+    "phone": {
+      "country": "País",
+      "number": "Número de teléfono",
+      "placeholder": "90 00 00 00",
+      "countries": {
+        "TG": "Togo",
+        "BJ": "Benín",
+        "CI": "Costa de Marfil",
+        "GH": "Ghana",
+        "BF": "Burkina Faso",
+        "NE": "Níger",
+        "ML": "Malí",
+        "SN": "Senegal",
+        "NG": "Nigeria",
+        "CM": "Camerún",
+        "CD": "RD Congo",
+        "GA": "Gabón",
+        "FR": "Francia",
+        "BE": "Bélgica",
+        "CH": "Suiza",
+        "US": "EE. UU. / Canadá"
+      }
     }
   },
   "home": {
@@ -950,7 +978,9 @@
     "sending": "Enviando…",
     "send": "Enviar el código",
     "haveCode": "Ya tengo un código",
-    "backToLogin": "Volver a iniciar sesión"
+    "backToLogin": "Volver a iniciar sesión",
+    "identifierPlaceholder": "Correo o número de teléfono",
+    "phoneHint": "Cuenta creada con un teléfono: el código llega por SMS. Si no lo recibes, pide ayuda a un administrador."
   },
   "resetPassword": {
     "doneTitle": "Contraseña restablecida",

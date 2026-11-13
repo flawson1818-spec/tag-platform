@@ -752,7 +752,7 @@ export function isMfaRequired(res: AuthResponse | MfaRequiredResponse): res is M
 export type MfaOtpChannel = 'EMAIL' | 'WHATSAPP' | 'SMS';
 
 export const authApi = {
-  register: (data: { email: string; password: string; displayName: string }) =>
+  register: (data: { email?: string; phone?: string; password: string; displayName: string }) =>
     request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data: { email: string; password: string; deviceToken?: string }) =>
     request<AuthResponse | MfaRequiredResponse>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),

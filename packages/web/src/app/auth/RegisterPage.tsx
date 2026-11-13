@@ -1,3 +1,4 @@
+import { PhoneInput, fullPhone } from './PhoneInput';
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +10,9 @@ export function RegisterPage() {
   const { t } = useTranslation();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [mode, setMode] = useState<'email' | 'phone'>('email');
+  const [country, setCountry] = useState('+228');
+  const [local, setLocal] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -18,7 +22,7 @@ export function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(email, password, displayName);
+      await register(mode === 'email' ? { email: email.trim() } : { phone: fullPhone(country, local) }, password, displayName);
       navigate('/onboarding');
     } catch (err) {
       setError((err as Error).message);
@@ -38,13 +42,26 @@ export function RegisterPage() {
           onChange={(e) => setDisplayName(e.target.value)}
           required
         />
-        <input
-          type="email"
-          placeholder={t('auth.register.emailPlaceholder')}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <div className="auth-switch" role="radiogroup" aria-label={t('auth.register.withLabel')}>
+          <button type="button" role="radio" aria-checked={mode === 'email'} className={mode === 'email' ? 'is-on' : ''} onClick={() => setMode('email')}>
+            <span aria-hidden="true">✉️</span> {t('auth.register.withEmail')}
+          </button>
+          <button type="button" role="radio" aria-checked={mode === 'phone'} className={mode === 'phone' ? 'is-on' : ''} onClick={() => setMode('phone')}>
+            <span aria-hidden="true">📱</span> {t('auth.register.withPhone')}
+          </button>
+        </div>
+        {mode === 'email' ? (
+          <input
+            type="email"
+            placeholder={t('auth.register.emailPlaceholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+        ) : (
+          <PhoneInput country={country} local={local} onChange={(c, l) => { setCountry(c); setLocal(l); }} />
+        )}
         <input
           type="password"
           placeholder={t('auth.register.passwordPlaceholder')}

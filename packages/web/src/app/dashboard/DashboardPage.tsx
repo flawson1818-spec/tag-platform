@@ -1,3 +1,4 @@
+import { EMAIL_VERIFICATION_ON, isPhoneAccountEmail } from '../../lib/features';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
@@ -29,14 +30,14 @@ export function DashboardPage() {
   return (
     <div className="dashboard-page">
       <h2>{t('dashboard.welcome', { name: user.display_name })}</h2>
-      {!user.email_verified_at && (
+      {EMAIL_VERIFICATION_ON && !user.email_verified_at && !isPhoneAccountEmail(user.email) && (
         <p className="hint">
           {t('dashboard.emailUnverified')} <Link to="/onboarding">{t('dashboard.verifyIt')}</Link>.
         </p>
       )}
       <dl className="user-summary">
         <dt>{t('dashboard.emailLabel')}</dt>
-        <dd>{user.email}</dd>
+        <dd>{isPhoneAccountEmail(user.email) ? (user.phone ?? '—') : user.email}</dd>
         <dt>{t('dashboard.statusLabel')}</dt>
         <dd>{t(`userStatuses.${user.status}`, user.status)}</dd>
         <dt>{t('dashboard.languageLabel')}</dt>
