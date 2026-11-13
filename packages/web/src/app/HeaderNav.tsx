@@ -167,6 +167,7 @@ export function HeaderNav() {
                   <span aria-hidden="true">🛡️</span> <span className="nav-admin-label">{t('nav.admin')}</span>
                 </NavLink>
               )}
+              <ShareAppButton variant="icon" />
               <NavLink to="/messages" className={({ isActive }) => `nav-icon${isActive ? ' active' : ''}`} title={t('nav.messages')}>
                 <span aria-hidden="true">✉️</span>
                 <span className="sr-only">{t('nav.messages')}</span>
@@ -219,6 +220,7 @@ export function HeaderNav() {
             </>
           ) : (
             <>
+              <ShareAppButton variant="icon" />
               <LanguageSwitcher />
               <ThemeToggle />
               <InstallPwaButton />

@@ -3405,3 +3405,13 @@ nav .nav-dropdown-panel .share-app-panel button:hover { background: color-mix(in
 .pilot-bar-track { height: 10px; background: color-mix(in srgb, var(--color-border) 50%, transparent); border-radius: 4px; overflow: hidden; }
 .pilot-bar { display: block; height: 100%; background: var(--chart-1); border-radius: 0 4px 4px 0; }
 .pilot-bar-value { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Share button in the header: an icon, discreet but always there */
+.share-app-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0;
+  border-radius: 50%; background: transparent; border: none; color: inherit; opacity: 0.85; cursor: pointer;
+}
+.share-app-icon:hover, .share-app-icon[aria-expanded='true'] { opacity: 1; background: rgba(255, 255, 255, 0.12); }
+.share-app-panel.is-floating { position: fixed; width: 230px; min-width: 0; z-index: 200; }
+nav .share-app-panel a, nav .share-app-panel button { color: var(--color-text); background: transparent; box-shadow: none; }
+nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: color-mix(in srgb, var(--color-primary) 8%, transparent); }

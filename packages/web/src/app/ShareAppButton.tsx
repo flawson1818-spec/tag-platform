@@ -11,10 +11,12 @@ function appUrl(): string {
  * e-mail… — the member picks the contacts); elsewhere, a small panel with WhatsApp, SMS,
  * e-mail, Facebook and "copy the link". Nothing is read from the contacts by the site.
  */
-export function ShareAppButton({ variant = 'menu' }: { variant?: 'menu' | 'card' }) {
+export function ShareAppButton({ variant = 'menu' }: { variant?: 'menu' | 'card' | 'icon' }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  /** Icon variant: the panel is placed on screen under the icon, never cut by the edge. */
+  const [place, setPlace] = useState<{ top: number; left: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const url = appUrl();
   const message = t('share.message', { url });
@@ -37,6 +39,11 @@ export function ShareAppButton({ variant = 'menu' }: { variant?: 'menu' | 'card'
       } catch (err) {
         if ((err as Error).name === 'AbortError') return; // the member closed the sheet
       }
+    }
+    if (variant === 'icon' && ref.current) {
+      const r = ref.current.getBoundingClientRect();
+      const width = 230;
+      setPlace({ top: r.bottom + 6, left: Math.max(12, Math.min(r.right - width, window.innerWidth - width - 12)) });
     }
     setOpen((o) => !o);
   };
@@ -62,12 +69,34 @@ export function ShareAppButton({ variant = 'menu' }: { variant?: 'menu' | 'card'
 
   return (
     <div className={`share-app share-app-${variant}`} ref={ref}>
-      <button type="button" className="share-app-button" onClick={share} aria-expanded={open}>
-        <span aria-hidden="true">📤</span> {t('share.button')}
-      </button>
+      {variant === 'icon' ? (
+        <button
+          type="button"
+          className="share-app-icon"
+          onClick={share}
+          aria-expanded={open}
+          aria-label={t('share.button')}
+          title={t('share.button')}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.6" y1="13.5" x2="15.4" y2="17.5" />
+            <line x1="15.4" y1="6.5" x2="8.6" y2="10.5" />
+          </svg>
+        </button>
+      ) : (
+        <button type="button" className="share-app-button" onClick={share} aria-expanded={open}>
+          <span aria-hidden="true">📤</span> {t('share.button')}
+        </button>
+      )}
       {variant === 'card' && <p className="hint">{t('share.hint')}</p>}
       {open && (
-        <div className="share-app-panel" role="dialog" aria-label={t('share.button')}>
+        <div
+          className={`share-app-panel${variant === 'icon' ? ' is-floating' : ''}`}
+          style={variant === 'icon' && place ? { top: place.top, left: place.left } : undefined}
+          role="dialog" aria-label={t('share.button')}>
           {links.map((l) => (
             <a key={l.key} href={l.href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
               <span aria-hidden="true">{l.icon}</span> {t(`share.via.${l.key}`)}
