@@ -50,5 +50,6 @@ import { PrayerTestimoniesService } from './prayer-testimonies.service';
     PrayerCategoryFollowsService,
     PrayerTopicNotificationSchedulerService,
   ],
+  exports: [PrayerTestimoniesService],
 })
 export class PrayerModule {}

@@ -1521,3 +1521,46 @@ export const mobilizationsApi = {
     request<Mobilization>(`/mobilizations/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ status, note }) }),
   withdraw: (token: string, id: string) => request<void>(`/mobilizations/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
 };
+
+// ---- Actes de foi (§5.8) ----
+
+export const FAITH_ACT_KINDS = ['COMMITMENT', 'FAST', 'TIME_GIFT', 'PRAYER_VIGIL', 'EVANGELISM'] as const;
+export type FaithActKind = (typeof FAITH_ACT_KINDS)[number];
+
+export interface FaithAct {
+  id: string;
+  kind: FaithActKind;
+  title: string;
+  description: string | null;
+  startDate: string;
+  endDate: string | null;
+  isPublic: boolean;
+  status: 'ACTIVE' | 'FULFILLED' | 'ABANDONED';
+  fulfilledAt: string | null;
+  testimonyId: string | null;
+  createdAt: string;
+  supportCount: number;
+  supportedByMe: boolean;
+  mine: boolean;
+}
+
+export const faithActsApi = {
+  mine: (token: string) => request<FaithAct[]>('/faith-acts/mine', { headers: authHeaders(token) }),
+  ofMember: (token: string, memberId: string) =>
+    request<FaithAct[]>(`/social/members/${memberId}/faith-acts`, { headers: authHeaders(token) }),
+  create: (
+    token: string,
+    data: { kind: FaithActKind; title: string; description?: string; startDate?: string; endDate?: string; isPublic?: boolean },
+  ) => request<FaithAct>('/faith-acts', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+  update: (
+    token: string,
+    id: string,
+    data: { status?: FaithAct['status']; testimony?: string; isPublic?: boolean; endDate?: string | null },
+  ) => request<FaithAct>(`/faith-acts/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(data) }),
+  remove: (token: string, id: string) => request<void>(`/faith-acts/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+  support: (token: string, id: string, on: boolean) =>
+    request<{ supportCount: number; supportedByMe: boolean }>(`/faith-acts/${id}/support`, {
+      method: on ? 'POST' : 'DELETE',
+      headers: authHeaders(token),
+    }),
+};

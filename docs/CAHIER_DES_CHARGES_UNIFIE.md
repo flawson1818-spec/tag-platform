@@ -159,9 +159,13 @@ conformément à la décision du 10/11/2026, **seule l'administration** décide 
 dans la salle, et seulement si le demandeur l'a autorisé (confidentialité « Public »), sans son
 nom.
 
-### 5.8 Actes de foi (pilote) — 🔨
+### 5.8 Actes de foi (pilote) — ✅
 Un membre enregistre un acte de foi (engagement, jeûne, don de temps) ; il apparaît dans son
 profil et nourrit les témoignages.
+- Types : engagement, jeûne, don de temps, veille de prière, évangélisation ; durée (1, 3, 7, 21,
+  40 jours ou sans fin) ; public ou privé. Les autres membres appuient « Je te soutiens ».
+- Accompli : le membre peut raconter ce que Dieu a fait ; ce récit devient un témoignage, publié
+  après relecture comme les autres. Écrans : menu de l'avatar → Mes actes de foi ; profil.
 
 ### 5.9 WhatsApp (pilote V17) — ⛔ bloqué par un élément externe
 Menu conversationnel 1-6 (rejoindre la prière, déposer une demande, programme du jour,
@@ -211,7 +215,6 @@ mondial ; campagnes publicitaires automatisées.
 
 | Point | État | Ce qu'il faut |
 |---|---|---|
-| §5.8 Actes de foi | 🔨 | Développement (table, profil, lien avec les témoignages) |
 | §5.10 Pilotage | 🔨 | Développement (taux d'assignation, de prise en charge, d'exaucement, sources, séries 7-90 jours) |
 | §5.9 WhatsApp | ⛔ | Un compte Meta Business vérifié, puis WHATSAPP_ACCESS_TOKEN et WHATSAPP_PHONE_NUMBER_ID |
 
@@ -235,6 +238,7 @@ Pour la rendre active, il faut lancer sa migration dans l'éditeur SQL de Supaba
 | 20261116_social_post_kinds | Expériences et écrits dans le fil |
 | 20261117_prayer_request_mobilizations | Mobiliser un groupe sur une demande |
 | 20261118_prayer_request_prayers | « Je prie pour ce sujet » |
+| 20261119_faith_acts | Actes de foi |
 
 Réglages du serveur (Render → Environment) dont dépendent certaines fonctions :
 

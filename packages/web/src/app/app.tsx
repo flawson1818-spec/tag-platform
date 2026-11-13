@@ -46,6 +46,7 @@ import { AdminPrayerRequestsPage } from './admin/AdminPrayerRequestsPage';
 import { AdminWatchPage } from './admin/AdminWatchPage';
 import { AdminApplicationsPage } from './admin/AdminApplicationsPage';
 import { ApplicationsPage } from './applications/ApplicationsPage';
+import { FaithActsPage } from './faith/FaithActsPage';
 
 /** Permissions that open an administration page, from the same list the menus use. */
 function perms(path: string): string[] {
@@ -253,6 +254,14 @@ export function App() {
                   <RequireAccess permissions={perms('/admin/candidatures')}>
                     <AdminApplicationsPage />
                   </RequireAccess>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/actes-de-foi"
+              element={
+                <ProtectedRoute>
+                  <FaithActsPage />
                 </ProtectedRoute>
               }
             />

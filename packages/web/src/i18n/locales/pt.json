@@ -37,7 +37,8 @@
     "community": "Comunidade",
     "askPrayer": "Pedido de oração",
     "communityShort": "Comunidade",
-    "applications": "Candidaturas"
+    "applications": "Candidaturas",
+    "faithActs": "Os meus atos de fé"
   },
   "auth": {
     "login": {
@@ -1456,5 +1457,60 @@
     "count_other": "{{count}} pessoas oram por este tema",
     "mine_one": "{{count}} pessoa orou pelo seu pedido na sala",
     "mine_other": "{{count}} pessoas oraram pelo seu pedido na sala"
+  },
+  "faith": {
+    "title": "Os meus atos de fé",
+    "intro": "Um passo de fé: um compromisso, um jejum, tempo dado, uma vigília, uma saída de evangelização. Os seus irmãos apoiam-no e, quando cumprido, conta o que Deus fez.",
+    "newTitle": "Um novo ato de fé",
+    "kindLabel": "Tipo",
+    "kinds": {
+      "COMMITMENT": "Compromisso",
+      "FAST": "Jejum",
+      "TIME_GIFT": "Dom de tempo",
+      "PRAYER_VIGIL": "Vigília de oração",
+      "EVANGELISM": "Evangelização"
+    },
+    "placeholders": {
+      "COMMITMENT": "Ex.: Ler a Bíblia toda este ano",
+      "FAST": "Ex.: 3 dias de jejum pela minha família",
+      "TIME_GIFT": "Ex.: Servir todos os sábados no orfanato",
+      "PRAYER_VIGIL": "Ex.: Vigiar todas as sextas da meia-noite às 3h",
+      "EVANGELISM": "Ex.: Partilhar o Evangelho com 10 pessoas este mês"
+    },
+    "titleLabel": "O seu ato de fé",
+    "descriptionPlaceholder": "Porquê, por quem (opcional)",
+    "duration": "Duração:",
+    "days_one": "{{count}} dia",
+    "days_other": "{{count}} dias",
+    "noEnd": "Sem fim definido",
+    "publicLabel": "Visível no meu perfil, para que os meus irmãos me apoiem",
+    "create": "Começar",
+    "activeTitle_one": "Em curso ({{count}})",
+    "activeTitle_other": "Em curso ({{count}})",
+    "noneActive": "Nenhum ato de fé em curso. Dê o passo!",
+    "closedTitle": "Terminados",
+    "daysLeft_one": "falta {{count}} dia",
+    "daysLeft_other": "faltam {{count}} dias",
+    "private": "privado",
+    "status": {
+      "ACTIVE": "Em curso",
+      "FULFILLED": "Cumprido",
+      "ABANDONED": "Parado"
+    },
+    "support": "Apoio-te",
+    "supportedBy_one": "{{count}} pessoa apoia-o",
+    "supportedBy_other": "{{count}} pessoas apoiam-no",
+    "fulfil": "Cumprido",
+    "abandon": "Parar",
+    "abandonConfirm": "Parar este ato de fé? Não é um fracasso: pode começar outro.",
+    "remove": "Retirar",
+    "testimonyLabel": "Conte o que Deus fez (opcional)",
+    "testimonyPlaceholder": "O que viveu, o que mudou…",
+    "testimonyHint": "Se escrever algo, torna-se um testemunho publicado após revisão da equipa.",
+    "confirmFulfil": "Glória a Deus, está cumprido!",
+    "becameTestimony": "Tornou-se um testemunho",
+    "profileTitle": "Atos de fé",
+    "manage": "Gerir",
+    "startCta": "Começar um ato de fé"
   }
 }

@@ -2,7 +2,8 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
-import { FeedPost, MemberProfile, socialApi } from '../../lib/api';
+import { FaithAct, FeedPost, MemberProfile, faithActsApi, socialApi } from '../../lib/api';
+import { FaithActCard } from '../faith/FaithActCard';
 import { Avatar, SocialPostCard } from './SocialPostCard';
 import { MessageMemberButton } from './MessagesPage';
 
@@ -18,6 +19,7 @@ export function MemberProfilePage() {
   const [form, setForm] = useState({ bio: '', churchName: '', city: '' });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [acts, setActs] = useState<FaithAct[]>([]);
 
   useEffect(() => {
     const token = getAccessToken();
@@ -34,6 +36,10 @@ export function MemberProfilePage() {
       .memberPosts(token, id)
       .then((res) => setPosts(res.data))
       .catch(() => setPosts([]));
+    faithActsApi
+      .ofMember(token, id)
+      .then(setActs)
+      .catch(() => setActs([]));
   }, [id]);
 
   const save = async (e: FormEvent) => {
@@ -118,6 +124,29 @@ export function MemberProfilePage() {
           </div>
           {error && <p className="error">{error}</p>}
         </form>
+      )}
+
+      {acts.length > 0 && (
+        <>
+          <h3 className="social-section-title">
+            <span aria-hidden="true">🔥</span> {t('faith.profileTitle')}
+            {profile.isMe && (
+              <Link to="/actes-de-foi" className="social-section-link">
+                {t('faith.manage')}
+              </Link>
+            )}
+          </h3>
+          <ul className="faith-list">
+            {acts.slice(0, 6).map((a) => (
+              <FaithActCard key={a.id} act={a} onChange={(n) => setActs((prev) => prev.map((x) => (x.id === n.id ? n : x)))} />
+            ))}
+          </ul>
+        </>
+      )}
+      {acts.length === 0 && profile.isMe && (
+        <p className="hint">
+          <Link to="/actes-de-foi"><span aria-hidden="true">🔥</span> {t('faith.startCta')}</Link>
+        </p>
       )}
 
       <h3 className="social-section-title">{t('social.postsTitle', { count: profile.postCount })}</h3>

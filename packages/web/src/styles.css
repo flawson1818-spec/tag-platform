@@ -3328,3 +3328,35 @@ nav .nav-dropdown-panel .share-app-panel button:hover { background: color-mix(in
 .room-pray-for.is-on { background: color-mix(in srgb, #16a34a 18%, transparent); color: #15803d; cursor: default; }
 .room-carried .hint { margin: 0; }
 .prayed-count { margin: 0.3rem 0 0; font-weight: 600; color: #15803d; }
+
+/* ---- Actes de foi (§5.8) ---- */
+.faith-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.faith-card {
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  padding: 0.9rem 1rem; box-shadow: var(--shadow-sm); display: grid; gap: 0.5rem;
+}
+.faith-card.st-fulfilled { border-color: color-mix(in srgb, #16a34a 45%, var(--color-border)); }
+.faith-card.st-abandoned { opacity: 0.7; }
+.faith-card-head { display: flex; gap: 0.7rem; align-items: flex-start; }
+.faith-icon {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+.faith-card-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.faith-card-body .hint { margin: 0; font-size: 0.82rem; }
+.faith-kind { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.7; }
+.faith-status { font-size: 0.78rem; font-weight: 700; border-radius: 999px; padding: 0.2rem 0.6rem; white-space: nowrap; }
+.faith-status.st-active { background: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.faith-status.st-fulfilled { background: color-mix(in srgb, #16a34a 16%, transparent); color: #15803d; }
+.faith-status.st-abandoned { background: color-mix(in srgb, #6b7280 16%, transparent); }
+.faith-desc { margin: 0; }
+.faith-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.faith-close { display: grid; gap: 0.4rem; border-top: 1px dashed var(--color-border); padding-top: 0.6rem; }
+.faith-close label { display: grid; gap: 0.3rem; font-weight: 600; }
+.faith-close .hint { margin: 0; }
+.faith-duration { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+.faith-duration button {
+  border-radius: 999px; padding: 0.3rem 0.8rem; background: transparent; color: var(--color-text); border: 1px solid var(--color-border);
+}
+.faith-duration button.is-on { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.social-section-link { margin-left: 0.8rem; font-size: 0.85rem; font-weight: 600; }

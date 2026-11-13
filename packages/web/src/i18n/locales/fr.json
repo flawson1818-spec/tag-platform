@@ -37,7 +37,8 @@
     "community": "Communauté",
     "askPrayer": "Demande de prière",
     "communityShort": "Communauté",
-    "applications": "Candidatures"
+    "applications": "Candidatures",
+    "faithActs": "Mes actes de foi"
   },
   "auth": {
     "login": {
@@ -1456,5 +1457,60 @@
     "count_other": "{{count}} personnes prient pour ce sujet",
     "mine_one": "{{count}} personne a prié pour ta demande dans la salle",
     "mine_other": "{{count}} personnes ont prié pour ta demande dans la salle"
+  },
+  "faith": {
+    "title": "Mes actes de foi",
+    "intro": "Un pas de foi : un engagement, un jeûne, du temps donné, une veille, une sortie d'évangélisation. Tes frères et sœurs te soutiennent, et quand c'est accompli, tu racontes ce que Dieu a fait.",
+    "newTitle": "Un nouvel acte de foi",
+    "kindLabel": "Type",
+    "kinds": {
+      "COMMITMENT": "Engagement",
+      "FAST": "Jeûne",
+      "TIME_GIFT": "Don de temps",
+      "PRAYER_VIGIL": "Veille de prière",
+      "EVANGELISM": "Évangélisation"
+    },
+    "placeholders": {
+      "COMMITMENT": "Ex. : Lire toute la Bible cette année",
+      "FAST": "Ex. : 3 jours de jeûne pour ma famille",
+      "TIME_GIFT": "Ex. : Servir chaque samedi à l'orphelinat",
+      "PRAYER_VIGIL": "Ex. : Veiller chaque vendredi de minuit à 3 h",
+      "EVANGELISM": "Ex. : Partager l'Évangile à 10 personnes ce mois-ci"
+    },
+    "titleLabel": "Ton acte de foi",
+    "descriptionPlaceholder": "Pourquoi, pour qui (facultatif)",
+    "duration": "Durée :",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "noEnd": "Sans fin fixée",
+    "publicLabel": "Visible sur mon profil, pour que mes frères et sœurs me soutiennent",
+    "create": "Commencer",
+    "activeTitle_one": "En cours ({{count}})",
+    "activeTitle_other": "En cours ({{count}})",
+    "noneActive": "Aucun acte de foi en cours. Lance-toi !",
+    "closedTitle": "Terminés",
+    "daysLeft_one": "plus que {{count}} jour",
+    "daysLeft_other": "plus que {{count}} jours",
+    "private": "privé",
+    "status": {
+      "ACTIVE": "En cours",
+      "FULFILLED": "Accompli",
+      "ABANDONED": "Arrêté"
+    },
+    "support": "Je te soutiens",
+    "supportedBy_one": "{{count}} personne te soutient",
+    "supportedBy_other": "{{count}} personnes te soutiennent",
+    "fulfil": "Accompli",
+    "abandon": "Arrêter",
+    "abandonConfirm": "Arrêter cet acte de foi ? Ce n'est pas un échec : tu pourras en commencer un autre.",
+    "remove": "Retirer",
+    "testimonyLabel": "Raconte ce que Dieu a fait (facultatif)",
+    "testimonyPlaceholder": "Ce que tu as vécu, ce qui a changé…",
+    "testimonyHint": "Si tu écris quelque chose, il deviendra un témoignage publié après relecture par l'équipe.",
+    "confirmFulfil": "Gloire à Dieu, c'est accompli !",
+    "becameTestimony": "Devenu un témoignage",
+    "profileTitle": "Actes de foi",
+    "manage": "Gérer",
+    "startCta": "Commencer un acte de foi"
   }
 }

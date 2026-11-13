@@ -37,7 +37,8 @@
     "community": "Community",
     "askPrayer": "Prayer request",
     "communityShort": "Community",
-    "applications": "Applications"
+    "applications": "Applications",
+    "faithActs": "My acts of faith"
   },
   "auth": {
     "login": {
@@ -1456,5 +1457,60 @@
     "count_other": "{{count}} people are praying for this",
     "mine_one": "{{count}} person prayed for your request in the room",
     "mine_other": "{{count}} people prayed for your request in the room"
+  },
+  "faith": {
+    "title": "My acts of faith",
+    "intro": "A step of faith: a commitment, a fast, time given, a vigil, an evangelism outing. Your brothers and sisters support you, and when it is fulfilled, you tell what God did.",
+    "newTitle": "A new act of faith",
+    "kindLabel": "Kind",
+    "kinds": {
+      "COMMITMENT": "Commitment",
+      "FAST": "Fast",
+      "TIME_GIFT": "Gift of time",
+      "PRAYER_VIGIL": "Prayer vigil",
+      "EVANGELISM": "Evangelism"
+    },
+    "placeholders": {
+      "COMMITMENT": "E.g. Read the whole Bible this year",
+      "FAST": "E.g. 3 days of fasting for my family",
+      "TIME_GIFT": "E.g. Serve every Saturday at the orphanage",
+      "PRAYER_VIGIL": "E.g. Watch every Friday from midnight to 3 am",
+      "EVANGELISM": "E.g. Share the Gospel with 10 people this month"
+    },
+    "titleLabel": "Your act of faith",
+    "descriptionPlaceholder": "Why, for whom (optional)",
+    "duration": "Duration:",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "noEnd": "No set end",
+    "publicLabel": "Visible on my profile, so my brothers and sisters support me",
+    "create": "Start",
+    "activeTitle_one": "In progress ({{count}})",
+    "activeTitle_other": "In progress ({{count}})",
+    "noneActive": "No act of faith in progress. Take the step!",
+    "closedTitle": "Finished",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "private": "private",
+    "status": {
+      "ACTIVE": "In progress",
+      "FULFILLED": "Fulfilled",
+      "ABANDONED": "Stopped"
+    },
+    "support": "I support you",
+    "supportedBy_one": "{{count}} person supports you",
+    "supportedBy_other": "{{count}} people support you",
+    "fulfil": "Fulfilled",
+    "abandon": "Stop",
+    "abandonConfirm": "Stop this act of faith? It is not a failure: you can start another one.",
+    "remove": "Remove",
+    "testimonyLabel": "Tell what God did (optional)",
+    "testimonyPlaceholder": "What you lived, what changed…",
+    "testimonyHint": "If you write something, it becomes a testimony published after the team reviews it.",
+    "confirmFulfil": "Glory to God, it is fulfilled!",
+    "becameTestimony": "Became a testimony",
+    "profileTitle": "Acts of faith",
+    "manage": "Manage",
+    "startCta": "Start an act of faith"
   }
 }
