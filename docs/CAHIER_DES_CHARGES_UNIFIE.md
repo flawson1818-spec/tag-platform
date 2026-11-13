@@ -172,9 +172,12 @@ Menu conversationnel 1-6 (rejoindre la prière, déposer une demande, programme 
 prochaine rencontre, témoignage, parler à un responsable), webhook Meta signé, simulateur.
 Nécessite un compte Meta Business (WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID).
 
-### 5.10 Pilotage (pilote V7) — 🔨
+### 5.10 Pilotage (pilote V7) — ✅
 Le tableau de bord ajoute : taux d'assignation, de prise en charge, d'exaucement, de publication
 des témoignages, sources des demandes, série sur 7 à 90 jours.
+- Écran : Administration → Statistiques, en tête : tuiles (reçues, confiées, prises en charge,
+  exaucées, portées dans la salle, délai médian, témoignages publiés), courbe par jour (reçues /
+  exaucées, avec tableau), sources, vie de la prière (« Je prie », groupes mobilisés, actes de foi).
 
 ---
 
@@ -215,7 +218,6 @@ mondial ; campagnes publicitaires automatisées.
 
 | Point | État | Ce qu'il faut |
 |---|---|---|
-| §5.10 Pilotage | 🔨 | Développement (taux d'assignation, de prise en charge, d'exaucement, sources, séries 7-90 jours) |
 | §5.9 WhatsApp | ⛔ | Un compte Meta Business vérifié, puis WHATSAPP_ACCESS_TOKEN et WHATSAPP_PHONE_NUMBER_ID |
 
 ### 9.2 Développé, mais à activer en production

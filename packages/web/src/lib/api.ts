@@ -1564,3 +1564,24 @@ export const faithActsApi = {
       headers: authHeaders(token),
     }),
 };
+
+// ---- Pilotage (§5.10) ----
+
+export interface Pilotage {
+  days: number;
+  totals: { requests: number; testimonies: number; prayers: number; mobilizations: number; faithActs: number };
+  rates: {
+    assigned: number | null;
+    inCare: number | null;
+    answered: number | null;
+    carriedInRoom: number | null;
+    testimoniesPublished: number | null;
+  };
+  medianHoursToAssign: number | null;
+  sources: { key: 'MEMBER' | 'ANONYMOUS' | 'PUBLIC'; count: number }[];
+  series: { day: string; requests: number; answered: number }[];
+}
+
+export const pilotageApi = {
+  get: (token: string, days: number) => request<Pilotage>(`/analytics/pilotage?days=${days}`, { headers: authHeaders(token) }),
+};

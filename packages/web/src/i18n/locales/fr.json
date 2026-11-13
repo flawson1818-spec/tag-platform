@@ -1512,5 +1512,49 @@
     "profileTitle": "Actes de foi",
     "manage": "Gérer",
     "startCta": "Commencer un acte de foi"
+  },
+  "pilotage": {
+    "title": "Pilotage des demandes de prière",
+    "intro": "Chaque demande est-elle reçue, confiée, portée, exaucée ? D'où viennent-elles ?",
+    "period": "Période",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "tiles": {
+      "requests": "demandes reçues",
+      "assigned": "confiées à un intercesseur",
+      "inCare": "prises en charge",
+      "answered": "exaucées",
+      "carriedInRoom": "portées dans la salle",
+      "delay": "délai médian pour confier",
+      "testimonies_one": "de {{count}} témoignage publiés",
+      "testimonies_other": "de {{count}} témoignages publiés"
+    },
+    "hours_one": "{{count}} h",
+    "hours_other": "{{count}} h",
+    "seriesTitle": "Demandes par jour",
+    "series": {
+      "requests": "Demandes reçues",
+      "answered": "Dont exaucées",
+      "requestsShort": "Reçues",
+      "answeredShort": "Exaucées"
+    },
+    "chartLabel": "Demandes reçues et exaucées par jour",
+    "showTable": "Voir le tableau",
+    "day": "Jour",
+    "sourcesTitle": "D'où viennent les demandes",
+    "sources": {
+      "MEMBER": "Membres (privé)",
+      "PUBLIC": "Membres (public)",
+      "ANONYMOUS": "Anonymes / visiteurs"
+    },
+    "lifeTitle": "La vie de la prière",
+    "life": {
+      "prayers_one": "{{count}} « Je prie pour ce sujet »",
+      "prayers_other": "{{count}} « Je prie pour ce sujet »",
+      "mobilizations_one": "{{count}} groupe mobilisé",
+      "mobilizations_other": "{{count}} groupes mobilisés",
+      "faithActs_one": "{{count}} acte de foi commencé",
+      "faithActs_other": "{{count}} actes de foi commencés"
+    }
   }
 }

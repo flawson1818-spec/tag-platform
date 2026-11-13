@@ -1512,5 +1512,49 @@
     "profileTitle": "Acts of faith",
     "manage": "Manage",
     "startCta": "Start an act of faith"
+  },
+  "pilotage": {
+    "title": "Prayer request steering",
+    "intro": "Is every request received, entrusted, carried, answered? Where do they come from?",
+    "period": "Period",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "tiles": {
+      "requests": "requests received",
+      "assigned": "entrusted to an intercessor",
+      "inCare": "in care",
+      "answered": "answered",
+      "carriedInRoom": "carried in the room",
+      "delay": "median time to entrust",
+      "testimonies_one": "of {{count}} testimony published",
+      "testimonies_other": "of {{count}} testimonies published"
+    },
+    "hours_one": "{{count}} h",
+    "hours_other": "{{count}} h",
+    "seriesTitle": "Requests per day",
+    "series": {
+      "requests": "Requests received",
+      "answered": "Of which answered",
+      "requestsShort": "Received",
+      "answeredShort": "Answered"
+    },
+    "chartLabel": "Requests received and answered per day",
+    "showTable": "Show the table",
+    "day": "Day",
+    "sourcesTitle": "Where requests come from",
+    "sources": {
+      "MEMBER": "Members (private)",
+      "PUBLIC": "Members (public)",
+      "ANONYMOUS": "Anonymous / visitors"
+    },
+    "lifeTitle": "Life of the prayer",
+    "life": {
+      "prayers_one": "{{count}} “I'm praying for this”",
+      "prayers_other": "{{count}} “I'm praying for this”",
+      "mobilizations_one": "{{count}} group mobilised",
+      "mobilizations_other": "{{count}} groups mobilised",
+      "faithActs_one": "{{count}} act of faith started",
+      "faithActs_other": "{{count}} acts of faith started"
+    }
   }
 }

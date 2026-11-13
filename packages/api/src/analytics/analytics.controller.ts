@@ -31,6 +31,14 @@ export class AnalyticsController {
     return this.analyticsService.getDashboard();
   }
 
+  /** Pilotage (§5.10): assignment, care, answers, sources, series over 7, 30 or 90 days. */
+  @Get('pilotage')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @RequirePermission('analytics.view_dashboard')
+  pilotage(@Query('days') days?: string) {
+    return this.analyticsService.getPilotage(Number(days) || 30);
+  }
+
   @Get('export')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @RequirePermission('analytics.export')

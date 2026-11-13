@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { DashboardSnapshot, WorldMapSnapshot } from './analytics.types';
+import { Pilotage, RequestRow, computePilotage } from './pilotage';
 
 const EXPORT_ROW_LIMIT = 5000;
 const EXPORT_TTL_HOURS = 24;
@@ -28,6 +29,53 @@ export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
   constructor(private readonly supabase: SupabaseService) {}
+
+  /** Pilotage over the last `days` days (§5.10). Tables not migrated yet simply count 0. */
+  async getPilotage(days: number): Promise<Pilotage> {
+    const span = [7, 30, 90].includes(days) ? days : 30;
+    const now = new Date();
+    const since = new Date(now.getTime() - span * 86_400_000).toISOString();
+    const db = this.supabase.client;
+
+    const columns = (extended: boolean) =>
+      extended
+        ? 'created_at, status, author_id, confidentiality, assigned_to, assigned_at, promoted_slot_id'
+        : 'created_at, status, author_id, confidentiality, promoted_slot_id';
+    let requests: { data: unknown[] | null; error: { message: string } | null } = await db
+      .from('prayer_requests')
+      .select(columns(true))
+      .is('deleted_at', null)
+      .gte('created_at', since)
+      .limit(10000);
+    if (requests.error) {
+      // Before migration 20261111 (assignment): the basic columns only.
+      requests = await db
+        .from('prayer_requests')
+        .select(columns(false))
+        .is('deleted_at', null)
+        .gte('created_at', since)
+        .limit(10000);
+    }
+    if (requests.error) throw new InternalServerErrorException(requests.error.message);
+
+    const testimonies = await db.from('testimonies').select('status').gte('created_at', since).limit(10000);
+    const count = async (table: string) => {
+      const { count: n, error } = await db.from(table).select('*', { count: 'exact', head: true }).gte('created_at', since);
+      return error ? 0 : (n ?? 0);
+    };
+    const [prayers, mobilizations, faithActs] = await Promise.all([
+      count('prayer_request_prayers'),
+      count('prayer_request_mobilizations'),
+      count('faith_acts'),
+    ]);
+    return computePilotage(
+      span,
+      now,
+      (requests.data ?? []) as unknown as RequestRow[],
+      testimonies.error ? [] : ((testimonies.data ?? []) as { status: string }[]),
+      { prayers, mobilizations, faithActs },
+    );
+  }
 
   async getWorldMap(): Promise<WorldMapSnapshot> {
     const { data: runningSlots, error: slotsError } = await this.supabase.client

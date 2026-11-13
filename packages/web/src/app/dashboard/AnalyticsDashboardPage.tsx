@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
 import { DashboardSnapshot, EXPORT_SCOPES, ExportJob, analyticsApi } from '../../lib/api';
+import { PilotagePanel } from './PilotagePanel';
 
 const ACCENT = '#45519c';
 const ACCENT_SOFT = '#8b96e6';
@@ -186,6 +187,8 @@ export function AnalyticsDashboardPage() {
     <div className="worldmap-page">
       <h2>{t('analytics.title')}</h2>
       <p className="hint">{t('analytics.intro')}</p>
+
+      <PilotagePanel />
 
       <h3>{t('analytics.retentionTitle')}</h3>
       <RetentionTiles retention={snapshot.retention} />

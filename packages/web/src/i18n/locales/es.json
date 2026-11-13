@@ -1512,5 +1512,49 @@
     "profileTitle": "Actos de fe",
     "manage": "Gestionar",
     "startCta": "Empezar un acto de fe"
+  },
+  "pilotage": {
+    "title": "Seguimiento de las peticiones",
+    "intro": "¿Cada petición se recibe, se confía, se lleva, se contesta? ¿De dónde vienen?",
+    "period": "Período",
+    "days_one": "{{count}} día",
+    "days_other": "{{count}} días",
+    "tiles": {
+      "requests": "peticiones recibidas",
+      "assigned": "confiadas a un intercesor",
+      "inCare": "atendidas",
+      "answered": "contestadas",
+      "carriedInRoom": "llevadas a la sala",
+      "delay": "plazo mediano para confiar",
+      "testimonies_one": "de {{count}} testimonio publicados",
+      "testimonies_other": "de {{count}} testimonios publicados"
+    },
+    "hours_one": "{{count}} h",
+    "hours_other": "{{count}} h",
+    "seriesTitle": "Peticiones por día",
+    "series": {
+      "requests": "Peticiones recibidas",
+      "answered": "De ellas contestadas",
+      "requestsShort": "Recibidas",
+      "answeredShort": "Contestadas"
+    },
+    "chartLabel": "Peticiones recibidas y contestadas por día",
+    "showTable": "Ver la tabla",
+    "day": "Día",
+    "sourcesTitle": "De dónde vienen las peticiones",
+    "sources": {
+      "MEMBER": "Miembros (privado)",
+      "PUBLIC": "Miembros (público)",
+      "ANONYMOUS": "Anónimos / visitantes"
+    },
+    "lifeTitle": "La vida de la oración",
+    "life": {
+      "prayers_one": "{{count}} «Oro por este tema»",
+      "prayers_other": "{{count}} «Oro por este tema»",
+      "mobilizations_one": "{{count}} grupo movilizado",
+      "mobilizations_other": "{{count}} grupos movilizados",
+      "faithActs_one": "{{count}} acto de fe iniciado",
+      "faithActs_other": "{{count}} actos de fe iniciados"
+    }
   }
 }
