@@ -38,6 +38,12 @@ services:
         sync: false
       - key: VAPID_SUBJECT
         value: mailto:admin@example.com
+      # E-mails par Gmail (sans SMS ni domaine) : un petit script Google publié par le titulaire du
+      # compte Gmail (docs/gmail-relay.gs). Prioritaire sur Brevo quand il est réglé.
+      - key: EMAIL_RELAY_URL
+        sync: false
+      - key: EMAIL_RELAY_SECRET
+        sync: false
       # E-mails (vérification, mot de passe oublié, codes) via Brevo — gratuit jusqu'à 300/jour.
       # Sans ces deux valeurs, les e-mails sont seulement enregistrés, pas envoyés.
       - key: BREVO_API_KEY

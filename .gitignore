@@ -52,3 +52,6 @@ test-output
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+# Secrets created on the owner's computer — never committed
+cles-notifications.txt
+email-gmail-*.txt
