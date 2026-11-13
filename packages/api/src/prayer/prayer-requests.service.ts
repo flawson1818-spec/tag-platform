@@ -17,6 +17,7 @@ import { CreatePrayerRequestDto } from './dto/create-prayer-request.dto';
 import { ListPrayerRequestsQueryDto } from './dto/list-prayer-requests.query.dto';
 import { PromotePrayerRequestDto } from './dto/promote-prayer-request.dto';
 import { toRoomId } from './prayer-constants';
+import { requestGuidedText, verseForRequest } from './request-verses';
 import { PrayerProgramsService } from './prayer-programs.service';
 import { PrayerRealtimeGateway } from './prayer-realtime.gateway';
 import { PrayerRequest, PrayerRequestStatus } from './prayer-request.entity';
@@ -295,17 +296,15 @@ export class PrayerRequestsService {
     }
     assertRequestTransition(request.status, 'ASSIGNED');
 
-    const guidedText = await this.aiAgentsService
-      .draftGuidedPrayer(request.category, request.description)
-      .catch(
-        () =>
-          `[Texte généré automatiquement par l'IA Intercession — à valider] Prions pour : ${request.description}`,
-      );
+    // Read in the room in this order: the request, its verse, then the prayer (§ salle de prière).
+    const prayer = await this.aiAgentsService.draftGuidedPrayer(request.category, request.description).catch(() => null);
+    const guidedText = requestGuidedText(request.description, prayer);
 
     const { interrupted, activated } = await this.slotsService.injectUrgent(dto.programId, {
       title: `${request.category} — demande de prière`,
       category: REQUEST_TO_SLOT_CATEGORY[request.category] ?? 'Autre',
       guidedText,
+      bibleReferences: [verseForRequest(request.category)],
       durationSeconds: DEFAULT_PROMOTED_SLOT_DURATION_SECONDS,
     });
 

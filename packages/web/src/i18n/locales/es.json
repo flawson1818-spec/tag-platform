@@ -398,6 +398,12 @@
       "liveTitle": "{{name}} dirige la oración en directo.",
       "liveHint": "El programa continúa en segundo plano: al devolver el control, la sala lo retoma donde está.",
       "liveChip": "En directo · {{name}}"
+    },
+    "reader": {
+      "start": "Escuchar: la IA lee la oración",
+      "stop": "Detener la lectura",
+      "reading": "La IA lee: {{text}}",
+      "pause": "Un momento de silencio… luego la IA vuelve a leer la oración."
     }
   },
   "communities": {

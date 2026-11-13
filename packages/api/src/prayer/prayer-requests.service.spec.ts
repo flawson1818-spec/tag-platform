@@ -290,7 +290,7 @@ describe('PrayerRequestsService', () => {
   });
 
   describe('promote', () => {
-    it('maps the request category to the mapped slot category and falls back to a placeholder guided text', async () => {
+    it('reads the request first, then its verse, then a simple prayer when the AI is unavailable', async () => {
       const supabase = createSupabaseServiceMock({
         prayer_requests: [
           createQueryChain({ data: NEW_REQUEST, error: null }),
@@ -306,7 +306,11 @@ describe('PrayerRequestsService', () => {
 
       expect(slotsService.injectUrgent).toHaveBeenCalledWith(
         'program-1',
-        expect.objectContaining({ category: 'Famille', guidedText: expect.stringContaining('à valider') }),
+        expect.objectContaining({
+          category: 'Famille',
+          guidedText: expect.stringMatching(/^Sujet de prière : /),
+          bibleReferences: [expect.stringMatching(/^Josué 24:15 — /)],
+        }),
       );
     });
 
@@ -327,7 +331,9 @@ describe('PrayerRequestsService', () => {
 
       expect(slotsService.injectUrgent).toHaveBeenCalledWith(
         'program-1',
-        expect.objectContaining({ guidedText: 'Prions avec confiance pour cette famille.' }),
+        expect.objectContaining({
+          guidedText: expect.stringMatching(/^Sujet de prière : [\s\S]*\n\nPrions avec confiance pour cette famille\.$/),
+        }),
       );
     });
 

@@ -398,6 +398,12 @@
       "liveTitle": "{{name}} is leading the prayer live.",
       "liveHint": "The program carries on in the background: when you hand back, the room picks it up where it is.",
       "liveChip": "Live · {{name}}"
+    },
+    "reader": {
+      "start": "Listen: the AI reads the prayer",
+      "stop": "Stop reading",
+      "reading": "The AI reads: {{text}}",
+      "pause": "A moment of silence… then the AI reads the prayer again."
     }
   },
   "communities": {

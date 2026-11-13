@@ -33,6 +33,9 @@ Trois piliers :
    Un modérateur présent peut **reprendre la main à tout moment** sur l'IA : il dirige en direct
    avec le sujet qu'il écrit, pendant la durée choisie (3 h au plus), puis rend la main ; le
    programme continue en arrière-plan et la salle le reprend là où il en est.
+   **L'IA lit la prière** à voix haute (voix de l'appareil, chacun l'active pour lui) : pour une
+   demande portée dans la salle, elle lit d'abord la demande, puis le verset qui la soutient
+   (choisi selon le sujet), puis la prière ; elle relit ainsi jusqu'au segment suivant.
    Entre deux temps de prière d'une heure, un **bref temps de louange** (5 minutes par défaut) :
    la salle joue la louange choisie par l'administration (liens YouTube ou Spotify, pris à tour
    de rôle), puis le temps de prière suivant commence. Un petit trou du calendrier (30 minutes

@@ -405,7 +405,7 @@ export class PrayerSlotsService {
    */
   async injectUrgent(
     programId: string,
-    input: { title: string; category: string; guidedText?: string; durationSeconds: number },
+    input: { title: string; category: string; guidedText?: string; bibleReferences?: string[]; durationSeconds: number },
   ): Promise<{ interrupted: PrayerSlot | null; activated: PrayerSlot }> {
     const running = await this.findRunningSlotByProgram(programId);
     if (running) await this.cutShort(running.id);
@@ -417,6 +417,7 @@ export class PrayerSlotsService {
       startAt: new Date().toISOString(),
       endAt: new Date(Date.now() + input.durationSeconds * 1000).toISOString(),
       guidedText: input.guidedText,
+      bibleReferences: input.bibleReferences,
     });
     const activated = await this.activate(created.id, input.durationSeconds);
     return { interrupted: running, activated };

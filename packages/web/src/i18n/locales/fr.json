@@ -398,6 +398,12 @@
       "liveTitle": "{{name}} dirige la prière en direct.",
       "liveHint": "Le programme continue en arrière-plan : quand tu rends la main, la salle le reprend là où il en est.",
       "liveChip": "En direct · {{name}}"
+    },
+    "reader": {
+      "start": "Écouter : l'IA lit la prière",
+      "stop": "Arrêter la lecture",
+      "reading": "L'IA lit : {{text}}",
+      "pause": "Un temps de silence… puis l'IA relit la prière."
     }
   },
   "communities": {

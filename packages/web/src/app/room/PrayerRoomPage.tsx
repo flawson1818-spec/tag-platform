@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { ChatMessage, PrayerSlot, RoomPerson, WS_URL, prayerApi, prayerRequestsApi } from '../../lib/api';
 import { Link } from 'react-router-dom';
+import { RoomReader } from './RoomReader';
 import { formatRemaining } from '../../lib/format';
 import { splitVerse } from '../../lib/creneau-parser';
 import i18n from '../../i18n/config';
@@ -512,6 +513,8 @@ export function PrayerRoomPage() {
           {remainingSeconds > 0 && remainingSeconds <= 5 && (
             <p className="hint room-ending-soon">{t('room.endingSoon', { seconds: remainingSeconds })}</p>
           )}
+
+          {!isWorship && <RoomReader slot={slot} />}
 
           {slot.kind === 'LIVE' && (
             <div className="room-chips">
