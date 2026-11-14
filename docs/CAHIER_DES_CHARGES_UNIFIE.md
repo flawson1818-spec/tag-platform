@@ -35,7 +35,10 @@ Trois piliers :
    programme continue en arrière-plan et la salle le reprend là où il en est.
    **L'IA lit la prière** à voix haute (voix de l'appareil, chacun l'active pour lui) : pour une
    demande portée dans la salle, elle lit d'abord la demande, puis le verset qui la soutient
-   (choisi selon le sujet), puis la prière ; elle relit ainsi jusqu'au segment suivant.
+   (choisi selon le sujet), puis la prière ; elle relit ainsi jusqu'au segment suivant. Une
+   référence biblique se lit « chapitre 3, verset 16 », jamais comme une heure. Voix naturelle
+   (Google Chirp 3 HD) et salle **traduite dans la langue du visiteur** quand la clé Google Cloud
+   est réglée ; sinon, voix de l'appareil et texte original.
    Entre deux temps de prière d'une heure, un **bref temps de louange** (5 minutes par défaut) :
    la salle joue la louange choisie par l'administration (liens YouTube ou Spotify, pris à tour
    de rôle), puis le temps de prière suivant commence. Un petit trou du calendrier (30 minutes
@@ -244,6 +247,7 @@ Pour la rendre active, il faut lancer sa migration dans l'éditeur SQL de Supaba
 | 20261117_prayer_request_mobilizations | Mobiliser un groupe sur une demande |
 | 20261118_prayer_request_prayers | « Je prie pour ce sujet » |
 | 20261119_faith_acts | Actes de foi |
+| 20261120_speech | Traduction et voix de la salle (mémoire des traductions, budget mensuel) |
 
 Réglages du serveur (Render → Environment) dont dépendent certaines fonctions :
 
@@ -253,6 +257,7 @@ Réglages du serveur (Render → Environment) dont dépendent certaines fonction
 | EMAIL_RELAY_URL + EMAIL_RELAY_SECRET (Gmail, voir docs/gmail-relay.gs) ou BREVO_API_KEY + EMAIL_FROM | Pas d'e-mails (inscription, mot de passe oublié, double authentification par e-mail). Render gratuit bloque l'envoi SMTP : seuls ces envois par HTTPS marchent |
 | VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT | Pas de notifications sur le téléphone (elles restent dans l'application) |
 | TWILIO_* | Pas de double authentification par SMS |
+| GOOGLE_CLOUD_API_KEY (Text-to-Speech + Translation) | La salle reste en français et la voix de l'appareil lit la prière (pas de voix naturelle « Chirp 3 HD ») ; budget mensuel TTS_MONTHLY_CHAR_LIMIT / TRANSLATE_MONTHLY_CHAR_LIMIT pour rester dans la gratuité |
 | PRAYER_WORSHIP_LINKS (facultatif) | La louange entre les prières n'a pas de musique par défaut tant qu'aucun lien n'est enregistré dans le programme |
 
 ### 9.3 Limites connues de l'hébergement actuel

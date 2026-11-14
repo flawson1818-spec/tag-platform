@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
-import { ChatMessage, PrayerSlot, RoomPerson, WS_URL, prayerApi, prayerRequestsApi } from '../../lib/api';
+import { ChatMessage, PrayerSlot, RoomPerson, SlotSpeech, WS_URL, prayerApi, prayerRequestsApi, speechApi } from '../../lib/api';
 import { Link } from 'react-router-dom';
 import { RoomReader } from './RoomReader';
 import { formatRemaining } from '../../lib/format';
@@ -39,7 +39,7 @@ type Relay = { nextTitle: string; deadline: string; moderators: string[] };
 type FloatingReaction = { id: number; emoji: string };
 
 export function PrayerRoomPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { status, user } = useAuth();
   const [connectionState, setConnectionState] = useState<ConnectionState>('connecting');
   const [slot, setSlot] = useState<PrayerSlot | null>(null);
@@ -226,6 +226,28 @@ export function PrayerRoomPage() {
       cancelled = true;
     };
   }, [slotId]);
+
+  // The room in the visitor's language, and what the AI reads (§ lecture de la prière).
+  const [speechFor, setSpeechFor] = useState<{ key: string; view: SlotSpeech } | null>(null);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const roomLang = i18n.language.slice(0, 2);
+  const speechKey = slot ? `${slot.id}|${slot.guided_text ?? ''}|${slot.title}` : '';
+  useEffect(() => {
+    if (!slot || slot.kind === 'WORSHIP') return;
+    let cancelled = false;
+    speechApi
+      .slot(slot.id, roomLang)
+      .then((view) => !cancelled && setSpeechFor({ key: `${speechKey}|${roomLang}`, view }))
+      .catch(() => !cancelled && setSpeechFor(null));
+    return () => {
+      cancelled = true;
+    };
+    // speechKey stands for the slot's readable content.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speechKey, roomLang]);
+  // Only the reading of THIS segment, in THIS language — never the previous one's.
+  const speech = speechFor && speechFor.key === `${speechKey}|${roomLang}` ? speechFor.view : null;
+  const shown = speech && speech.translated && !showOriginal ? speech : null;
 
   const prayForIt = () => {
     const token = getAccessToken();
@@ -514,7 +536,7 @@ export function PrayerRoomPage() {
             <p className="hint room-ending-soon">{t('room.endingSoon', { seconds: remainingSeconds })}</p>
           )}
 
-          {!isWorship && <RoomReader slot={slot} />}
+          {!isWorship && <RoomReader slotId={slot.id} speech={speech} kind={slot.kind} />}
 
           {slot.kind === 'LIVE' && (
             <div className="room-chips">
@@ -523,7 +545,15 @@ export function PrayerRoomPage() {
               </span>
             </div>
           )}
-          <h3>{isWorship && <span aria-hidden="true">🎵 </span>}{isWorship ? t('room.worship.title') : slot.title}</h3>
+          <h3>{isWorship && <span aria-hidden="true">🎵 </span>}{isWorship ? t('room.worship.title') : (shown?.title ?? slot.title)}</h3>
+          {speech?.translated && !isWorship && (
+            <p className="room-translated">
+              <span aria-hidden="true">🌐</span> {showOriginal ? t('room.translation.original') : t('room.translation.auto')}{' '}
+              <button type="button" className="link-button" onClick={() => setShowOriginal(!showOriginal)}>
+                {showOriginal ? t('room.translation.showTranslated') : t('room.translation.showOriginal')}
+              </button>
+            </p>
+          )}
           {isWorship && (
             <div className="room-worship">
               <p>{t('room.worship.text')}</p>
@@ -540,12 +570,12 @@ export function PrayerRoomPage() {
               )}
             </div>
           )}
-          {slot.guided_text && <p className="room-guided-text">{slot.guided_text}</p>}
+          {(shown ? shown.guidedText : slot.guided_text) && <p className="room-guided-text">{shown ? shown.guidedText : slot.guided_text}</p>}
 
           {slot.bible_references.length > 0 && (
             <div className="room-verses">
-              {slot.bible_references.map((stored) => {
-                const verse = splitVerse(stored);
+              {slot.bible_references.map((stored, vi) => {
+                const verse = shown?.verses[vi] ?? splitVerse(stored);
                 return (
                   <blockquote key={stored} className="room-verse">
                     {verse.text && <p className="room-verse-text">{verse.text}</p>}

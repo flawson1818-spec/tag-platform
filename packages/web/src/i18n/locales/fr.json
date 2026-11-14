@@ -404,6 +404,12 @@
       "stop": "Arrêter la lecture",
       "reading": "L'IA lit : {{text}}",
       "pause": "Un temps de silence… puis l'IA relit la prière."
+    },
+    "translation": {
+      "auto": "Traduit automatiquement.",
+      "original": "Texte original (français).",
+      "showOriginal": "Voir l'original",
+      "showTranslated": "Voir la traduction"
     }
   },
   "communities": {

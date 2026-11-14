@@ -1585,3 +1585,22 @@ export interface Pilotage {
 export const pilotageApi = {
   get: (token: string, days: number) => request<Pilotage>(`/analytics/pilotage?days=${days}`, { headers: authHeaders(token) }),
 };
+
+// ---- Reading and translating the prayer room ----
+
+export interface SlotSpeech {
+  lang: string;
+  translated: boolean;
+  title: string;
+  guidedText: string | null;
+  verses: { reference: string; text: string }[];
+  parts: string[];
+  neural: boolean;
+}
+
+export const speechApi = {
+  slot: (slotId: string, lang: string) =>
+    request<SlotSpeech>(`/speech/slots/${encodeURIComponent(slotId)}?lang=${encodeURIComponent(lang)}`),
+  audioUrl: (slotId: string, index: number, lang: string) =>
+    `${API_URL}/speech/slots/${encodeURIComponent(slotId)}/audio/${index}?lang=${encodeURIComponent(lang)}`,
+};

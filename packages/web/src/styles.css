@@ -3434,3 +3434,4 @@ nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: co
 }
 .room-reader.is-on .room-reader-toggle { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
 .room-reader-now { margin: 0; font-size: 0.85rem; opacity: 0.8; font-style: italic; text-align: center; max-width: 36rem; }
+.room-translated { margin: 0 0 0.4rem; font-size: 0.82rem; opacity: 0.75; text-align: center; }

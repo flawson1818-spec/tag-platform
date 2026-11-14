@@ -404,6 +404,12 @@
       "stop": "Stop reading",
       "reading": "The AI reads: {{text}}",
       "pause": "A moment of silence… then the AI reads the prayer again."
+    },
+    "translation": {
+      "auto": "Translated automatically.",
+      "original": "Original text (French).",
+      "showOriginal": "See the original",
+      "showTranslated": "See the translation"
     }
   },
   "communities": {

@@ -38,6 +38,11 @@ services:
         sync: false
       - key: VAPID_SUBJECT
         value: mailto:admin@example.com
+      # Voix naturelle (Google Text-to-Speech, Chirp 3 HD) et traduction de la salle (Google
+      # Translation) : une clé API Google Cloud avec ces deux API activées. Sans elle, la salle reste
+      # en français et la voix de l'appareil lit la prière.
+      - key: GOOGLE_CLOUD_API_KEY
+        sync: false
       # E-mails par Gmail (sans SMS ni domaine) : un petit script Google publié par le titulaire du
       # compte Gmail (docs/gmail-relay.gs). Prioritaire sur Brevo quand il est réglé.
       - key: EMAIL_RELAY_URL

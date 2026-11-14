@@ -848,6 +848,14 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     this.roomSharers.set(roomId, sharer);
   }
 
+  /** A segment shown in a room but not stored (live, praise, AI replay), by its id. */
+  findLiveSlot(id: string): PrayerSlot | null {
+    for (const t of this.takeovers.values()) if (t.slot.id === id) return t.slot;
+    for (const i of this.interludes.values()) if (i.slot.id === id) return i.slot;
+    for (const r of this.replays.values()) if (r.slot.id === id) return r.slot;
+    return null;
+  }
+
   getTakeover(roomId: string): TakeoverState | undefined {
     return this.takeovers.get(roomId);
   }

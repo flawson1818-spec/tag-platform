@@ -14,6 +14,7 @@ import { WatchModule } from '../watch/watch.module';
 import { ApplicationsModule } from '../applications/applications.module';
 import { MobilizationsModule } from '../mobilizations/mobilizations.module';
 import { FaithActsModule } from '../faith-acts/faith-acts.module';
+import { SpeechModule } from '../speech/speech.module';
 import { IntercessorsModule } from '../intercessors/intercessors.module';
 import { RolesModule } from '../roles/roles.module';
 import { CommunitiesModule } from '../communities/communities.module';
@@ -49,6 +50,7 @@ import { HealthController } from './health.controller';
     IntercessorsModule,
     MobilizationsModule,
     FaithActsModule,
+    SpeechModule,
     RolesModule,
     CommunitiesModule,
     PostsModule,

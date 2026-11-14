@@ -404,6 +404,12 @@
       "stop": "Detener la lectura",
       "reading": "La IA lee: {{text}}",
       "pause": "Un momento de silencio… luego la IA vuelve a leer la oración."
+    },
+    "translation": {
+      "auto": "Traducido automáticamente.",
+      "original": "Texto original (francés).",
+      "showOriginal": "Ver el original",
+      "showTranslated": "Ver la traducción"
     }
   },
   "communities": {
