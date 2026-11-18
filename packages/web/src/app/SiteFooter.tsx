@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 /** The platform's Facebook page; a deployment can point elsewhere with VITE_FACEBOOK_URL. */
-export const FACEBOOK_URL = import.meta.env.VITE_FACEBOOK_URL || 'https://www.facebook.com/share/19pVEQ4ahW/';
+export const FACEBOOK_URL = import.meta.env.VITE_FACEBOOK_URL || 'https://www.facebook.com/Touravantgarde/';
 
 export function SiteFooter() {
   const { t } = useTranslation();
