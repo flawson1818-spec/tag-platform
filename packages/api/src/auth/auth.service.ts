@@ -6,6 +6,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { MfaRecoveryCodesService } from '../access/mfa-recovery-codes.service';
@@ -29,6 +30,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MfaOtpChannel, MfaOtpService } from './mfa-otp.service';
+import { WelcomeService } from '../welcome/welcome.service';
 import { isBlacklistedPassword } from './password-blacklist';
 
 const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -51,6 +53,7 @@ export class AuthService {
     private readonly passwordHistoryService: PasswordHistoryService,
     private readonly supabase: SupabaseService,
     private readonly smsService: SmsService,
+    @Optional() private readonly welcomeService?: WelcomeService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -79,6 +82,7 @@ export class AuthService {
       timezone: dto.timezone,
     });
     await this.rolesService.assignSystemDefaultRole(user.id);
+    await this.welcomeService?.welcome({ id: user.id, display_name: user.display_name, locale: user.locale });
     // The validation code is paused for now (owner's decision, 13/11/2026); EMAIL_VERIFICATION=on restores it.
     if (process.env.EMAIL_VERIFICATION === 'on' && !isPhoneAccountEmail(user.email)) await this.sendVerificationEmail(user);
 
