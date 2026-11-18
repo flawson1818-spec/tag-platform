@@ -12,6 +12,7 @@ import { useUnreadMessages } from './useUnreadMessages';
 const VIEWS: { view: FeedView; icon: string }[] = [
   { view: 'all', icon: '🌍' },
   { view: 'groups', icon: '⛪' },
+  { view: 'videos', icon: '🎬' },
   { view: 'photos', icon: '📷' },
   { view: 'EXPERIENCE', icon: '✨' },
   { view: 'WRITING', icon: '📖' },

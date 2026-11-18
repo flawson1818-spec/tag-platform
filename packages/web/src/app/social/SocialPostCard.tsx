@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken } from '../auth/AuthContext';
+import { PostVideo } from './PostVideo';
 import { Comment, FeedPost, PostKind, postsApi, socialApi } from '../../lib/api';
 
 /** What a member shares, each with its picture. */
@@ -120,6 +121,8 @@ export function SocialPostCard({ post }: { post: FeedPost }) {
         </span>
       )}
       {post.content && <p className="social-post-text">{post.content}</p>}
+
+      {post.video && <PostVideo src={post.video} />}
 
       {post.photos.length > 0 && (
         <div className={`social-photos social-photos-${Math.min(post.photos.length, 4)}`}>

@@ -1185,7 +1185,15 @@
     "saved": "Perfil salvo.",
     "postsTitle_one": "Publicação ({{count}})",
     "postsTitle_other": "Publicações ({{count}})",
-    "noPosts": "Ainda não há publicações."
+    "noPosts": "Ainda não há publicações.",
+    "onlyVideo": "Este ficheiro não é um vídeo.",
+    "videoTooBig": "O vídeo excede 50 MB. Escolha um mais curto ou grave-o em qualidade reduzida.",
+    "videoTooLong": "O vídeo dura mais de 5 minutos.",
+    "removeVideo": "Remover o vídeo",
+    "uploadingVideo": "A enviar vídeo… {{percent}} %",
+    "videoFailed": "Este vídeo não pode ser reproduzido neste dispositivo.",
+    "soundOn": "Ativar o som",
+    "soundOff": "Silenciar"
   },
   "messages": {
     "title": "Mensagens",
@@ -1423,7 +1431,8 @@
     },
     "toEveryone": "🌍 Todos",
     "toGroup": "⛪ {{name}}",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "video": "Vídeo"
   },
   "feed": {
     "filtersLabel": "O que quer ver",
@@ -1432,14 +1441,16 @@
       "groups": "Meus grupos",
       "photos": "Fotos",
       "EXPERIENCE": "Experiências",
-      "WRITING": "Escritos"
+      "WRITING": "Escritos",
+      "videos": "Vídeos"
     },
     "empty": {
       "all": "Ainda não há publicações. Seja o primeiro a partilhar!",
       "groups": "Nada de novo nas suas igrejas e grupos.",
       "photos": "Ainda não há fotos.",
       "EXPERIENCE": "Ainda não há experiências. Conte o que Deus fez!",
-      "WRITING": "Ainda não há escritos. Partilhe uma meditação!"
+      "WRITING": "Ainda não há escritos. Partilhe uma meditação!",
+      "videos": "Ainda não há vídeos. Partilhe o primeiro: um louvor, um testemunho, uma pregação!"
     },
     "findGroup": "Encontrar uma igreja ou grupo",
     "myGroups": "Minhas igrejas e grupos",

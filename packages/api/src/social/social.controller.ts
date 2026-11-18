@@ -38,7 +38,7 @@ export class SocialController {
     @Query('view') view?: string,
     @Query('communityId') communityId?: string,
   ) {
-    const views = ['all', 'groups', 'photos', ...POST_KINDS];
+    const views = ['all', 'groups', 'photos', 'videos', ...POST_KINDS];
     const filter: FeedFilter = {
       view: views.includes(view ?? '') ? (view as FeedFilter['view']) : 'all',
       communityId: communityId && /^[0-9a-f-]{36}$/i.test(communityId) ? communityId : undefined,

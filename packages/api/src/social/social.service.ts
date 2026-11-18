@@ -32,7 +32,7 @@ export type PostKind = (typeof POST_KINDS)[number];
 
 /** all · my groups only · one group · posts with photos · one kind. */
 export interface FeedFilter {
-  view?: 'all' | 'groups' | 'photos' | PostKind;
+  view?: 'all' | 'groups' | 'photos' | 'videos' | PostKind;
   communityId?: string;
 }
 
@@ -45,6 +45,8 @@ export interface FeedPost {
   author: MemberSummary;
   community: { id: string; name: string } | null;
   photos: string[];
+  /** A signed link to the post's video, when it has one. */
+  video: string | null;
   amenCount: number;
   amenedByMe: boolean;
   commentCount: number;
@@ -111,7 +113,14 @@ export class SocialService {
 
     let query = this.db
       .from('posts')
-      .select(filter.view === 'photos' ? `${POST_SELECT}, post_photos!inner(post_id)` : POST_SELECT, { count: 'exact' })
+      .select(
+        filter.view === 'photos'
+          ? `${POST_SELECT}, post_photos!inner(post_id)`
+          : filter.view === 'videos'
+            ? `${POST_SELECT}, post_videos!inner(post_id)`
+            : POST_SELECT,
+        { count: 'exact' },
+      )
       .is('deleted_at', null);
     if (filter.communityId) {
       query = query.eq('community_id', filter.communityId);
@@ -158,8 +167,11 @@ export class SocialService {
   async createPost(authorId: string, dto: CreateSocialPostDto): Promise<FeedPost> {
     const content = dto.content?.trim() ?? '';
     const photoIds = Array.from(new Set(dto.photoFileIds ?? []));
-    if (!content && photoIds.length === 0) {
-      throw new BadRequestException('Écris un message ou ajoute au moins une photo.');
+    if (!content && photoIds.length === 0 && !dto.videoFileId) {
+      throw new BadRequestException('Écris un message, ajoute une photo ou une vidéo.');
+    }
+    if (dto.videoFileId && photoIds.length > 0) {
+      throw new BadRequestException('Une publication contient des photos ou une vidéo, pas les deux.');
     }
     if (dto.communityId && !(await this.isActiveMember(dto.communityId, authorId))) {
       throw new ForbiddenException('Tu dois être membre de cette communauté pour y publier.');
@@ -169,6 +181,13 @@ export class SocialService {
       const file = await this.filesService.findById(fileId, authorId).catch(() => null);
       if (!file || file.status !== 'AVAILABLE' || !file.mime_type.startsWith('image/')) {
         throw new BadRequestException("Une des photos n'est pas disponible. Réessaie de l'ajouter.");
+      }
+    }
+
+    if (dto.videoFileId) {
+      const video = await this.filesService.findById(dto.videoFileId, authorId).catch(() => null);
+      if (!video || video.status !== 'AVAILABLE' || !video.mime_type.startsWith('video/')) {
+        throw new BadRequestException("La vidéo n'est pas disponible. Réessaie de l'envoyer.");
       }
     }
 
@@ -204,6 +223,16 @@ export class SocialService {
         await this.db.from('posts').delete().eq('id', postId);
         if (MISSING_CODES.has(photoError.code ?? '')) throw new ServiceUnavailableException(UNAVAILABLE);
         throw new InternalServerErrorException(photoError.message);
+      }
+    }
+
+    if (dto.videoFileId) {
+      const { error: videoError } = await this.db.from('post_videos').insert({ post_id: postId, file_id: dto.videoFileId });
+      if (videoError) {
+        // Never leave a post without the video it was published with.
+        await this.db.from('posts').delete().eq('id', postId);
+        if (MISSING_CODES.has(videoError.code ?? '')) throw new ServiceUnavailableException(UNAVAILABLE);
+        throw new InternalServerErrorException(videoError.message);
       }
     }
 
@@ -344,12 +373,15 @@ export class SocialService {
     if (rows.length === 0) return [];
     const ids = rows.map((r) => r.id);
 
-    const [photos, amens, comments, kinds] = await Promise.all([
+    const [photos, amens, comments, kinds, videos] = await Promise.all([
       this.db.from('post_photos').select('post_id, file_id, position').in('post_id', ids),
       this.db.from('post_amens').select('post_id, user_id').in('post_id', ids),
       this.db.from('comments').select('post_id').in('post_id', ids).is('deleted_at', null),
       this.db.from('posts').select('id, kind').in('id', ids),
+      this.db.from('post_videos').select('post_id, file_id').in('post_id', ids),
     ]);
+    // Before migration 20261122 there are no videos.
+    const videoRows = (videos.error ? [] : (videos.data ?? [])) as { post_id: string; file_id: string }[];
     const kindRows = !kinds.error && Array.isArray(kinds.data) ? (kinds.data as { id: string; kind: PostKind }[]) : [];
     const kindOf = new Map(kindRows.map((k) => [k.id, k.kind]));
     // Before migration 20261107 photos/amens simply don't exist yet.
@@ -360,6 +392,7 @@ export class SocialService {
 
     const urls = await this.filesService.getPublicReadUrls([
       ...photoRows.map((p) => p.file_id),
+      ...videoRows.map((v) => v.file_id),
       ...rows.map((r) => r.author?.avatar_file_id ?? ''),
     ]);
 
@@ -383,6 +416,7 @@ export class SocialService {
         },
         community: row.community ? { id: row.community.id, name: row.community.name } : null,
         photos: postPhotos,
+        video: urls.get(videoRows.find((v) => v.post_id === row.id)?.file_id ?? '') ?? null,
         amenCount: postAmens.length,
         amenedByMe: postAmens.some((a) => a.user_id === viewerId),
         commentCount: commentRows.filter((c) => c.post_id === row.id).length,

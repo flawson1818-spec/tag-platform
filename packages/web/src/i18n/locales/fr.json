@@ -1185,7 +1185,15 @@
     "saved": "Profil enregistré.",
     "postsTitle_one": "Publication ({{count}})",
     "postsTitle_other": "Publications ({{count}})",
-    "noPosts": "Aucune publication pour l'instant."
+    "noPosts": "Aucune publication pour l'instant.",
+    "onlyVideo": "Ce fichier n'est pas une vidéo.",
+    "videoTooBig": "La vidéo dépasse 50 Mo. Choisis-en une plus courte ou enregistre-la en qualité réduite.",
+    "videoTooLong": "La vidéo dure plus de 5 minutes.",
+    "removeVideo": "Retirer la vidéo",
+    "uploadingVideo": "Envoi de la vidéo… {{percent}} %",
+    "videoFailed": "Cette vidéo ne peut pas être lue sur cet appareil.",
+    "soundOn": "Activer le son",
+    "soundOff": "Couper le son"
   },
   "messages": {
     "title": "Messages",
@@ -1423,7 +1431,8 @@
     },
     "toEveryone": "🌍 Tout le monde",
     "toGroup": "⛪ {{name}}",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "video": "Vidéo"
   },
   "feed": {
     "filtersLabel": "Ce que tu veux voir",
@@ -1432,14 +1441,16 @@
       "groups": "Mes groupes",
       "photos": "Photos",
       "EXPERIENCE": "Expériences",
-      "WRITING": "Écrits"
+      "WRITING": "Écrits",
+      "videos": "Vidéos"
     },
     "empty": {
       "all": "Aucune publication pour l'instant. Sois le premier à partager !",
       "groups": "Rien de nouveau dans tes églises et groupes.",
       "photos": "Aucune photo partagée pour l'instant.",
       "EXPERIENCE": "Aucune expérience partagée pour l'instant. Raconte ce que Dieu a fait !",
-      "WRITING": "Aucun écrit pour l'instant. Partage une méditation !"
+      "WRITING": "Aucun écrit pour l'instant. Partage une méditation !",
+      "videos": "Aucune vidéo pour l'instant. Partage la première : une louange, un témoignage, une prédication !"
     },
     "findGroup": "Trouver une église ou un groupe",
     "myGroups": "Mes églises et groupes",

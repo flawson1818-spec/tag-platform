@@ -1,7 +1,8 @@
 import { IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 const ALLOWED_MIME_PREFIX = /^(image|audio|video)\/[a-zA-Z0-9.+-]+$|^application\/pdf$/;
-const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+/** Photos stay at 25 Mo (checked in the service); a video may reach 50 Mo, the platform's storage limit. */
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
 export class PresignFileDto {
   @IsString()

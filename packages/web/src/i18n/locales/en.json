@@ -1185,7 +1185,15 @@
     "saved": "Profile saved.",
     "postsTitle_one": "Post ({{count}})",
     "postsTitle_other": "Posts ({{count}})",
-    "noPosts": "No posts yet."
+    "noPosts": "No posts yet.",
+    "onlyVideo": "This file is not a video.",
+    "videoTooBig": "The video is over 50 MB. Pick a shorter one or record it in lower quality.",
+    "videoTooLong": "The video is longer than 5 minutes.",
+    "removeVideo": "Remove the video",
+    "uploadingVideo": "Uploading video… {{percent}}%",
+    "videoFailed": "This video cannot be played on this device.",
+    "soundOn": "Turn sound on",
+    "soundOff": "Mute"
   },
   "messages": {
     "title": "Messages",
@@ -1423,7 +1431,8 @@
     },
     "toEveryone": "🌍 Everyone",
     "toGroup": "⛪ {{name}}",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "video": "Video"
   },
   "feed": {
     "filtersLabel": "What you want to see",
@@ -1432,14 +1441,16 @@
       "groups": "My groups",
       "photos": "Photos",
       "EXPERIENCE": "Experiences",
-      "WRITING": "Writings"
+      "WRITING": "Writings",
+      "videos": "Videos"
     },
     "empty": {
       "all": "No posts yet. Be the first to share!",
       "groups": "Nothing new in your churches and groups.",
       "photos": "No photos shared yet.",
       "EXPERIENCE": "No experiences shared yet. Tell what God has done!",
-      "WRITING": "No writings yet. Share a meditation!"
+      "WRITING": "No writings yet. Share a meditation!",
+      "videos": "No videos yet. Share the first one: a praise, a testimony, a sermon!"
     },
     "findGroup": "Find a church or group",
     "myGroups": "My churches and groups",

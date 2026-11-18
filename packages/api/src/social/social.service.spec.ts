@@ -86,6 +86,24 @@ describe('SocialService', () => {
       expect(post.mine).toBe(true);
     });
 
+    it('publishes a post with a video of the author, and returns its link', async () => {
+      const { service, db } = build(
+        { posts: [{ data: { id: 'p1' } }, { data: POST }], post_videos: [{ data: [{ post_id: 'p1', file_id: 'f1' }] }] },
+        { status: 'AVAILABLE', mime_type: 'video/mp4' },
+      );
+      const post = await service.createPost('u1', { content: 'Louange !', videoFileId: 'f1' });
+
+      expect(db.calls.find((c) => c.table === 'post_videos')?.ops.find(([op]) => op === 'insert')?.[1][0]).toMatchObject({ post_id: 'p1', file_id: 'f1' });
+      expect(post.video).toBe('https://signed/f1');
+    });
+
+    it('refuses a video that is not an available video, and photos together with a video', async () => {
+      const notVideo = build({}, { status: 'AVAILABLE', mime_type: 'image/png' });
+      await expect(notVideo.service.createPost('u1', { videoFileId: 'f1' })).rejects.toBeInstanceOf(BadRequestException);
+      const both = build({}, { status: 'AVAILABLE', mime_type: 'video/mp4' });
+      await expect(both.service.createPost('u1', { videoFileId: 'f1', photoFileIds: ['f2'] })).rejects.toBeInstanceOf(BadRequestException);
+    });
+
     it('answers 503 before the migration that allows personal posts', async () => {
       const { service } = build({ posts: [{ error: { code: '23502', message: 'not null' } }] });
       await expect(service.createPost('u1', { content: 'Bonjour' })).rejects.toBeInstanceOf(ServiceUnavailableException);

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -36,6 +37,9 @@ export class FilesService {
   }
 
   async presign(ownerId: string, dto: PresignFileDto): Promise<PresignResult> {
+    if (!dto.mimeType.startsWith('video/') && (dto.sizeBytes ?? 0) > 25 * 1024 * 1024) {
+      throw new BadRequestException('Ce fichier dépasse 25 Mo.');
+    }
     const fileId = randomUUID();
     const sanitizedName = dto.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const bucketKey = `${ownerId}/${fileId}-${sanitizedName}`;

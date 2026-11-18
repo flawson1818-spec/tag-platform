@@ -867,6 +867,19 @@ export const filesApi = {
     });
     if (!res.ok) throw new Error(`Échec de l'upload (${res.status})`);
   },
+  /** Same upload, with the percentage sent so far (a video takes a while). */
+  uploadWithProgress: (uploadUrl: string, file: File, onProgress: (percent: number) => void): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', uploadUrl);
+      xhr.setRequestHeader('x-upsert', 'false');
+      xhr.setRequestHeader('cache-control', 'max-age=3600');
+      xhr.setRequestHeader('content-type', file.type);
+      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
+      xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Échec de l'upload (${xhr.status})`)));
+      xhr.onerror = () => reject(new Error("Échec de l'upload : vérifie ta connexion."));
+      xhr.send(file);
+    }),
 };
 
 /** A member as the administration sees them, with their platform-wide roles. */
@@ -1288,7 +1301,7 @@ export interface MemberSummary {
 
 export const POST_KINDS = ['MESSAGE', 'EXPERIENCE', 'WRITING'] as const;
 export type PostKind = (typeof POST_KINDS)[number];
-export type FeedView = 'all' | 'groups' | 'photos' | 'EXPERIENCE' | 'WRITING';
+export type FeedView = 'all' | 'groups' | 'photos' | 'videos' | 'EXPERIENCE' | 'WRITING';
 
 export interface FeedPost {
   id: string;
@@ -1299,6 +1312,7 @@ export interface FeedPost {
   author: MemberSummary;
   community: { id: string; name: string } | null;
   photos: string[];
+  video?: string | null;
   amenCount: number;
   amenedByMe: boolean;
   commentCount: number;
@@ -1323,7 +1337,7 @@ export const socialApi = {
       }`,
       { headers: authHeaders(token) },
     ),
-  createPost: (token: string, data: { content?: string; photoFileIds?: string[]; communityId?: string; kind?: PostKind }) =>
+  createPost: (token: string, data: { content?: string; photoFileIds?: string[]; videoFileId?: string; communityId?: string; kind?: PostKind }) =>
     request<FeedPost>('/social/posts', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   amen: (token: string, postId: string, amen: boolean) =>
     request<{ amenCount: number; amenedByMe: boolean }>(`/social/posts/${postId}/amen`, {

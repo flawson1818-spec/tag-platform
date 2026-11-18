@@ -17,6 +17,11 @@ export class CreateSocialPostDto {
   @IsUUID('4', { each: true })
   photoFileIds?: string[];
 
+  /** One video the author uploaded through POST /files/presign (up to 50 Mo). Not with photos. */
+  @IsOptional()
+  @IsUUID()
+  videoFileId?: string;
+
   /** Publish in one of my communities instead of on my own profile. */
   @IsOptional()
   @IsUUID()
