@@ -3507,3 +3507,7 @@ nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: co
 .social-upload-progress > div { height: 100%; background: var(--color-primary); transition: width 0.2s; }
 .social-upload-progress > span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.78rem; font-weight: 600; }
 .composer-video-quick { font-weight: 600; }
+
+.site-footer-social { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
+.site-footer-youtube { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; border-radius: 999px; background: #ff0000; color: #fff; font-weight: 600; text-decoration: none; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.35); }
+.site-footer-youtube:hover { background: #cc0000; }
