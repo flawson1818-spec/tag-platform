@@ -5,15 +5,7 @@ import { getAccessToken } from '../auth/AuthContext';
 import { AppNotification, notificationsApi, pushApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 import i18n from '../../i18n/config';
-
-const PUSH_SUPPORTED = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window;
-
-function urlBase64ToUint8Array(base64Url: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
-  const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
-}
+import { PUSH_SUPPORTED, pushTurnedOff, subscribeDevice } from '../../lib/push';
 
 function PushNotificationsToggle() {
   const { t } = useTranslation();
@@ -38,25 +30,11 @@ function PushNotificationsToggle() {
     setError(null);
     setBusy(true);
     try {
-      const { publicKey } = await pushApi.vapidPublicKey();
-      if (!publicKey) {
-        setError(t('notifications.pushNotConfigured'));
-        return;
-      }
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        setError(t('notifications.permissionDenied'));
-        return;
-      }
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
-      });
-      await pushApi.register(token, JSON.stringify(sub));
+      const sub = await subscribeDevice(token, true);
       setSubscription(sub);
     } catch (err) {
-      setError((err as Error).message);
+      const code = (err as Error).message;
+      setError(code === 'denied' ? t('notifications.permissionDenied') : code === 'not-configured' ? t('notifications.pushNotConfigured') : code);
     } finally {
       setBusy(false);
     }
@@ -70,6 +48,7 @@ function PushNotificationsToggle() {
     try {
       await pushApi.unregister(token, JSON.stringify(subscription));
       await subscription.unsubscribe();
+      pushTurnedOff(true);
       setSubscription(null);
     } catch (err) {
       setError((err as Error).message);

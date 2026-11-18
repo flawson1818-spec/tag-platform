@@ -2,7 +2,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
 import { useAccess } from '../auth/AccessContext';
-import { AdminUser, ROLE_HIERARCHY, rolesApi, usersApi } from '../../lib/api';
+import { AdminUser, ROLE_HIERARCHY, rolesApi, suspendedApi, usersApi } from '../../lib/api';
 import { Pagination } from '../Pagination';
 import { isPhoneAccountEmail } from '../../lib/features';
 
@@ -67,6 +67,21 @@ export function AdminUsersPage() {
     }
   };
 
+  const deleteSuspended = () => {
+    const token = getAccessToken();
+    if (!token) return;
+    if (!window.confirm(t('adminUsers.deleteSuspended.confirm'))) return;
+    setError(null);
+    setNotice(null);
+    suspendedApi
+      .deleteAll(token)
+      .then((r) => {
+        setNotice(r.deleted > 0 ? t('adminUsers.deleteSuspended.done', { count: r.deleted }) : t('adminUsers.deleteSuspended.none'));
+        load();
+      })
+      .catch((err) => setError((err as Error).message));
+  };
+
   const addRole = (u: AdminUser) => {
     const token = getAccessToken();
     const role = picked[u.id] ?? DEFAULT_ROLE;
@@ -102,6 +117,12 @@ export function AdminUsersPage() {
         />
         <button type="submit">{t('adminUsers.search')}</button>
       </form>
+
+      <p>
+        <button type="button" className="admin-delete-suspended" onClick={deleteSuspended}>
+          <span aria-hidden="true">🗑️</span> {t('adminUsers.deleteSuspended.button')}
+        </button>
+      </p>
 
       {notice && <p className="admin-notice">{notice}</p>}
       {error && <p className="error">{error}</p>}

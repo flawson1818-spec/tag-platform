@@ -910,6 +910,10 @@ export const usersApi = {
     }),
 };
 
+export const suspendedApi = {
+  deleteAll: (token: string) => request<{ deleted: number }>('/users/suspended', { method: 'DELETE', headers: authHeaders(token) }),
+};
+
 export const rolesApi = {
   list: (token: string) => request<Role[]>('/roles', { headers: authHeaders(token) }),
   assign: (token: string, userId: string, roleCode: string, communityId?: string) =>

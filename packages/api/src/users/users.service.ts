@@ -218,6 +218,34 @@ export class UsersService {
     await this.auditLogService.record(userId, 'USER_SELF_DELETED', 'user', userId);
   }
 
+  /**
+   * Admin: removes every SUSPENDED account for good from the platform's point of view — each is
+   * anonymised like a self-deletion (no e-mail, phone, name or photo left), signed out everywhere
+   * and stripped of its notification devices. Prayers and posts they wrote stay, without a name.
+   */
+  async deleteSuspended(actorId: string): Promise<{ deleted: number }> {
+    const { data, error } = await this.db.select('id').eq('status', 'SUSPENDED').is('deleted_at', null);
+    if (error) throw new InternalServerErrorException(error.message);
+    const ids = ((data ?? []) as { id: string }[]).map((r) => r.id).filter((id) => id !== actorId);
+    for (const id of ids) {
+      const { error: updateError } = await this.db
+        .update({
+          status: 'DELETED',
+          deleted_at: new Date().toISOString(),
+          email: `deleted-${id}@tag.invalid`,
+          phone: null,
+          display_name: 'Compte supprimé',
+          avatar_file_id: null,
+        })
+        .eq('id', id);
+      if (updateError) throw new InternalServerErrorException(updateError.message);
+      await this.supabase.client.from('refresh_tokens').update({ revoked_at: new Date().toISOString() }).eq('user_id', id).is('revoked_at', null);
+      await this.supabase.client.from('push_tokens').delete().eq('user_id', id);
+      await this.auditLogService.record(actorId, 'USER_DELETED', 'user', id, { status: 'SUSPENDED' });
+    }
+    return { deleted: ids.length };
+  }
+
   async list(query: ListUsersQueryDto): Promise<PaginatedResult<UserResponseDto & { roles: string[] }>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;

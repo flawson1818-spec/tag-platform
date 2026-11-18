@@ -35,6 +35,15 @@ function testimonyExcerpt(testimony: PublicTestimony, t: TFunction): string {
   return t('home.testimonyExcerpt', { type });
 }
 
+const FEATURES = [
+  { key: 'room', icon: '🙏', to: '/room' },
+  { key: 'requests', icon: '📿', to: '/prayer-requests' },
+  { key: 'community', icon: '⛪', to: '/communaute' },
+  { key: 'testimonies', icon: '✨', to: '/testimonies' },
+  { key: 'languages', icon: '🌍', to: '/room' },
+  { key: 'notify', icon: '🔔', to: '/register' },
+] as const;
+
 export function HomePage() {
   const { t } = useTranslation();
   const [slot, setSlot] = useState<ActivePrayerSlot | null>(null);
@@ -106,6 +115,48 @@ export function HomePage() {
         )}
       </section>
 
+      <section className="about-mission" aria-labelledby="about-mission-title">
+        <p className="about-kicker">{t('home.about.kicker')}</p>
+        <h3 id="about-mission-title">{t('home.about.title')}</h3>
+        <p className="about-lead">{t('home.about.lead')}</p>
+        <ul className="about-proof">
+          {(['p1', 'p2', 'p3'] as const).map((k) => (
+            <li key={k}>
+              <strong>{t(`home.about.proof.${k}.value`)}</strong>
+              <span>{t(`home.about.proof.${k}.label`)}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="about-section" aria-labelledby="about-how">
+        <h3 id="about-how">{t('home.about.howTitle')}</h3>
+        <ol className="about-steps">
+          {(['s1', 's2', 's3'] as const).map((k, i) => (
+            <li key={k}>
+              <span className="about-step-number" aria-hidden="true">{i + 1}</span>
+              <strong>{t(`home.about.steps.${k}.title`)}</strong>
+              <span>{t(`home.about.steps.${k}.text`)}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="about-section" aria-labelledby="about-features">
+        <h3 id="about-features">{t('home.about.featuresTitle')}</h3>
+        <ul className="about-features">
+          {FEATURES.map((f) => (
+            <li key={f.key}>
+              <Link to={f.to}>
+                <span className="about-feature-icon" aria-hidden="true">{f.icon}</span>
+                <strong>{t(`home.about.features.${f.key}.title`)}</strong>
+                <span>{t(`home.about.features.${f.key}.text`)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <TodayWatch />
 
       <div className="home-columns">
@@ -146,6 +197,27 @@ export function HomePage() {
           </Link>
         </section>
       </div>
+
+      <section className="about-final">
+        <h3>{t('home.about.finalTitle')}</h3>
+        <p>{t('home.about.finalText')}</p>
+        <div className="about-final-actions">
+          <Link to="/register" className="home-hero-cta">{t('home.about.createAccount')}</Link>
+          <Link to="/room" className="link-button">{t('home.about.justListen')}</Link>
+        </div>
+        <details className="about-faq">
+          <summary>{t('home.about.faq.q1')}</summary>
+          <p>{t('home.about.faq.a1')}</p>
+        </details>
+        <details className="about-faq">
+          <summary>{t('home.about.faq.q2')}</summary>
+          <p>{t('home.about.faq.a2')}</p>
+        </details>
+        <details className="about-faq">
+          <summary>{t('home.about.faq.q3')}</summary>
+          <p>{t('home.about.faq.a3')}</p>
+        </details>
+      </section>
     </div>
   );
 }

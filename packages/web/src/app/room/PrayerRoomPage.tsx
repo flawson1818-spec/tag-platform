@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
 import { getAccessToken, useAuth } from '../auth/AuthContext';
+import { ringBell } from '../../lib/push';
 import { ChatMessage, PrayerSlot, RoomPerson, SlotSpeech, WS_URL, prayerApi, prayerRequestsApi, speechApi } from '../../lib/api';
 import { Link } from 'react-router-dom';
 import { RoomReader } from './RoomReader';
@@ -77,6 +78,8 @@ export function PrayerRoomPage() {
   const [canShare, setCanShare] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [takeoverOpen, setTakeoverOpen] = useState(false);
+  const [callBanner, setCallBanner] = useState<{ title: string; body: string } | null>(null);
+  const [callSent, setCallSent] = useState(false);
   const [takeoverForm, setTakeoverForm] = useState({ title: '', text: '', minutes: 60 });
   const [now, setNow] = useState(() => Date.now());
   /** The request carried by the current slot, if any (§5.7). */
@@ -191,6 +194,18 @@ export function PrayerRoomPage() {
       const id = Date.now() + Math.random();
       setReactions((prev) => [...prev, { id, emoji: payload.emoji }]);
       setTimeout(() => setReactions((prev) => prev.filter((r) => r.id !== id)), 2200);
+    });
+
+    socket.on('room:called', (payload: { title?: string; body?: string; callerId?: string; confirmation?: boolean }) => {
+      if (payload.confirmation) {
+        setCallSent(true);
+        setTimeout(() => setCallSent(false), 6000);
+        return;
+      }
+      if (payload.callerId && payload.callerId === userRef.current?.id) return;
+      ringBell();
+      setCallBanner({ title: payload.title ?? '', body: payload.body ?? '' });
+      setTimeout(() => setCallBanner(null), 20000);
     });
 
     socket.on('room:error', (payload: { message: string }) => {
@@ -389,6 +404,11 @@ export function PrayerRoomPage() {
     setTakeoverOpen(false);
   }
 
+  function callToPrayer() {
+    setRoomError(null);
+    socketRef.current?.emit('room:call', { roomId: ROOM_ID });
+  }
+
   function giveBack() {
     socketRef.current?.emit('room:release', { roomId: ROOM_ID });
   }
@@ -428,6 +448,25 @@ export function PrayerRoomPage() {
         <p className="room-status">
           {connectionState === 'connecting' ? t('room.connecting') : t('room.empty')}
         </p>
+      )}
+
+      {callBanner && (
+        <div className="room-call-banner" role="alert">
+          <span aria-hidden="true">🔔</span>
+          <span>
+            <strong>{callBanner.title}</strong> {callBanner.body}
+          </span>
+          <button type="button" className="link-button" onClick={() => setCallBanner(null)}>{t('roomCall.dismiss')}</button>
+        </div>
+      )}
+
+      {user && (
+        <div className="room-call">
+          <button type="button" className="room-call-button" onClick={callToPrayer} disabled={callSent}>
+            <span aria-hidden="true">🔔</span> {callSent ? t('roomCall.sent') : t('roomCall.button')}
+          </button>
+          {!callSent && <span className="hint">{t('roomCall.hint')}</span>}
+        </div>
       )}
 
       {canShare && (

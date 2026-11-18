@@ -3440,3 +3440,39 @@ nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: co
 .room-hour p { margin: 0.3rem 0 0; }
 .room-hour-verse { font-style: italic; opacity: 0.85; }
 .room-hour-night, .room-hour-midnight, .room-hour-vigil { background: rgba(60, 70, 140, 0.2); }
+
+.push-prompt { position: fixed; left: 50%; bottom: 4.5rem; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 0.75rem; width: min(32rem, calc(100% - 2rem)); padding: 0.75rem 1rem; border-radius: 0.9rem; background: var(--surface, #fff); color: var(--text, #222); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28); border: 1px solid rgba(120, 130, 200, 0.4); }
+.push-prompt-icon { font-size: 1.6rem; }
+.push-prompt-text { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; font-size: 0.85rem; }
+.push-prompt-actions { display: flex; flex-direction: column; align-items: stretch; gap: 0.2rem; }
+.room-call { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin: 0.4rem 0 0.8rem; }
+.room-call-button { border-radius: 999px; padding: 0.5rem 1.1rem; font-weight: 600; }
+.room-call-banner { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.8rem; padding: 0.7rem 0.9rem; border-radius: 0.8rem; background: rgba(240, 180, 60, 0.2); border: 1px solid rgba(240, 180, 60, 0.6); animation: room-call-pulse 1.2s ease-in-out 3; }
+@keyframes room-call-pulse { 50% { transform: scale(1.015); } }
+.admin-delete-suspended { background: transparent; border: 1px solid #c0392b; color: #c0392b; border-radius: 0.5rem; padding: 0.35rem 0.8rem; }
+
+/* ---- Visitor home: what the platform is ---- */
+.about-mission, .about-section, .about-final { margin: 0 0 2rem; }
+.about-mission { text-align: center; }
+.about-kicker { margin: 0; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-primary); font-weight: 700; }
+.about-mission h3 { margin: 0.3rem 0 0.6rem; font-size: 1.5rem; }
+.about-lead { margin: 0 auto 1rem; max-width: 36rem; line-height: 1.6; }
+.about-proof { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.about-proof li { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.7rem 0.4rem; border-radius: 0.8rem; border: 1px solid var(--color-border); font-size: 0.78rem; }
+.about-proof strong { font-size: 1.25rem; color: var(--color-primary); }
+.about-section h3 { text-align: center; margin: 0 0 0.9rem; }
+.about-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.about-steps li { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: 0.8rem; padding: 0.8rem; border-radius: 0.8rem; border: 1px solid var(--color-border); }
+.about-steps li span:last-child { grid-column: 2; font-size: 0.9rem; opacity: 0.85; }
+.about-step-number { grid-row: 1 / span 2; display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--color-primary); color: #fff; font-weight: 700; }
+.about-features { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+.about-features a { display: flex; flex-direction: column; gap: 0.25rem; height: 100%; padding: 0.8rem; border-radius: 0.8rem; border: 1px solid var(--color-border); text-decoration: none; color: inherit; }
+.about-features a:hover { border-color: var(--color-primary); }
+.about-features a span:last-child { font-size: 0.85rem; opacity: 0.85; }
+.about-feature-icon { font-size: 1.5rem; }
+.about-final { text-align: center; padding: 1.4rem 1rem; border-radius: 1rem; background: rgba(120, 130, 200, 0.1); }
+.about-final-actions { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; margin-bottom: 1rem; }
+.about-faq { text-align: left; border-top: 1px solid var(--color-border); padding: 0.6rem 0; }
+.about-faq summary { cursor: pointer; font-weight: 600; }
+.about-faq p { margin: 0.4rem 0 0; font-size: 0.9rem; }
+@media (max-width: 520px) { .about-features { grid-template-columns: 1fr; } .about-proof li { font-size: 0.7rem; } }

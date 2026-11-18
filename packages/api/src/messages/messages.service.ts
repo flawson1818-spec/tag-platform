@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { FilesService } from '../storage/files.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { PushNotificationsService } from '../communication/push-notifications.service';
 import { MessagesGateway } from './messages.gateway';
 
 /** Postgres undefined table/column, or PostgREST's "not in schema cache". */
@@ -86,6 +87,7 @@ export class MessagesService {
     private readonly supabase: SupabaseService,
     private readonly filesService: FilesService,
     private readonly gateway: MessagesGateway,
+    private readonly push: PushNotificationsService,
   ) {}
 
   private get db() {
@@ -188,7 +190,20 @@ export class MessagesService {
       .eq('id', conversationId);
 
     this.gateway.emitMessage([userId, peerId], message);
+    void this.notifyPeer(userId, peerId, text, conversationId);
     return message;
+  }
+
+  /** A push to the receiver's phone or browser: who wrote, and the start of the message. Never blocks sending. */
+  private async notifyPeer(senderId: string, peerId: string, text: string, conversationId: string): Promise<void> {
+    try {
+      const { data } = await this.db.from('users').select('display_name').eq('id', senderId).maybeSingle();
+      const name = (data as { display_name?: string } | null)?.display_name ?? 'Un membre';
+      const preview = text.length > 120 ? `${text.slice(0, 117)}…` : text;
+      await this.push.send(peerId, `✉️ ${name}`, preview, { url: `/messages?c=${conversationId}`, tag: `dm-${conversationId}` });
+    } catch {
+      /* the message is sent; the notification is best-effort */
+    }
   }
 
   async markRead(userId: string, conversationId: string): Promise<{ ok: true }> {

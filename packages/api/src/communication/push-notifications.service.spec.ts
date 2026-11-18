@@ -44,6 +44,45 @@ describe('PushNotificationsService', () => {
     });
   });
 
+  describe('broadcast (call to prayer)', () => {
+    const rows = [
+      { id: 't1', user_id: 'caller', token: JSON.stringify({ endpoint: 'a' }), platform: 'WEB', created_at: '' },
+      { id: 't2', user_id: 'u2', token: JSON.stringify({ endpoint: 'b' }), platform: 'WEB', created_at: '' },
+      { id: 't3', user_id: 'u3', token: JSON.stringify({ endpoint: 'c' }), platform: 'WEB', created_at: '' },
+    ];
+
+    it('rings every device except the caller, with the room url and the ringing flag', async () => {
+      process.env.VAPID_PUBLIC_KEY = 'pub';
+      process.env.VAPID_PRIVATE_KEY = 'priv';
+      const client = buildFakeWebpushClient();
+      client.sendNotification.mockResolvedValue({});
+      const supabase = createSupabaseServiceMock({ push_tokens: createQueryChain({ data: rows, error: null }) });
+      const service = new PushNotificationsService(supabase as never, client);
+
+      const result = await service.broadcast('T', 'B', { url: '/room', sound: true, exceptUserIds: ['caller'] });
+
+      expect(result).toEqual({ sent: 2 });
+      expect(JSON.parse(client.sendNotification.mock.calls[0][1])).toMatchObject({ title: 'T', url: '/room', sound: true });
+      delete process.env.VAPID_PUBLIC_KEY;
+      delete process.env.VAPID_PRIVATE_KEY;
+    });
+
+    it('forgets a device the browser reports as gone (410)', async () => {
+      process.env.VAPID_PUBLIC_KEY = 'pub';
+      process.env.VAPID_PRIVATE_KEY = 'priv';
+      const client = buildFakeWebpushClient();
+      client.sendNotification.mockRejectedValue(Object.assign(new Error('gone'), { statusCode: 410 }));
+      const chain = createQueryChain({ data: rows.slice(1, 2), error: null });
+      const supabase = createSupabaseServiceMock({ push_tokens: chain });
+      const service = new PushNotificationsService(supabase as never, client);
+
+      expect(await service.broadcast('T', 'B')).toEqual({ sent: 0 });
+      expect(chain.delete).toHaveBeenCalled();
+      delete process.env.VAPID_PUBLIC_KEY;
+      delete process.env.VAPID_PRIVATE_KEY;
+    });
+  });
+
   describe('unregisterToken', () => {
     it('deletes only the given user+token pair', async () => {
       const chain = createQueryChain({ data: null, error: null });
@@ -133,7 +172,7 @@ describe('PushNotificationsService', () => {
         expect(webpushClient.setVapidDetails).toHaveBeenCalledWith('mailto:admin@example.com', 'public-key', 'private-key');
         expect(webpushClient.sendNotification).toHaveBeenCalledWith(
           { endpoint: 'https://push.example/1' },
-          JSON.stringify({ title: 'Titre', body: 'Corps' }),
+          JSON.stringify({ title: 'Titre', body: 'Corps', url: '/', sound: false }),
         );
         expect(notificationsChain.insert).toHaveBeenCalledWith([
           expect.objectContaining({ push_token_id: 'token-1', status: 'DELIVERED' }),

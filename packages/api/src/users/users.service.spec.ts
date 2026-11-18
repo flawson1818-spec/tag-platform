@@ -106,6 +106,23 @@ describe('UsersService', () => {
     });
   });
 
+  describe('deleteSuspended', () => {
+    it('anonymises every suspended account, signs it out, drops its devices and never touches the admin', async () => {
+      const users = createQueryChain({ data: [{ id: 'u1' }, { id: 'u2' }, { id: 'admin-1' }], error: null });
+      const refresh = createQueryChain({ data: null, error: null });
+      const push = createQueryChain({ data: null, error: null });
+      const supabase = createSupabaseServiceMock({ users, refresh_tokens: refresh, push_tokens: push });
+      const { service, auditLogService } = buildDeps({ supabase });
+
+      const result = await service.deleteSuspended('admin-1');
+
+      expect(result).toEqual({ deleted: 2 });
+      expect(users.update).toHaveBeenCalledWith(expect.objectContaining({ status: 'DELETED', email: 'deleted-u1@tag.invalid', phone: null, display_name: 'Compte supprimé' }));
+      expect(push.delete).toHaveBeenCalledTimes(2);
+      expect(auditLogService.record).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('softDelete (admin-triggered)', () => {
     it('marks DELETED without scrubbing PII, and audit-logs with the acting admin', async () => {
       const usersChain = createQueryChain({ data: USER_ROW, error: null });

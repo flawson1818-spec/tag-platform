@@ -143,6 +143,79 @@
       "PHOTO": "foto",
       "AUDIO": "audio",
       "VIDEO": "video"
+    },
+    "about": {
+      "kicker": "¿Qué es Tour d'avant-garde?",
+      "title": "Una oración se eleva en cada instante",
+      "lead": "Tour d'avant-garde es una sala de oración cristiana abierta día y noche en todo el mundo. Cada hora, creyentes oran juntos por los mismos temas, guiados por versículos, y puedes unirte desde tu teléfono — sin cuenta para escuchar.",
+      "proof": {
+        "p1": {
+          "value": "24/7",
+          "label": "una oración que nunca se detiene"
+        },
+        "p2": {
+          "value": "4",
+          "label": "idiomas: francés, inglés, español, portugués"
+        },
+        "p3": {
+          "value": "Gratis",
+          "label": "sin registro para escuchar"
+        }
+      },
+      "howTitle": "Cómo funciona",
+      "steps": {
+        "s1": {
+          "title": "Entra en la sala",
+          "text": "Un clic. Ves el tema de oración, el versículo y el tiempo restante."
+        },
+        "s2": {
+          "title": "Ora con los demás",
+          "text": "Una voz lee la oración en tu idioma. Puedes escribir, levantar la mano o enviar ánimo."
+        },
+        "s3": {
+          "title": "Comparte y mantente unido",
+          "text": "Deja una petición de oración, cuenta lo que Dios hace y encuentra tu iglesia o grupo."
+        }
+      },
+      "featuresTitle": "Todo para ti",
+      "features": {
+        "room": {
+          "title": "Sala de oración continua",
+          "text": "Oraciones guiadas según la hora: mañana, mediodía, tarde, noche, vigilia y medianoche."
+        },
+        "requests": {
+          "title": "Peticiones de oración",
+          "text": "Confía un tema, otros interceden y te acompañan."
+        },
+        "community": {
+          "title": "Iglesias, grupos y muro",
+          "text": "Una red cristiana para compartir, conversar y orar juntos en vivo."
+        },
+        "testimonies": {
+          "title": "Testimonios",
+          "text": "Gracias recibidas, para fortalecer la fe de todos."
+        },
+        "languages": {
+          "title": "En tu idioma",
+          "text": "La oración y su lectura se traducen al idioma que elijas."
+        },
+        "notify": {
+          "title": "Llamadas a orar",
+          "text": "Una notificación sonora cuando empieza una oración dirigida o te invitan."
+        }
+      },
+      "finalTitle": "Únete a la torre",
+      "finalText": "Crea tu cuenta con tu correo o número de teléfono: es gratis y rápido.",
+      "createAccount": "Crear mi cuenta",
+      "justListen": "O escuchar primero, sin cuenta →",
+      "faq": {
+        "q1": "¿Necesito una cuenta para entrar?",
+        "a1": "No. Puedes escuchar la sala sin registrarte. La cuenta sirve para orar con otros, dejar peticiones y unirte a un grupo.",
+        "q2": "¿Es de una sola iglesia?",
+        "a2": "No. Tour d'avant-garde está abierto a todos los creyentes, y cada iglesia o grupo puede tener su propia sala.",
+        "q3": "¿Quién dirige las oraciones?",
+        "a3": "Una inteligencia artificial mantiene la oración día y noche, y los responsables pueden tomar el control en cualquier momento para dirigir en vivo."
+      }
     }
   },
   "events": {
@@ -850,6 +923,13 @@
       "ACTIVE": "Activar",
       "LOCKED": "Bloquear",
       "SUSPENDED": "Suspender"
+    },
+    "deleteSuspended": {
+      "button": "Eliminar cuentas suspendidas",
+      "confirm": "¿Eliminar definitivamente todas las cuentas suspendidas? Sus datos personales se borrarán. No se puede deshacer.",
+      "done_one": "{{count}} cuenta suspendida eliminada.",
+      "done_other": "{{count}} cuentas suspendidas eliminadas.",
+      "none": "No hay cuentas suspendidas."
     }
   },
   "roles": {
@@ -1598,5 +1678,18 @@
       "faithActs_one": "{{count}} acto de fe iniciado",
       "faithActs_other": "{{count}} actos de fe iniciados"
     }
+  },
+  "push": {
+    "promptTitle": "Activa las notificaciones",
+    "promptText": "Recibe un aviso sonoro cuando empiece una oración dirigida, cuando alguien te invite a orar y cuando recibas un mensaje.",
+    "enable": "Activar",
+    "later": "Más tarde"
+  },
+  "roomCall": {
+    "button": "Llamar a orar",
+    "hint": "Invita a todos los miembros a entrar en la sala",
+    "sent": "Llamada enviada a todos los miembros.",
+    "incoming": "Entrar en la sala",
+    "dismiss": "Cerrar"
   }
 }

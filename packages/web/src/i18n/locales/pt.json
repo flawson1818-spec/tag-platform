@@ -143,6 +143,79 @@
       "PHOTO": "foto",
       "AUDIO": "áudio",
       "VIDEO": "vídeo"
+    },
+    "about": {
+      "kicker": "O que é a Tour d'avant-garde?",
+      "title": "Uma oração sobe a cada instante",
+      "lead": "A Tour d'avant-garde é uma sala de oração cristã aberta dia e noite, em todo o mundo. A cada hora, crentes oram juntos pelos mesmos temas, guiados por versículos, e pode juntar-se do seu telemóvel — sem conta para ouvir.",
+      "proof": {
+        "p1": {
+          "value": "24/7",
+          "label": "uma oração que nunca pára"
+        },
+        "p2": {
+          "value": "4",
+          "label": "idiomas: francês, inglês, espanhol, português"
+        },
+        "p3": {
+          "value": "Grátis",
+          "label": "sem registo para ouvir"
+        }
+      },
+      "howTitle": "Como funciona",
+      "steps": {
+        "s1": {
+          "title": "Entre na sala",
+          "text": "Um clique. Vê o tema de oração, o versículo e o tempo restante."
+        },
+        "s2": {
+          "title": "Ore com os outros",
+          "text": "Uma voz lê a oração no seu idioma. Pode escrever, levantar a mão ou enviar encorajamento."
+        },
+        "s3": {
+          "title": "Partilhe e fique ligado",
+          "text": "Deixe um pedido de oração, conte o que Deus faz e encontre a sua igreja ou grupo."
+        }
+      },
+      "featuresTitle": "Tudo para si",
+      "features": {
+        "room": {
+          "title": "Sala de oração contínua",
+          "text": "Orações guiadas conforme a hora: manhã, meio-dia, tarde, noite, vigília e meia-noite."
+        },
+        "requests": {
+          "title": "Pedidos de oração",
+          "text": "Confie um tema, outros intercedem e apoiam."
+        },
+        "community": {
+          "title": "Igrejas, grupos e mural",
+          "text": "Uma rede cristã para partilhar, conversar e orar juntos ao vivo."
+        },
+        "testimonies": {
+          "title": "Testemunhos",
+          "text": "Graças recebidas, para fortalecer a fé de todos."
+        },
+        "languages": {
+          "title": "No seu idioma",
+          "text": "A oração e a sua leitura são traduzidas para o idioma que escolher."
+        },
+        "notify": {
+          "title": "Chamadas para orar",
+          "text": "Uma notificação sonora quando começa uma oração dirigida ou é convidado."
+        }
+      },
+      "finalTitle": "Junte-se à torre",
+      "finalText": "Crie a sua conta com e-mail ou número de telefone: é grátis e rápido.",
+      "createAccount": "Criar a minha conta",
+      "justListen": "Ou ouvir primeiro, sem conta →",
+      "faq": {
+        "q1": "Preciso de conta para entrar?",
+        "a1": "Não. Pode ouvir a sala sem se registar. A conta serve para orar com outros, deixar pedidos e juntar-se a um grupo.",
+        "q2": "É de uma só igreja?",
+        "a2": "Não. A Tour d'avant-garde está aberta a todos os crentes, e cada igreja ou grupo pode ter a sua sala.",
+        "q3": "Quem dirige as orações?",
+        "a3": "Uma inteligência artificial mantém a oração dia e noite, e os responsáveis podem assumir a qualquer momento para dirigir ao vivo."
+      }
     }
   },
   "events": {
@@ -850,6 +923,13 @@
       "ACTIVE": "Ativar",
       "LOCKED": "Bloquear",
       "SUSPENDED": "Suspender"
+    },
+    "deleteSuspended": {
+      "button": "Eliminar contas suspensas",
+      "confirm": "Eliminar definitivamente todas as contas suspensas? Os dados pessoais serão apagados. Não pode ser desfeito.",
+      "done_one": "{{count}} conta suspensa eliminada.",
+      "done_other": "{{count}} contas suspensas eliminadas.",
+      "none": "Nenhuma conta suspensa."
     }
   },
   "roles": {
@@ -1598,5 +1678,18 @@
       "faithActs_one": "{{count}} ato de fé iniciado",
       "faithActs_other": "{{count}} atos de fé iniciados"
     }
+  },
+  "push": {
+    "promptTitle": "Ative as notificações",
+    "promptText": "Receba um aviso sonoro quando uma oração dirigida começar, quando alguém o convidar a orar e quando receber uma mensagem.",
+    "enable": "Ativar",
+    "later": "Mais tarde"
+  },
+  "roomCall": {
+    "button": "Chamar para orar",
+    "hint": "Convide todos os membros a entrar na sala",
+    "sent": "Chamada enviada a todos os membros.",
+    "incoming": "Entrar na sala",
+    "dismiss": "Fechar"
   }
 }

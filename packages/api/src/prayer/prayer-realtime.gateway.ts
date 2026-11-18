@@ -190,6 +190,10 @@ export interface TakeoverPayload {
 /** A moderator may lead for up to three hours in one go (then renews or gives back). */
 export const TAKEOVER_MAX_MINUTES = 180;
 
+/** A call to prayer rings everybody: once per room per quarter of an hour, once per person per hour. */
+export const CALL_ROOM_COOLDOWN_MS = 15 * 60_000;
+export const CALL_USER_COOLDOWN_MS = 60 * 60_000;
+
 export interface NowPlaying {
   videoId?: string;
   title: string;
@@ -860,6 +864,55 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     return this.takeovers.get(roomId);
   }
 
+  private readonly lastRoomCall = new Map<string, number>();
+  private readonly lastUserCall = new Map<string, number>();
+
+  /**
+   * "Appeler à prier": a member in the room invites everyone to come in. Every member who allowed
+   * notifications gets a ringing push that opens the room; whoever is on the site hears a bell.
+   */
+  @SubscribeMessage('room:call')
+  async handleCall(@ConnectedSocket() client: Socket, @MessageBody() payload: RoomJoinPayload): Promise<void> {
+    if (!payload?.roomId) return;
+    const userId = extractUserId(client, this.tokenService);
+    if (!userId) return;
+    const result = await this.callToPrayer(payload.roomId, userId, await this.displayNameFor(userId));
+    if (result === 'cooldown') {
+      client.emit('room:error', { roomId: payload.roomId, message: "L'appel vient d'être lancé : patiente quelques minutes avant d'en lancer un autre." });
+    } else {
+      client.emit('room:called', { roomId: payload.roomId, callerId: userId, confirmation: true });
+    }
+  }
+
+  /** Rings the room's members. Returns 'cooldown' when a call was made too recently. */
+  async callToPrayer(roomId: string, userId: string, displayName: string, lead = false): Promise<'sent' | 'cooldown'> {
+    const now = Date.now();
+    if (!lead && now - (this.lastUserCall.get(userId) ?? 0) < CALL_USER_COOLDOWN_MS) return 'cooldown';
+    if (now - (this.lastRoomCall.get(roomId) ?? 0) < CALL_ROOM_COOLDOWN_MS) return 'cooldown';
+    this.lastRoomCall.set(roomId, now);
+    this.lastUserCall.set(userId, now);
+
+    const title = lead ? '🔔 Prière dirigée en direct' : '🔔 Viens prier avec nous';
+    const body = lead
+      ? `${displayName} dirige une prière en direct. Entre dans la salle de prière.`
+      : `${displayName} est dans la salle de prière et t'invite à le rejoindre.`;
+    this.server?.to(roomId).emit('room:called', { roomId, title, body, callerId: userId });
+    const options = { url: '/room', tag: `call-${roomId}`, sound: true };
+    try {
+      const communityId = fromRoomId(roomId);
+      if (!communityId) {
+        await this.pushNotificationsService.broadcast(title, body, { ...options, exceptUserIds: [userId] });
+      } else {
+        const { data } = await this.supabase.client.from('community_members').select('user_id').eq('community_id', communityId);
+        const ids = ((data ?? []) as { user_id: string }[]).map((m) => m.user_id).filter((id) => id !== userId);
+        await Promise.all(ids.map((id) => this.pushNotificationsService.send(id, title, body, { ...options, url: `/communities/${communityId}?tab=live` }).catch(() => undefined)));
+      }
+    } catch (error) {
+      this.logger.error(`Call to prayer failed in room ${roomId}`, error as Error);
+    }
+    return 'sent';
+  }
+
   /** "Reprendre la main": a moderator present leads the room live, now. */
   @SubscribeMessage('room:takeover')
   async handleTakeover(@ConnectedSocket() client: Socket, @MessageBody() payload: TakeoverPayload): Promise<void> {
@@ -898,6 +951,8 @@ export class PrayerRealtimeGateway implements OnGatewayDisconnect {
     };
     this.takeovers.set(payload.roomId, { slot, userId, socketId: client.id, displayName });
     this.stopWorshipMusic(payload.roomId);
+    // A new directed prayer starts: everybody is invited to come in (not when only renewed).
+    if (!keep) void this.callToPrayer(payload.roomId, userId, displayName, true);
     this.server?.to(payload.roomId).emit('slot:started', {
       roomId: payload.roomId,
       slot,

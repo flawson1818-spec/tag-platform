@@ -143,6 +143,79 @@
       "PHOTO": "photo",
       "AUDIO": "audio",
       "VIDEO": "vidéo"
+    },
+    "about": {
+      "kicker": "Qu'est-ce que Tour d'avant-garde ?",
+      "title": "Une prière s'élève à chaque instant",
+      "lead": "Tour d'avant-garde est une salle de prière chrétienne ouverte jour et nuit, partout dans le monde. À chaque heure, des croyants prient ensemble pour les mêmes sujets, guidés par des versets, et tu peux les rejoindre depuis ton téléphone — sans compte pour écouter.",
+      "proof": {
+        "p1": {
+          "value": "24h/24",
+          "label": "une prière qui ne s'arrête jamais"
+        },
+        "p2": {
+          "value": "4",
+          "label": "langues : français, anglais, espagnol, portugais"
+        },
+        "p3": {
+          "value": "0 €",
+          "label": "gratuit, sans inscription pour écouter"
+        }
+      },
+      "howTitle": "Comment ça marche",
+      "steps": {
+        "s1": {
+          "title": "Entre dans la salle",
+          "text": "Un clic suffit. Tu vois le sujet de prière du moment, le verset et le temps restant."
+        },
+        "s2": {
+          "title": "Prie avec les autres",
+          "text": "Une voix lit la prière dans ta langue. Tu peux écrire, lever la main ou envoyer un encouragement."
+        },
+        "s3": {
+          "title": "Partage et reste relié",
+          "text": "Dépose une demande de prière, témoigne de ce que Dieu fait et retrouve ton église ou ton groupe."
+        }
+      },
+      "featuresTitle": "Tout ce qu'il y a pour toi",
+      "features": {
+        "room": {
+          "title": "Salle de prière en continu",
+          "text": "Des prières guidées adaptées à l'heure : matin, midi, soir, nuit, veille et minuit."
+        },
+        "requests": {
+          "title": "Demandes de prière",
+          "text": "Confie un sujet, d'autres intercèdent et te soutiennent."
+        },
+        "community": {
+          "title": "Églises, groupes et fil",
+          "text": "Un réseau chrétien pour partager, échanger et prier ensemble en direct."
+        },
+        "testimonies": {
+          "title": "Témoignages",
+          "text": "Des grâces reçues, pour fortifier la foi de tous."
+        },
+        "languages": {
+          "title": "Dans ta langue",
+          "text": "La prière et sa lecture sont traduites dans la langue que tu choisis."
+        },
+        "notify": {
+          "title": "Appels à prier",
+          "text": "Une notification sonore quand une prière dirigée commence ou qu'on t'invite."
+        }
+      },
+      "finalTitle": "Rejoins la tour",
+      "finalText": "Crée ton compte avec ton e-mail ou ton numéro de téléphone : c'est gratuit et rapide.",
+      "createAccount": "Créer mon compte",
+      "justListen": "Ou écouter d'abord, sans compte →",
+      "faq": {
+        "q1": "Faut-il un compte pour entrer ?",
+        "a1": "Non. Tu peux écouter la salle sans inscription. Le compte sert à prier avec les autres, déposer des demandes et rejoindre un groupe.",
+        "q2": "Est-ce réservé à une église ?",
+        "a2": "Non. Tour d'avant-garde est ouvert à tous les croyants, et chaque église ou groupe peut avoir sa propre salle.",
+        "q3": "Qui dirige les prières ?",
+        "a3": "Une intelligence artificielle assure la continuité jour et nuit, et des responsables peuvent reprendre la main à tout moment pour diriger en direct."
+      }
     }
   },
   "events": {
@@ -850,6 +923,13 @@
       "ACTIVE": "Activer",
       "LOCKED": "Verrouiller",
       "SUSPENDED": "Suspendre"
+    },
+    "deleteSuspended": {
+      "button": "Supprimer les comptes suspendus",
+      "confirm": "Supprimer définitivement tous les comptes suspendus ? Leurs données personnelles seront effacées. Cette action est irréversible.",
+      "done_one": "{{count}} compte suspendu supprimé.",
+      "done_other": "{{count}} comptes suspendus supprimés.",
+      "none": "Aucun compte suspendu à supprimer."
     }
   },
   "roles": {
@@ -1598,5 +1678,18 @@
       "faithActs_one": "{{count}} acte de foi commencé",
       "faithActs_other": "{{count}} actes de foi commencés"
     }
+  },
+  "push": {
+    "promptTitle": "Active les notifications",
+    "promptText": "Sois averti avec un son quand une prière dirigée commence, quand quelqu'un t'invite à prier et quand tu reçois un message.",
+    "enable": "Activer",
+    "later": "Plus tard"
+  },
+  "roomCall": {
+    "button": "Appeler à prier",
+    "hint": "Invite tous les membres à entrer dans la salle",
+    "sent": "Appel envoyé à tous les membres.",
+    "incoming": "Entrer dans la salle",
+    "dismiss": "Fermer"
   }
 }

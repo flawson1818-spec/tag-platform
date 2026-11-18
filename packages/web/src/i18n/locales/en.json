@@ -143,6 +143,79 @@
       "PHOTO": "Photo",
       "AUDIO": "Audio",
       "VIDEO": "Video"
+    },
+    "about": {
+      "kicker": "What is Tour d'avant-garde?",
+      "title": "A prayer rises at every moment",
+      "lead": "Tour d'avant-garde is a Christian prayer room open day and night, all over the world. Every hour, believers pray together for the same subjects, guided by Bible verses, and you can join from your phone — no account needed to listen.",
+      "proof": {
+        "p1": {
+          "value": "24/7",
+          "label": "a prayer that never stops"
+        },
+        "p2": {
+          "value": "4",
+          "label": "languages: French, English, Spanish, Portuguese"
+        },
+        "p3": {
+          "value": "Free",
+          "label": "no sign-up needed to listen"
+        }
+      },
+      "howTitle": "How it works",
+      "steps": {
+        "s1": {
+          "title": "Enter the room",
+          "text": "One click. You see the current prayer subject, the verse and the time left."
+        },
+        "s2": {
+          "title": "Pray with others",
+          "text": "A voice reads the prayer in your language. You can write, raise a hand or send encouragement."
+        },
+        "s3": {
+          "title": "Share and stay connected",
+          "text": "Post a prayer request, tell what God is doing and find your church or group."
+        }
+      },
+      "featuresTitle": "Everything for you",
+      "features": {
+        "room": {
+          "title": "Non-stop prayer room",
+          "text": "Guided prayers matched to the hour: morning, midday, evening, night, vigil and midnight."
+        },
+        "requests": {
+          "title": "Prayer requests",
+          "text": "Share a need, others intercede and stand with you."
+        },
+        "community": {
+          "title": "Churches, groups and feed",
+          "text": "A Christian network to share, talk and pray together live."
+        },
+        "testimonies": {
+          "title": "Testimonies",
+          "text": "Graces received, to strengthen everyone's faith."
+        },
+        "languages": {
+          "title": "In your language",
+          "text": "The prayer and its reading are translated into the language you choose."
+        },
+        "notify": {
+          "title": "Calls to pray",
+          "text": "A sound notification when a led prayer starts or you are invited."
+        }
+      },
+      "finalTitle": "Join the tower",
+      "finalText": "Create your account with your e-mail or phone number: it is free and quick.",
+      "createAccount": "Create my account",
+      "justListen": "Or listen first, no account →",
+      "faq": {
+        "q1": "Do I need an account to enter?",
+        "a1": "No. You can listen to the room without signing up. An account lets you pray with others, post requests and join a group.",
+        "q2": "Is it tied to one church?",
+        "a2": "No. Tour d'avant-garde is open to all believers, and each church or group can have its own room.",
+        "q3": "Who leads the prayers?",
+        "a3": "An artificial intelligence keeps the prayer going day and night, and leaders can take over at any time to lead live."
+      }
     }
   },
   "events": {
@@ -850,6 +923,13 @@
       "ACTIVE": "Activate",
       "LOCKED": "Lock",
       "SUSPENDED": "Suspend"
+    },
+    "deleteSuspended": {
+      "button": "Delete suspended accounts",
+      "confirm": "Permanently delete all suspended accounts? Their personal data will be erased. This cannot be undone.",
+      "done_one": "{{count}} suspended account deleted.",
+      "done_other": "{{count}} suspended accounts deleted.",
+      "none": "No suspended account to delete."
     }
   },
   "roles": {
@@ -1598,5 +1678,18 @@
       "faithActs_one": "{{count}} act of faith started",
       "faithActs_other": "{{count}} acts of faith started"
     }
+  },
+  "push": {
+    "promptTitle": "Turn on notifications",
+    "promptText": "Get a sound alert when a led prayer starts, when someone invites you to pray, and when you receive a message.",
+    "enable": "Turn on",
+    "later": "Later"
+  },
+  "roomCall": {
+    "button": "Call to prayer",
+    "hint": "Invite all members to join the room",
+    "sent": "Call sent to all members.",
+    "incoming": "Enter the room",
+    "dismiss": "Close"
   }
 }

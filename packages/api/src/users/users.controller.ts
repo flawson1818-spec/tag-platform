@@ -101,6 +101,14 @@ export class UsersController {
     return toUserResponse(await this.usersService.updateStatus(id, dto.status, currentUser.id));
   }
 
+  /** Before ':id' so "suspended" is not read as an id. */
+  @Delete('suspended')
+  @UseGuards(PermissionGuard)
+  @RequirePermission('user.manage')
+  removeSuspended(@CurrentUser() currentUser: AuthenticatedUser) {
+    return this.usersService.deleteSuspended(currentUser.id);
+  }
+
   @Delete(':id')
   @UseGuards(PermissionGuard)
   @RequirePermission('user.manage')

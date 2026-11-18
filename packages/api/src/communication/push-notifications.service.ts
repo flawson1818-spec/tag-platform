@@ -12,6 +12,13 @@ const PUSH_NOTIFICATION_COLUMNS = 'id, user_id, push_token_id, title, body, stat
  * narrow interface instead of importing `webpush` directly everywhere lets tests pass a plain
  * fake object, no module interception needed.
  */
+/** Where a tap on the notification leads, and whether it should ring (an urgent call). */
+export interface PushOptions {
+  url?: string;
+  tag?: string;
+  sound?: boolean;
+}
+
 export interface WebPushClient {
   setVapidDetails(subject: string, publicKey: string, privateKey: string): void;
   sendNotification(subscription: webpush.PushSubscription, payload: string): Promise<unknown>;
@@ -64,7 +71,7 @@ export class PushNotificationsService {
   }
 
   /** Sends to every device currently registered for userId (fans out one row per token). */
-  async send(userId: string, title: string, body: string): Promise<PushNotification[]> {
+  async send(userId: string, title: string, body: string, options: PushOptions = {}): Promise<PushNotification[]> {
     const { data: tokens, error: tokensError } = await this.supabase.client
       .from('push_tokens')
       .select(PUSH_TOKEN_COLUMNS)
@@ -77,7 +84,7 @@ export class PushNotificationsService {
       return [];
     }
 
-    const results = await Promise.all(targets.map((t) => this.deliver(t, title, body)));
+    const results = await Promise.all(targets.map((t) => this.deliver(t, title, body, options)));
 
     const { data, error } = await this.supabase.client
       .from('push_notifications')
@@ -96,7 +103,25 @@ export class PushNotificationsService {
     return data as unknown as PushNotification[];
   }
 
-  private async deliver(target: PushToken, title: string, body: string): Promise<'DELIVERED' | 'FAILED' | 'CREATED'> {
+  /**
+   * One message to every device of every member (the call to prayer). Not recorded one by one in
+   * push_notifications — only the count comes back. `exceptUserIds` skips the person who calls.
+   */
+  async broadcast(title: string, body: string, options: PushOptions & { exceptUserIds?: string[] } = {}): Promise<{ sent: number }> {
+    if (!this.vapidConfigured) return { sent: 0 };
+    const { data, error } = await this.supabase.client.from('push_tokens').select(PUSH_TOKEN_COLUMNS).eq('platform', 'WEB');
+    if (error) throw new InternalServerErrorException(error.message);
+    const skip = new Set(options.exceptUserIds ?? []);
+    const targets = ((data as unknown as PushToken[] | null) ?? []).filter((t) => !skip.has(t.user_id));
+    let sent = 0;
+    for (let i = 0; i < targets.length; i += 50) {
+      const results = await Promise.all(targets.slice(i, i + 50).map((t) => this.deliver(t, title, body, options)));
+      sent += results.filter((r) => r === 'DELIVERED').length;
+    }
+    return { sent };
+  }
+
+  private async deliver(target: PushToken, title: string, body: string, options: PushOptions = {}): Promise<'DELIVERED' | 'FAILED' | 'CREATED'> {
     if (target.platform !== 'WEB' || !this.vapidConfigured) {
       this.logger.warn(`Push "${title}" recorded for device ${target.id} but NOT sent — no provider configured`);
       return 'CREATED';
@@ -104,10 +129,13 @@ export class PushNotificationsService {
 
     try {
       const subscription = JSON.parse(target.token) as webpush.PushSubscription;
-      await this.webpushClient.sendNotification(subscription, JSON.stringify({ title, body }));
+      await this.webpushClient.sendNotification(subscription, JSON.stringify({ title, body, url: options.url ?? '/', tag: options.tag, sound: options.sound ?? false }));
       return 'DELIVERED';
     } catch (error) {
       this.logger.error(`Web Push delivery failed for device ${target.id}`, error as Error);
+      // The browser says the device is gone for good (uninstalled, permission withdrawn): forget it.
+      const code = (error as { statusCode?: number }).statusCode;
+      if (code === 404 || code === 410) await this.supabase.client.from('push_tokens').delete().eq('id', target.id);
       return 'FAILED';
     }
   }

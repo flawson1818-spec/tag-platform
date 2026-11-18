@@ -31,6 +31,7 @@ import { EventsPage } from './events/EventsPage';
 import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
 import { HeaderNav, MemberTabBar } from './HeaderNav';
+import { PushPrompt } from './PushPrompt';
 import { WatchtowerMark } from './WatchtowerMark';
 import { AccessProvider } from './auth/AccessContext';
 import { AdminHomePage } from './admin/AdminHomePage';
@@ -80,6 +81,7 @@ export function App() {
           </div>
           <HeaderNav />
         </header>
+        <PushPrompt />
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
