@@ -4,6 +4,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { PrayerSlotsService } from '../prayer/prayer-slots.service';
 import { PrayerRealtimeGateway } from '../prayer/prayer-realtime.gateway';
 import { PrayerSlot } from '../prayer/prayer-slot.entity';
+import { HourTheme, hourTheme } from './day-period';
 import { readingParts, splitVerse } from './spoken';
 
 export const SPEECH_LANGS = ['fr', 'en', 'es', 'pt'] as const;
@@ -26,6 +27,8 @@ export interface SlotSpeech {
   title: string;
   guidedText: string | null;
   verses: { reference: string; text: string }[];
+  /** The call of the hour (morning, night, midnight vigil…), translated like the rest. */
+  hour: { key: string; label: string; intro: string; verse: { reference: string; text: string } } | null;
   /** What is read aloud, in order, then read again. */
   parts: string[];
   /** A natural (neural) voice is available for these parts. */
@@ -61,22 +64,30 @@ export class SpeechService {
   async slot(id: string, lang: SpeechLang): Promise<SlotSpeech> {
     const slot = await this.resolve(id);
     const verses = slot.bible_references.map(splitVerse);
-    const parts = readingParts(slot);
-    if (lang === 'fr' || !this.key) {
-      return { lang: this.key ? lang : 'fr', translated: false, title: slot.title, guidedText: slot.guided_text, verses, parts, neural: Boolean(this.key) };
-    }
-    const source = [slot.title, slot.guided_text ?? '', ...verses.flatMap((v) => [v.reference, v.text]), ...parts];
+    // Worship and prayer-request segments keep their own words; every other one gets the call of the hour.
+    const isRequest = /^Sujet de prière\s*:/i.test(slot.guided_text ?? '');
+    const theme: HourTheme | null = (slot as { kind?: string }).kind === 'WORSHIP' || id.startsWith('worship-') || isRequest ? null : hourTheme();
+    const parts = readingParts(slot, theme);
+    const base = { title: slot.title, guidedText: slot.guided_text, verses, parts };
+    const french = { ...base, hour: theme, translated: false, neural: Boolean(this.key) };
+    if (lang === 'fr' || !this.key) return { lang: this.key ? lang : 'fr', ...french };
+
+    const extra = theme ? [theme.label, theme.intro, theme.verse.reference, theme.verse.text] : [];
+    const source = [slot.title, slot.guided_text ?? '', ...verses.flatMap((v) => [v.reference, v.text]), ...parts, ...extra];
     const out = await this.translate(source, lang);
-    if (!out) return { lang: 'fr', translated: false, title: slot.title, guidedText: slot.guided_text, verses, parts, neural: true };
+    if (!out) return { lang: 'fr', ...french, neural: true };
     let i = 2;
     const tVerses = verses.map(() => ({ reference: out[i++], text: out[i++] }));
+    const tParts = out.slice(i, i + parts.length);
+    i += parts.length;
     return {
       lang,
       translated: true,
       title: out[0],
       guidedText: slot.guided_text ? out[1] : null,
       verses: tVerses,
-      parts: out.slice(i),
+      hour: theme ? { key: theme.key, label: out[i], intro: out[i + 1], verse: { reference: out[i + 2], text: out[i + 3] } } : null,
+      parts: tParts,
       neural: true,
     };
   }

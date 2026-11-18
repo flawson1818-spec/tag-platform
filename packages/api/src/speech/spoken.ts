@@ -35,6 +35,13 @@ export interface ReadableSlot {
   title: string;
   guided_text: string | null;
   bible_references: string[];
+  kind?: string;
+}
+
+/** The call of the hour (night, midnight, vigil…) read after the title, with its verse. */
+export interface ReadableHour {
+  intro: string;
+  verse: { reference: string; text: string };
 }
 
 export function splitVerse(stored: string): { reference: string; text: string } {
@@ -46,7 +53,7 @@ export function splitVerse(stored: string): { reference: string; text: string } 
  * The parts read, in order. A prayer request: the request, its verse, the prayer. Any other
  * segment: its title, its prayer, its verses. The whole plan is read again and again.
  */
-export function readingParts(slot: ReadableSlot): string[] {
+export function readingParts(slot: ReadableSlot, hour?: ReadableHour | null): string[] {
   const verses = slot.bible_references.map((stored) => {
     const v = splitVerse(stored);
     return speakable(v.text ? `${v.reference}. ${v.text}` : v.reference);
@@ -56,5 +63,8 @@ export function readingParts(slot: ReadableSlot): string[] {
     const [subject, ...rest] = text.split(/\n\s*\n/);
     return [speakable(subject), ...verses, speakable(rest.join(' '))].filter(Boolean);
   }
-  return [speakable(slot.title), speakable(text), ...verses].filter(Boolean);
+  const call = hour
+    ? [speakable(hour.intro), speakable(`${hour.verse.reference}. ${hour.verse.text}`)]
+    : [];
+  return [speakable(slot.title), ...call, speakable(text), ...verses].filter(Boolean);
 }

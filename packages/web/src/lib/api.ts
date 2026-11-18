@@ -1594,6 +1594,7 @@ export interface SlotSpeech {
   title: string;
   guidedText: string | null;
   verses: { reference: string; text: string }[];
+  hour: { key: string; label: string; intro: string; verse: { reference: string; text: string } } | null;
   parts: string[];
   neural: boolean;
 }

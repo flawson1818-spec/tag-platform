@@ -24,7 +24,12 @@ function build(tables: Record<string, unknown> = {}) {
 
 describe('SpeechService', () => {
   const env = { ...process.env };
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-18T14:00:00Z')); // midday in Lomé
+  });
   afterEach(() => {
+    vi.useRealTimers();
     process.env = { ...env };
     vi.unstubAllGlobals();
   });
@@ -33,7 +38,8 @@ describe('SpeechService', () => {
     delete process.env.GOOGLE_CLOUD_API_KEY;
     const view = await build().slot(SLOT.id, 'en');
     expect(view).toMatchObject({ lang: 'fr', translated: false, neural: false });
-    expect(view.parts).toEqual(['Prière 1', 'Père, merci pour Jean, chapitre 3, verset 16.', 'Jean, chapitre 3, verset 16. Car Dieu a tant aimé le monde']);
+    expect(view.hour?.key).toBe('MIDDAY');
+    expect(view.parts).toEqual(['Prière 1', expect.stringContaining('Il est midi'), 'Psaume, chapitre 55, verset 18. Le soir, le matin, à midi, je soupire et je gémis, et il entendra ma voix.', 'Père, merci pour Jean, chapitre 3, verset 16.', 'Jean, chapitre 3, verset 16. Car Dieu a tant aimé le monde']);
   });
 
   it('translates everything the room shows and reads, once, into the visitor language', async () => {
@@ -46,7 +52,8 @@ describe('SpeechService', () => {
     const view = await build({ speech_usage: { data: { tts_chars: 0, translate_chars: 0 }, error: null }, speech_translations: { data: [], error: null } }).slot(SLOT.id, 'en');
     expect(view).toMatchObject({ lang: 'en', translated: true, title: 'EN:Prière 1' });
     expect(view.verses[0]).toEqual({ reference: 'EN:Jean 3:16', text: 'EN:Car Dieu a tant aimé le monde' });
-    expect(view.parts[1]).toBe('EN:Père, merci pour Jean, chapitre 3, verset 16.');
+    expect(view.hour).toMatchObject({ key: 'MIDDAY', label: 'EN:Prière de midi' });
+    expect(view.parts[3]).toBe('EN:Père, merci pour Jean, chapitre 3, verset 16.');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

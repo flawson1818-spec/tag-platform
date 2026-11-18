@@ -38,6 +38,17 @@ type NextUp = { title: string; startsNewCreneau: boolean };
 type Relay = { nextTitle: string; deadline: string; moderators: string[] };
 type FloatingReaction = { id: number; emoji: string };
 
+const HOUR_ICONS: Record<string, string> = {
+  DAWN: '🌅',
+  MORNING: '☀️',
+  MIDDAY: '🕛',
+  AFTERNOON: '🌤️',
+  EVENING: '🌇',
+  NIGHT: '🌙',
+  MIDNIGHT: '🕯️',
+  VIGIL: '⭐',
+};
+
 export function PrayerRoomPage() {
   const { t, i18n } = useTranslation();
   const { status, user } = useAuth();
@@ -231,7 +242,7 @@ export function PrayerRoomPage() {
   const [speechFor, setSpeechFor] = useState<{ key: string; view: SlotSpeech } | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const roomLang = i18n.language.slice(0, 2);
-  const speechKey = slot ? `${slot.id}|${slot.guided_text ?? ''}|${slot.title}` : '';
+  const speechKey = slot ? `${slot.id}|${slot.start_at}|${slot.guided_text ?? ''}|${slot.title}` : '';
   useEffect(() => {
     if (!slot || slot.kind === 'WORSHIP') return;
     let cancelled = false;
@@ -546,6 +557,17 @@ export function PrayerRoomPage() {
             </div>
           )}
           <h3>{isWorship && <span aria-hidden="true">🎵 </span>}{isWorship ? t('room.worship.title') : (shown?.title ?? slot.title)}</h3>
+          {speech?.hour && !isWorship && (
+            <div className={`room-hour room-hour-${speech.hour.key.toLowerCase()}`}>
+              <strong>
+                <span aria-hidden="true">{HOUR_ICONS[speech.hour.key] ?? '🙏'}</span> {speech.hour.label}
+              </strong>
+              <p>{speech.hour.intro}</p>
+              <p className="room-hour-verse">
+                « {speech.hour.verse.text} » — {speech.hour.verse.reference}
+              </p>
+            </div>
+          )}
           {speech?.translated && !isWorship && (
             <p className="room-translated">
               <span aria-hidden="true">🌐</span> {showOriginal ? t('room.translation.original') : t('room.translation.auto')}{' '}
