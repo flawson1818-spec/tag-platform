@@ -1691,5 +1691,10 @@
     "sent": "Appel envoyé à tous les membres.",
     "incoming": "Entrer dans la salle",
     "dismiss": "Fermer"
+  },
+  "footer": {
+    "tagline": "Une prière s'élève à chaque instant",
+    "facebook": "Suivre notre page Facebook",
+    "links": "Liens utiles"
   }
 }

@@ -37,7 +37,7 @@ function testimonyExcerpt(testimony: PublicTestimony, t: TFunction): string {
 
 const FEATURES = [
   { key: 'room', icon: '🙏', to: '/room' },
-  { key: 'requests', icon: '📿', to: '/prayer-requests' },
+  { key: 'requests', icon: '🤲', to: '/prayer-requests' },
   { key: 'community', icon: '⛪', to: '/communaute' },
   { key: 'testimonies', icon: '✨', to: '/testimonies' },
   { key: 'languages', icon: '🌍', to: '/room' },
@@ -148,7 +148,7 @@ export function HomePage() {
           {FEATURES.map((f) => (
             <li key={f.key}>
               <Link to={f.to}>
-                <span className="about-feature-icon" aria-hidden="true">{f.icon}</span>
+                <span className={`about-feature-icon about-icon-${f.key}`} aria-hidden="true">{f.icon}</span>
                 <strong>{t(`home.about.features.${f.key}.title`)}</strong>
                 <span>{t(`home.about.features.${f.key}.text`)}</span>
               </Link>

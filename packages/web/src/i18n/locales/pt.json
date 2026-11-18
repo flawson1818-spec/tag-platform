@@ -1691,5 +1691,10 @@
     "sent": "Chamada enviada a todos os membros.",
     "incoming": "Entrar na sala",
     "dismiss": "Fechar"
+  },
+  "footer": {
+    "tagline": "Uma oração sobe a cada instante",
+    "facebook": "Siga a nossa página do Facebook",
+    "links": "Links úteis"
   }
 }

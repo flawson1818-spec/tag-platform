@@ -1691,5 +1691,10 @@
     "sent": "Call sent to all members.",
     "incoming": "Enter the room",
     "dismiss": "Close"
+  },
+  "footer": {
+    "tagline": "A prayer rises at every moment",
+    "facebook": "Follow our Facebook page",
+    "links": "Useful links"
   }
 }

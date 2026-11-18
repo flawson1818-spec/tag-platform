@@ -32,6 +32,7 @@ import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
 import { HeaderNav, MemberTabBar } from './HeaderNav';
 import { PushPrompt } from './PushPrompt';
+import { SiteFooter } from './SiteFooter';
 import { WatchtowerMark } from './WatchtowerMark';
 import { AccessProvider } from './auth/AccessContext';
 import { AdminHomePage } from './admin/AdminHomePage';
@@ -339,6 +340,7 @@ export function App() {
             <Route path="/items" element={<ItemsPage />} />
           </Routes>
         </main>
+        <SiteFooter />
         <MemberTabBar />
       </div>
       </AccessProvider>

@@ -3476,3 +3476,22 @@ nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: co
 .about-faq summary { cursor: pointer; font-weight: 600; }
 .about-faq p { margin: 0.4rem 0 0; font-size: 0.9rem; }
 @media (max-width: 520px) { .about-features { grid-template-columns: 1fr; } .about-proof li { font-size: 0.7rem; } }
+
+/* ---- Home icons: bold coloured tiles the eye catches ---- */
+.about-feature-icon { display: grid; place-items: center; width: 3.2rem; height: 3.2rem; border-radius: 1rem; font-size: 1.7rem; color: #fff; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2); margin-bottom: 0.3rem; transition: transform 0.2s; }
+.about-features a:hover .about-feature-icon { transform: scale(1.1) rotate(-4deg); }
+.about-icon-room { background: linear-gradient(135deg, #5b6bd6, #3a3f9a); }
+.about-icon-requests { background: linear-gradient(135deg, #e0813a, #c2531b); }
+.about-icon-community { background: linear-gradient(135deg, #2fa37a, #1c7455); }
+.about-icon-testimonies { background: linear-gradient(135deg, #e8b52e, #c98a0a); }
+.about-icon-languages { background: linear-gradient(135deg, #2f9bd6, #1c6ea8); }
+.about-icon-notify { background: linear-gradient(135deg, #d6495f, #a82a3f); }
+.about-step-number { width: 2.6rem; height: 2.6rem; font-size: 1.15rem; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+.about-steps li { grid-template-columns: 2.6rem 1fr; }
+.about-proof strong { font-size: 1.5rem; }
+.site-footer { margin: 2.5rem auto 0; padding: 1.6rem 1rem 6rem; text-align: center; border-top: 1px solid var(--color-border); max-width: 760px; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.site-footer-brand { margin: 0; font-style: italic; opacity: 0.8; }
+.site-footer-facebook { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; border-radius: 999px; background: #1877f2; color: #fff; font-weight: 600; text-decoration: none; box-shadow: 0 4px 12px rgba(24, 119, 242, 0.35); }
+.site-footer-facebook:hover { background: #1464cc; }
+.site-footer-links { display: flex; gap: 1.1rem; flex-wrap: wrap; justify-content: center; font-size: 0.9rem; }
+.site-footer-copy { margin: 0; font-size: 0.75rem; opacity: 0.6; }
