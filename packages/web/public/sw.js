@@ -1,8 +1,29 @@
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+// Bump this line to force every installed app to fetch the new version.
+const VERSION = '2026-11-23';
+const OFFLINE_CACHE = `tag-offline-${VERSION}`;
 
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(OFFLINE_CACHE).then((cache) => cache.add('/offline.html')).catch(() => undefined));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      const names = await caches.keys();
+      await Promise.all(names.filter((n) => n.startsWith('tag-offline-') && n !== OFFLINE_CACHE).map((n) => caches.delete(n)));
+      await self.clients.claim();
+    })(),
+  );
+});
+
+// Only page loads are handled: with no network, a friendly page instead of a browser error.
+// Everything else (API, images, audio, video with its range requests) goes straight to the network.
 self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request));
+  if (event.request.mode !== 'navigate') return;
+  event.respondWith(
+    fetch(event.request).catch(async () => (await caches.match('/offline.html')) || Response.error()),
+  );
 });
 
 // A push: shown with the phone's own notification sound and a vibration. When the app is open

@@ -218,7 +218,7 @@ mondial ; campagnes publicitaires automatisées.
 
 ---
 
-## 9. État au 11 novembre 2026 et reste à faire
+## 9. État au 23 novembre 2026 et reste à faire
 
 ### 9.1 À développer
 
@@ -248,6 +248,8 @@ Pour la rendre active, il faut lancer sa migration dans l'éditeur SQL de Supaba
 | 20261118_prayer_request_prayers | « Je prie pour ce sujet » |
 | 20261119_faith_acts | Actes de foi |
 | 20261120_speech | Traduction et voix de la salle (mémoire des traductions, budget mensuel) |
+| 20261121_welcome_message | Compte de la plateforme + message de bienvenue chrétien dans la messagerie de chaque membre |
+| 20261122_post_videos | Vidéos dans la communauté (jusqu'à 50 Mo) |
 
 Réglages du serveur (Render → Environment) dont dépendent certaines fonctions :
 

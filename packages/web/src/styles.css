@@ -3511,3 +3511,6 @@ nav .share-app-panel a:hover, nav .share-app-panel button:hover { background: co
 .site-footer-social { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
 .site-footer-youtube { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; border-radius: 999px; background: #ff0000; color: #fff; font-weight: 600; text-decoration: none; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.35); }
 .site-footer-youtube:hover { background: #cc0000; }
+
+.update-banner { position: sticky; top: 0; z-index: 70; display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.55rem 0.9rem; background: #45519c; color: #fff; font-size: 0.9rem; }
+.update-banner button { background: #fff; color: #45519c; border: 0; border-radius: 999px; padding: 0.3rem 0.9rem; font-weight: 700; cursor: pointer; }

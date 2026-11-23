@@ -32,6 +32,7 @@ import { AiAccueilPage } from './ai/AiAccueilPage';
 import { AiEvangelisationPage } from './ai/AiEvangelisationPage';
 import { HeaderNav, MemberTabBar } from './HeaderNav';
 import { PushPrompt } from './PushPrompt';
+import { UpdateBanner } from './UpdateBanner';
 import { SiteFooter } from './SiteFooter';
 import { WatchtowerMark } from './WatchtowerMark';
 import { AccessProvider } from './auth/AccessContext';
@@ -82,6 +83,7 @@ export function App() {
           </div>
           <HeaderNav />
         </header>
+        <UpdateBanner />
         <PushPrompt />
         <main>
           <Routes>

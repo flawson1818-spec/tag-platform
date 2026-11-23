@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SlotSpeech, speechApi } from '../../lib/api';
 
+/** A silent WAV: playing it inside the tap is what unlocks later playback on phones. */
+const SILENCE = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 const PAUSE_BETWEEN_PARTS_MS = 1400;
 const PAUSE_BETWEEN_READINGS_MS = 7000;
 /** The most natural device voices, when the server has no neural voice. */
@@ -18,6 +20,8 @@ export function RoomReader({ slotId, speech, kind }: { slotId: string; speech: S
   const [on, setOn] = useState(false);
   const [reading, setReading] = useState<string | null>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  /** One element, started by the tap itself: phones allow it to keep playing the following parts. */
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const lang = speech?.lang ?? 'fr';
 
   useEffect(() => {
@@ -37,7 +41,7 @@ export function RoomReader({ slotId, speech, kind }: { slotId: string; speech: S
     if (!on || !speech || kind === 'WORSHIP' || speech.parts.length === 0) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let audio: HTMLAudioElement | null = null;
+    const audio = audioRef.current;
     let neural = speech.neural;
     const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
 
@@ -65,12 +69,13 @@ export function RoomReader({ slotId, speech, kind }: { slotId: string; speech: S
         synth.speak(u);
       };
       if (!neural) return viaDevice();
-      audio = new Audio(speechApi.audioUrl(slotId, i, speech.lang));
+      if (!audio) return viaDevice();
       audio.onended = after;
       audio.onerror = () => {
         neural = false; // no natural voice right now: the device reads, without a gap
         viaDevice();
       };
+      audio.src = speechApi.audioUrl(slotId, i, speech.lang);
       audio.play().catch(() => {
         neural = false;
         viaDevice();
@@ -80,7 +85,11 @@ export function RoomReader({ slotId, speech, kind }: { slotId: string; speech: S
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
-      audio?.pause();
+      if (audio) {
+        audio.onended = null;
+        audio.onerror = null;
+        audio.pause();
+      }
       synth?.cancel();
     };
     // partsKey stands for what is read.
@@ -91,7 +100,15 @@ export function RoomReader({ slotId, speech, kind }: { slotId: string; speech: S
 
   return (
     <div className={`room-reader${on ? ' is-on' : ''}`}>
-      <button type="button" className="room-reader-toggle" onClick={() => setOn(!on)} aria-pressed={on}>
+      <button type="button" className="room-reader-toggle" onClick={() => {
+          if (!on && typeof Audio !== 'undefined') {
+            audioRef.current ??= new Audio();
+            // Unlocks playback inside this tap, so the next parts can start by themselves.
+            audioRef.current.src = SILENCE;
+            void audioRef.current.play().catch(() => undefined);
+          }
+          setOn(!on);
+        }} aria-pressed={on}>
         <span aria-hidden="true">{on ? '🔇' : '🔊'}</span> {on ? t('room.reader.stop') : t('room.reader.start')}
       </button>
       {on && (

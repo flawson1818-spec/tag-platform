@@ -1708,5 +1708,9 @@
     "facebook": "Suivre notre page Facebook",
     "links": "Liens utiles",
     "youtube": "Voir notre chaîne YouTube"
+  },
+  "update": {
+    "available": "Une nouvelle version est disponible.",
+    "reload": "Mettre à jour"
   }
 }
