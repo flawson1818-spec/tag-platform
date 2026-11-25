@@ -12,6 +12,7 @@ export type SpeechLang = (typeof SPEECH_LANGS)[number];
 
 const LOCALES: Record<SpeechLang, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', pt: 'pt-BR' };
 const BUCKET = 'tag-files';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const TTS_URL = 'https://texttospeech.googleapis.com/v1';
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -53,12 +54,23 @@ export class SpeechService {
     private readonly gateway: PrayerRealtimeGateway,
   ) {}
 
+  /** Google Cloud (Text-to-Speech + Translation): needs a billing account. */
   private get key(): string | null {
     return process.env.GOOGLE_CLOUD_API_KEY?.trim() || null;
   }
 
+  /** Gemini API (Google AI Studio): a free key, no billing account. Used when there is no Cloud key. */
+  private get geminiKey(): string | null {
+    return process.env.GEMINI_API_KEY?.trim() || null;
+  }
+
+  /** Is any provider configured? Without one the room stays in French, read by the device. */
+  private get enabled(): boolean {
+    return Boolean(this.key || this.geminiKey);
+  }
+
   status() {
-    return { neural: Boolean(this.key), translate: Boolean(this.key) };
+    return { neural: this.enabled, translate: this.enabled, provider: this.key ? 'google-cloud' : this.geminiKey ? 'gemini' : null };
   }
 
   async slot(id: string, lang: SpeechLang): Promise<SlotSpeech> {
@@ -69,8 +81,8 @@ export class SpeechService {
     const theme: HourTheme | null = (slot as { kind?: string }).kind === 'WORSHIP' || id.startsWith('worship-') || isRequest ? null : hourTheme();
     const parts = readingParts(slot, theme);
     const base = { title: slot.title, guidedText: slot.guided_text, verses, parts };
-    const french = { ...base, hour: theme, translated: false, neural: Boolean(this.key) };
-    if (lang === 'fr' || !this.key) return { lang: this.key ? lang : 'fr', ...french };
+    const french = { ...base, hour: theme, translated: false, neural: this.enabled };
+    if (lang === 'fr' || !this.enabled) return { lang: this.enabled ? lang : 'fr', ...french };
 
     const extra = theme ? [theme.label, theme.intro, theme.verse.reference, theme.verse.text] : [];
     const source = [slot.title, slot.guided_text ?? '', ...verses.flatMap((v) => [v.reference, v.text]), ...parts, ...extra];
@@ -93,17 +105,18 @@ export class SpeechService {
   }
 
   /** MP3 of one part, in a natural voice; null when none is available (the device reads it). */
-  async audio(id: string, index: number, lang: SpeechLang): Promise<Buffer | null> {
-    if (!this.key) return null;
+  async audio(id: string, index: number, lang: SpeechLang): Promise<{ data: Buffer; type: string } | null> {
+    if (!this.enabled) return null;
     const view = await this.slot(id, lang);
     const text = view.parts[index];
     if (!text) throw new NotFoundException('Rien à lire.');
+    if (!this.key) return this.geminiAudio(text);
     const voice = await this.voice(view.lang);
     if (!voice) return null;
     const path = `tts/${this.hash(`${voice.name}|${text}`)}.mp3`;
     const storage = this.supabase.client.storage.from(BUCKET);
     const cached = await storage.download(path).catch(() => ({ data: null }));
-    if (cached.data) return Buffer.from(await cached.data.arrayBuffer());
+    if (cached.data) return { data: Buffer.from(await cached.data.arrayBuffer()), type: 'audio/mpeg' };
 
     if (!(await this.withinBudget('tts_chars', text.length, envNumber('TTS_MONTHLY_CHAR_LIMIT', 900_000)))) return null;
     const res = await fetch(`${TTS_URL}/text:synthesize?key=${this.key}`, {
@@ -122,7 +135,103 @@ export class SpeechService {
     }
     const audio = Buffer.from(((await res.json()) as { audioContent: string }).audioContent, 'base64');
     await storage.upload(path, audio, { contentType: 'audio/mpeg', upsert: true }).catch(() => undefined);
-    return audio;
+    return { data: audio, type: 'audio/mpeg' };
+  }
+
+  // ---- Gemini API (free key from Google AI Studio) ----
+
+  private geminiModels: { text: string | null; tts: string | null } | null = null;
+
+  /** Picks the free Flash models the key can use (a name may change over time: GEMINI_TEXT_MODEL / GEMINI_TTS_MODEL override). */
+  private async pickGeminiModels(): Promise<{ text: string | null; tts: string | null }> {
+    if (this.geminiModels) return this.geminiModels;
+    const forced = { text: process.env.GEMINI_TEXT_MODEL?.trim() || null, tts: process.env.GEMINI_TTS_MODEL?.trim() || null };
+    if (forced.text && forced.tts) return (this.geminiModels = forced);
+    try {
+      const res = await fetch(`${GEMINI_URL}/models?pageSize=200`, { headers: { 'x-goog-api-key': this.geminiKey as string }, signal: AbortSignal.timeout(10_000) });
+      const list = ((await res.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] }).models ?? [];
+      const names = list.filter((m) => m.supportedGenerationMethods?.includes('generateContent')).map((m) => m.name.replace(/^models\//, ''));
+      const stable = (n: string) => !/preview|exp|live|image|thinking|audio|native|robotics|computer/i.test(n);
+      const textOnes = names.filter((n) => /flash/i.test(n) && !/tts/i.test(n) && !/live|image|audio/i.test(n));
+      const ttsOnes = names.filter((n) => /tts/i.test(n));
+      const best = (xs: string[], prefer: RegExp[]) => {
+        for (const p of prefer) {
+          const hit = xs.filter((n) => p.test(n)).sort((a, b) => Number(stable(b)) - Number(stable(a)) || b.localeCompare(a))[0];
+          if (hit) return hit;
+        }
+        return xs.sort((a, b) => Number(stable(b)) - Number(stable(a)) || b.localeCompare(a))[0] ?? null;
+      };
+      this.geminiModels = {
+        text: forced.text ?? best(textOnes, [/flash-lite/i, /flash/i]),
+        tts: forced.tts ?? best(ttsOnes, [/flash/i]),
+      };
+    } catch (error) {
+      this.logger.warn(`Gemini model list failed: ${(error as Error).message}`);
+      return { text: forced.text, tts: forced.tts };
+    }
+    return this.geminiModels;
+  }
+
+  private async geminiTranslate(texts: string[], lang: SpeechLang): Promise<string[] | null> {
+    const { text: model } = await this.pickGeminiModels();
+    if (!model) return null;
+    const language = { fr: 'French', en: 'English', es: 'Spanish', pt: 'Portuguese' }[lang];
+    const prompt =
+      `Translate each string of this JSON array from French to ${language}. They are Christian prayers, Bible verses and texts of an online prayer room: ` +
+      `keep a warm, reverent tone, render Bible verses in the wording of a well-known ${language} Bible, keep proper names, and do not add or remove anything. ` +
+      `Reply with only a JSON array of strings, the same length and order.\n${JSON.stringify(texts)}`;
+    try {
+      const res = await fetch(`${GEMINI_URL}/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': this.geminiKey as string },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', responseSchema: { type: 'ARRAY', items: { type: 'STRING' } }, temperature: 0.2 },
+        }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
+      const body = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+      const parsed = JSON.parse(body.candidates?.[0]?.content?.parts?.[0]?.text ?? 'null') as unknown;
+      if (!Array.isArray(parsed) || parsed.length !== texts.length || parsed.some((v) => typeof v !== 'string')) throw new Error('unexpected answer');
+      return parsed as string[];
+    } catch (error) {
+      this.logger.warn(`Gemini translation failed: ${(error as Error).message}`);
+      return null;
+    }
+  }
+
+  /** A natural voice from Gemini's text-to-speech (raw 24 kHz audio, wrapped as WAV so every browser plays it). */
+  private async geminiAudio(text: string): Promise<{ data: Buffer; type: string } | null> {
+    const { tts: model } = await this.pickGeminiModels();
+    if (!model) return null;
+    const voiceName = process.env.GEMINI_TTS_VOICE?.trim() || 'Kore';
+    const path = `tts/${this.hash(`gemini|${model}|${voiceName}|${text}`)}.wav`;
+    const storage = this.supabase.client.storage.from(BUCKET);
+    const cached = await storage.download(path).catch(() => ({ data: null }));
+    if (cached.data) return { data: Buffer.from(await cached.data.arrayBuffer()), type: 'audio/wav' };
+    if (!(await this.withinBudget('tts_chars', text.length, envNumber('TTS_MONTHLY_CHAR_LIMIT', 900_000)))) return null;
+    try {
+      const res = await fetch(`${GEMINI_URL}/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': this.geminiKey as string },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Say slowly, warmly and calmly, like a prayer: ${text}` }] }],
+          generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } },
+        }),
+        signal: AbortSignal.timeout(45_000),
+      });
+      if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
+      const body = (await res.json()) as { candidates?: { content?: { parts?: { inlineData?: { data?: string } }[] } }[] };
+      const pcm = body.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData?.data;
+      if (!pcm) throw new Error('no audio in the answer');
+      const wav = pcmToWav(Buffer.from(pcm, 'base64'));
+      await storage.upload(path, wav, { contentType: 'audio/wav', upsert: true }).catch(() => undefined);
+      return { data: wav, type: 'audio/wav' };
+    } catch (error) {
+      this.logger.warn(`Gemini voice failed: ${(error as Error).message}`);
+      return null;
+    }
   }
 
   // ---- helpers ----
@@ -179,6 +288,17 @@ export class SpeechService {
     if (todo.length) {
       const chars = todo.reduce((n, i) => n + texts[i].length, 0);
       if (!(await this.withinBudget('translate_chars', chars, envNumber('TRANSLATE_MONTHLY_CHAR_LIMIT', 450_000)))) return null;
+      if (!this.key) {
+        const translated = await this.geminiTranslate(todo.map((i) => texts[i]), lang);
+        if (!translated) return null;
+        const rows = todo.map((i, k) => {
+          out[i] = translated[k];
+          this.memory.set(keys[i], translated[k]);
+          return { hash: keys[i], lang, source: texts[i].slice(0, 4000), text: translated[k] };
+        });
+        await this.supabase.client.from('speech_translations').upsert(rows, { onConflict: 'hash', ignoreDuplicates: true });
+        return out as string[];
+      }
       try {
         const res = await fetch(`${TRANSLATE_URL}?key=${this.key}`, {
           method: 'POST',
@@ -220,4 +340,22 @@ export class SpeechService {
   private hash(value: string): string {
     return createHash('sha256').update(value).digest('hex').slice(0, 40);
   }
+}
+
+/** Raw 16-bit mono 24 kHz audio (what Gemini returns) with a WAV header, playable everywhere. */
+export function pcmToWav(pcm: Buffer, sampleRate = 24000): Buffer {
+  const header = Buffer.alloc(44);
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + pcm.length, 4);
+  header.write('WAVEfmt ', 8);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(1, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(sampleRate * 2, 28);
+  header.writeUInt16LE(2, 32);
+  header.writeUInt16LE(16, 34);
+  header.write('data', 36);
+  header.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([header, pcm]);
 }

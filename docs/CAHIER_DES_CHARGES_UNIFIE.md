@@ -259,6 +259,7 @@ Réglages du serveur (Render → Environment) dont dépendent certaines fonction
 | EMAIL_RELAY_URL + EMAIL_RELAY_SECRET (Gmail, voir docs/gmail-relay.gs) ou BREVO_API_KEY + EMAIL_FROM | Pas d'e-mails (inscription, mot de passe oublié, double authentification par e-mail). Render gratuit bloque l'envoi SMTP : seuls ces envois par HTTPS marchent |
 | VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT | Pas de notifications sur le téléphone (elles restent dans l'application) |
 | TWILIO_* | Pas de double authentification par SMS |
+| GEMINI_API_KEY (clé gratuite Google AI Studio, sans carte ; traduction + voix, utilisée si GOOGLE_CLOUD_API_KEY est absente) | Idem : français + voix de l'appareil |
 | GOOGLE_CLOUD_API_KEY (Text-to-Speech + Translation) | La salle reste en français et la voix de l'appareil lit la prière (pas de voix naturelle « Chirp 3 HD ») ; budget mensuel TTS_MONTHLY_CHAR_LIMIT / TRANSLATE_MONTHLY_CHAR_LIMIT pour rester dans la gratuité |
 | PRAYER_WORSHIP_LINKS (facultatif) | La louange entre les prières n'a pas de musique par défaut tant qu'aucun lien n'est enregistré dans le programme |
 

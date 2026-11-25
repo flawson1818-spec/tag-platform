@@ -43,6 +43,10 @@ services:
       # en français et la voix de l'appareil lit la prière.
       - key: GOOGLE_CLOUD_API_KEY
         sync: false
+      # Alternative GRATUITE sans carte bancaire : une clé Gemini de Google AI Studio
+      # (https://aistudio.google.com/apikey) traduit et lit les prières. Utilisée si la clé Google Cloud est absente.
+      - key: GEMINI_API_KEY
+        sync: false
       # E-mails par Gmail (sans SMS ni domaine) : un petit script Google publié par le titulaire du
       # compte Gmail (docs/gmail-relay.gs). Prioritaire sur Brevo quand il est réglé.
       - key: EMAIL_RELAY_URL

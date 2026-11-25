@@ -1,4 +1,4 @@
-import { SpeechService } from './speech.service';
+import { SpeechService, pcmToWav } from './speech.service';
 
 function chain(result: unknown) {
   const b: Record<string, unknown> = {};
@@ -32,6 +32,29 @@ describe('SpeechService', () => {
     vi.useRealTimers();
     process.env = { ...env };
     vi.unstubAllGlobals();
+  });
+
+  it('wraps raw Gemini audio in a valid WAV header', () => {
+    const wav = pcmToWav(Buffer.alloc(100));
+    expect(wav.length).toBe(144);
+    expect(wav.toString('ascii', 0, 4)).toBe('RIFF');
+    expect(wav.toString('ascii', 8, 12)).toBe('WAVE');
+    expect(wav.readUInt32LE(24)).toBe(24000);
+  });
+
+  it('with only a free Gemini key: translates through Gemini', async () => {
+    delete process.env.GOOGLE_CLOUD_API_KEY;
+    process.env.GEMINI_API_KEY = 'x';
+    process.env.GEMINI_TEXT_MODEL = 'gemini-text';
+    process.env.GEMINI_TTS_MODEL = 'gemini-tts';
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init: { body: string }) => {
+      const prompt = JSON.parse(init.body).contents[0].parts[0].text as string;
+      const n = (JSON.parse(prompt.slice(prompt.indexOf('['))) as string[]).length;
+      const text = JSON.stringify(Array.from({ length: n }, (_, i) => `EN${i}`));
+      return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }) };
+    }));
+    const view = await build().slot(SLOT.id, 'en');
+    expect(view).toMatchObject({ lang: 'en', translated: true, neural: true });
   });
 
   it('without a Google key: French, read by the device, references spoken as chapter and verse', async () => {

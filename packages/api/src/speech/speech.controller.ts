@@ -30,6 +30,6 @@ export class SpeechController {
   ) {
     const audio = await this.speech.audio(id.slice(0, 64), index, lang(l));
     if (!audio) throw new NotFoundException('Pas de voix naturelle disponible : la voix de l’appareil prend le relais.');
-    res.set({ 'content-type': 'audio/mpeg', 'cache-control': 'public, max-age=604800' }).send(audio);
+    res.set({ 'content-type': audio.type, 'cache-control': 'public, max-age=604800' }).send(audio.data);
   }
 }
